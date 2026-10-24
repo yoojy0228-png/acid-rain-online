@@ -347,7 +347,7 @@ footer{text-align:center;padding:1.6rem 0 .5rem;color:#7386a0;font-size:.85rem}
     <h2>🌐 온라인 1대1 대전</h2>
     <div id="onlineLobby">
       <label for="onlineName">내 닉네임</label><input id="onlineName" maxlength="18" placeholder="예: 산성비고수" value="플레이어">
-      <label for="onlineTopic">대전 주제</label><select id="onlineTopic"><option>문해력</option><option>가짜 판별</option><option>AI 윤리</option></select>
+      <label for="onlineMode">온라인 게임 종류</label><select id="onlineMode"><option value="quiz">퀴즈 대전</option><option value="dots">도트 앤 박스</option></select><div id="onlineTopicWrap"><label for="onlineTopic">대전 주제</label><select id="onlineTopic"><option>문해력</option><option>가짜 판별</option><option>AI 윤리</option></select></div>
       <div class="online-actions"><button id="onlineCreate" class="online-primary">방 만들기</button><button id="onlineJoinShow" class="online-secondary">방 코드 입력</button></div>
       <div id="onlineJoinArea" hidden><label for="onlineCode">6자리 방 코드</label><input id="onlineCode" inputmode="numeric" maxlength="6" placeholder="123456"><button id="onlineJoin" class="online-primary" style="width:100%">참가하기</button></div>
     </div>
@@ -359,10 +359,7 @@ footer{text-align:center;padding:1.6rem 0 .5rem;color:#7386a0;font-size:.85rem}
     <div id="onlinePlay" hidden>
       <div class="online-score"><span id="onlineMyScore">나: 0점</span><span id="onlineOppScore">상대: 0점</span></div>
       <div class="online-status" id="onlinePlayStatus">문제를 기다리는 중…</div>
-      <h3 id="onlineQuestion"></h3>
-      <div id="onlineOptions"></div>
-      <div id="onlineExplain" class="online-small"></div>
-      <button id="onlineNext" class="online-primary" style="width:100%" hidden>다음 문제</button>
+      <div id="onlineQuizArea"><h3 id="onlineQuestion"></h3><div id="onlineOptions"></div><div id="onlineExplain" class="online-small"></div><button id="onlineNext" class="online-primary" style="width:100%" hidden>다음 문제</button></div><div id="onlineDotsArea" hidden><p id="onlineDotsStatus" class="online-status">선을 눌러 칸을 차지하세요.</p><canvas id="onlineDotsCanvas" width="640" height="640" style="display:block;width:100%;max-width:640px;aspect-ratio:1/1;touch-action:manipulation;cursor:pointer;margin:auto;background:#fff;border-radius:14px"></canvas><p class="online-small">선을 하나 그어 네 변을 완성하면 해당 칸을 차지하고 한 번 더 둡니다. 더 많은 칸을 차지한 사람이 승리합니다.</p></div>
     </div>
     <p class="online-small">온라인 대전은 두 사람이 같은 사이트에 접속해야 하며, 대전 서버가 켜져 있어야 합니다. 방을 닫으면 대전이 종료됩니다.</p>
     <button id="onlineClose" class="online-secondary" style="width:100%">닫기</button>
@@ -1175,7 +1172,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
 (() => {
   const $o = id => document.getElementById(id);
   const overlay = $o("onlineOverlay");
-  let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlinePool = [], onlineIndex = 0;
+  let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlineMode = "quiz", onlinePool = [], onlineIndex = 0, dotsState = null;
   let answered = false, myScore = 0, opponentScore = 0, myName = "플레이어";
 
   /* socket.io 클라이언트는 온라인 버튼을 눌렀을 때만 불러옵니다. 서버가 없는 환경에서도 나머지 게임은 정상 동작합니다. */
@@ -1212,7 +1209,19 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     $o("onlinePlay").hidden = name !== "play";
   }
   function renderPlayers(players) { $o("onlinePlayers").textContent = players.map((p, i) => `${i + 1}. ${p.name} · ${p.score}점`).join("   |   "); }
-  function renderOnlineScores() { $o("onlineMyScore").textContent = myName.replace(/#\d+$/, "") + ": " + myScore + "점"; $o("onlineOppScore").textContent = "상대: " + opponentScore + "점"; }
+  function renderOnlineScores() { $o("onlineMyScore").textContent = myName.replace(/#\d+$/, "") + ": " + myScore + (onlineMode === "dots" ? "칸" : "점"); $o("onlineOppScore").textContent = "상대: " + opponentScore + (onlineMode === "dots" ? "칸" : "점"); }
+  function drawOnlineDots(state) {
+    dotsState = state; const canvas=$o("onlineDotsCanvas"), ctx=canvas.getContext("2d"), n=state.size||4, pad=42, step=(640-pad*2)/n;
+    ctx.clearRect(0,0,640,640); ctx.fillStyle="#fff"; ctx.fillRect(0,0,640,640);
+    for(let r=0;r<n;r++) for(let c=0;c<n;c++){ const owner=state.boxes[r][c]; if(owner!==-1){ctx.fillStyle=owner===state.you?"#c8f7e7":"#ffd9e8";ctx.fillRect(pad+c*step+4,pad+r*step+4,step-8,step-8);ctx.fillStyle=owner===state.you?"#087f6c":"#c02665";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(owner===state.you?"나":"상대",pad+(c+.5)*step,pad+(r+.5)*step);}}
+    ctx.strokeStyle="#d9e2ef";ctx.lineWidth=4;ctx.lineCap="round";
+    for(let r=0;r<=n;r++)for(let c=0;c<n;c++)if(state.lines[`h-${r}-${c}`]){ctx.strokeStyle=state.lines[`h-${r}-${c}`]===state.you?"#0f9f86":"#e44e88";ctx.beginPath();ctx.moveTo(pad+c*step,pad+r*step);ctx.lineTo(pad+(c+1)*step,pad+r*step);ctx.stroke();}
+    for(let r=0;r<n;r++)for(let c=0;c<=n;c++)if(state.lines[`v-${r}-${c}`]){ctx.strokeStyle=state.lines[`v-${r}-${c}`]===state.you?"#0f9f86":"#e44e88";ctx.beginPath();ctx.moveTo(pad+c*step,pad+r*step);ctx.lineTo(pad+c*step,pad+(r+1)*step);ctx.stroke();}
+    ctx.fillStyle="#24364d";for(let r=0;r<=n;r++)for(let c=0;c<=n;c++){ctx.beginPath();ctx.arc(pad+c*step,pad+r*step,7,0,Math.PI*2);ctx.fill();}
+    const finished=state.boxes.flat().every(x=>x!==-1);const my=state.scores[state.you],opp=state.scores[1-state.you];$o("onlineDotsStatus").textContent=finished?(my===opp?`무승부! 최종 ${my} : ${opp}`:(my>opp?"내 승리! ":"상대 승리! ")+`최종 ${my} : ${opp}`):(state.turn===state.you?"내 차례 — 선을 선택하세요.":"상대 차례 — 기다려 주세요.");
+    myScore=state.scores[state.you];opponentScore=state.scores[1-state.you];renderOnlineScores();
+  }
+  function chooseOnlineDotLine(e){if(!dotsState||dotsState.turn!==dotsState.you||dotsState.finished)return;const canvas=$o("onlineDotsCanvas"),rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*640,y=(e.clientY-rect.top)/rect.height*640,n=dotsState.size||4,pad=42,step=(640-pad*2)/n;let best=null,dist=1e9;for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const d=Math.hypot(x-(pad+(c+.5)*step),y-(pad+r*step));if(d<dist){dist=d;best=`h-${r}-${c}`;}}for(let r=0;r<n;r++)for(let c=0;c<=n;c++){const d=Math.hypot(x-(pad+c*step),y-(pad+(r+.5)*step));if(d<dist){dist=d;best=`v-${r}-${c}`;}}if(dist<step*.34)sock.emit("dots:line",{line:best});}
   function resetOnline() {
     roomCode = ""; isHost = false; showPanel("lobby"); $o("onlineJoinArea").hidden = true;
     if (sock) { sock.disconnect(); sock = null; }
@@ -1233,17 +1242,22 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     });
     sock.on("room:update", r => renderPlayers(r.players));
     sock.on("room:ready", ({ room }) => {
+      onlineMode=room.mode||onlineMode; $o("onlineMode").value=onlineMode; $o("onlineTopicWrap").hidden=onlineMode==="dots";
       renderPlayers(room.players);
       status("방 코드: " + roomCode + "\n두 명이 모였습니다. 방장이 시작 버튼을 누르세요.");
       if (isHost) { $o("onlineStart").disabled = false; $o("onlineStart").textContent = "▶ 대전 시작"; }
     });
     sock.on("room:error", m => alert(m));
     sock.on("room:closed", m => { alert(m); resetOnline(); });
-    sock.on("game:started", () => {
+    sock.on("game:started", r => {
       showPanel("play"); myScore = 0; opponentScore = 0; renderOnlineScores();
+      if(onlineMode==="dots"){$o("onlineQuizArea").hidden=true;$o("onlineDotsArea").hidden=false;$o("onlinePlayStatus").textContent="도트 앤 박스 대전";return;}
+      $o("onlineQuizArea").hidden=false;$o("onlineDotsArea").hidden=true;
       if (isHost) { onlinePool = getOnlinePool(onlineTopic); onlineIndex = 0; sendQuestion(); }
       else $o("onlinePlayStatus").textContent = "방장이 문제를 준비하고 있습니다…";
     });
+    sock.on("dots:state", state => { if(onlineMode==="dots") drawOnlineDots(state); });
+    sock.on("dots:ended", state => { if(onlineMode==="dots"){drawOnlineDots(state);$o("onlineDotsStatus").textContent=`게임 종료! 나 ${state.scores[state.you]}칸 · 상대 ${state.scores[1-state.you]}칸`;}});
     sock.on("game:question", qn => {
       answered = false;
       $o("onlineQuestion").textContent = qn.text;
@@ -1289,18 +1303,20 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
   $o("onlineJoinShow").addEventListener("click", () => { $o("onlineJoinArea").hidden = !$o("onlineJoinArea").hidden; });
   $o("onlineCreate").addEventListener("click", async () => {
     if (!(await connect())) return;
-    isHost = true; myName = uniqueName($o("onlineName").value, "플레이어 1"); onlineTopic = $o("onlineTopic").value;
-    sock.emit("room:create", { name: myName, topic: onlineTopic });
+    isHost = true; myName = uniqueName($o("onlineName").value, "플레이어 1"); onlineTopic = $o("onlineTopic").value; onlineMode=$o("onlineMode").value;
+    sock.emit("room:create", { name: myName, topic: onlineTopic, mode: onlineMode });
   });
   $o("onlineJoin").addEventListener("click", async () => {
     const code = $o("onlineCode").value.trim();
     if (!/^\d{6}$/.test(code)) { alert("6자리 방 코드를 입력하세요."); return; }
     if (!(await connect())) return;
-    isHost = false; roomCode = code; myName = uniqueName($o("onlineName").value, "플레이어 2"); onlineTopic = $o("onlineTopic").value;
+    isHost = false; roomCode = code; myName = uniqueName($o("onlineName").value, "플레이어 2"); onlineTopic = $o("onlineTopic").value; onlineMode=$o("onlineMode").value;
     showPanel("waiting"); status("방에 참가하는 중…");
-    sock.emit("room:join", { code, name: myName });
+    sock.emit("room:join", { code, name: myName, mode: onlineMode });
   });
   $o("onlineStart").addEventListener("click", () => { if (isHost && sock) sock.emit("game:start"); });
+  $o("onlineMode").addEventListener("change",()=>{$o("onlineTopicWrap").hidden=$o("onlineMode").value==="dots";});
+  $o("onlineDotsCanvas").addEventListener("click",chooseOnlineDotLine);
   $o("onlineNext").addEventListener("click", () => {
     if (!isHost || !sock) return;
     if (myScore >= 100 || opponentScore >= 100) { myScore = 0; opponentScore = 0; renderOnlineScores(); }
