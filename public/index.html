@@ -1172,7 +1172,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
 (() => {
   const $o = id => document.getElementById(id);
   const overlay = $o("onlineOverlay");
-  let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlineMode = "quiz", onlinePool = [], onlineIndex = 0, dotsState = null;
+  let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlineMode = "quiz", onlinePool = [], onlineIndex = 0, dotsState = null, pendingDotLine = null, dotsQuestionActive = false;
   let answered = false, myScore = 0, opponentScore = 0, myName = "플레이어";
 
   /* socket.io 클라이언트는 온라인 버튼을 눌렀을 때만 불러옵니다. 서버가 없는 환경에서도 나머지 게임은 정상 동작합니다. */
@@ -1214,14 +1214,27 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     dotsState = state; const canvas=$o("onlineDotsCanvas"), ctx=canvas.getContext("2d"), n=state.size||4, pad=42, step=(640-pad*2)/n;
     ctx.clearRect(0,0,640,640); ctx.fillStyle="#fff"; ctx.fillRect(0,0,640,640);
     for(let r=0;r<n;r++) for(let c=0;c<n;c++){ const owner=state.boxes[r][c]; if(owner!==-1){ctx.fillStyle=owner===state.you?"#c8f7e7":"#ffd9e8";ctx.fillRect(pad+c*step+4,pad+r*step+4,step-8,step-8);ctx.fillStyle=owner===state.you?"#087f6c":"#c02665";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(owner===state.you?"나":"상대",pad+(c+.5)*step,pad+(r+.5)*step);}}
-    ctx.strokeStyle="#d9e2ef";ctx.lineWidth=4;ctx.lineCap="round";
-    for(let r=0;r<=n;r++)for(let c=0;c<n;c++)if(state.lines[`h-${r}-${c}`]){ctx.strokeStyle=state.lines[`h-${r}-${c}`]===state.you?"#0f9f86":"#e44e88";ctx.beginPath();ctx.moveTo(pad+c*step,pad+r*step);ctx.lineTo(pad+(c+1)*step,pad+r*step);ctx.stroke();}
-    for(let r=0;r<n;r++)for(let c=0;c<=n;c++)if(state.lines[`v-${r}-${c}`]){ctx.strokeStyle=state.lines[`v-${r}-${c}`]===state.you?"#0f9f86":"#e44e88";ctx.beginPath();ctx.moveTo(pad+c*step,pad+r*step);ctx.lineTo(pad+c*step,pad+(r+1)*step);ctx.stroke();}
+    ctx.lineCap="round";
+    // 사용하지 않은 선도 연한 회색으로 모두 표시해 판의 격자가 보이게 함
+    for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const k=`h-${r}-${c}`,owner=state.lines[k];ctx.strokeStyle=owner===undefined?"#c5cfdd":(owner===state.you?"#0f9f86":"#e44e88");ctx.lineWidth=owner===undefined?5:8;ctx.beginPath();ctx.moveTo(pad+c*step,pad+r*step);ctx.lineTo(pad+(c+1)*step,pad+r*step);ctx.stroke();}
+    for(let r=0;r<n;r++)for(let c=0;c<=n;c++){const k=`v-${r}-${c}`,owner=state.lines[k];ctx.strokeStyle=owner===undefined?"#c5cfdd":(owner===state.you?"#0f9f86":"#e44e88");ctx.lineWidth=owner===undefined?5:8;ctx.beginPath();ctx.moveTo(pad+c*step,pad+r*step);ctx.lineTo(pad+c*step,pad+(r+1)*step);ctx.stroke();}
     ctx.fillStyle="#24364d";for(let r=0;r<=n;r++)for(let c=0;c<=n;c++){ctx.beginPath();ctx.arc(pad+c*step,pad+r*step,7,0,Math.PI*2);ctx.fill();}
     const finished=state.boxes.flat().every(x=>x!==-1);const my=state.scores[state.you],opp=state.scores[1-state.you];$o("onlineDotsStatus").textContent=finished?(my===opp?`무승부! 최종 ${my} : ${opp}`:(my>opp?"내 승리! ":"상대 승리! ")+`최종 ${my} : ${opp}`):(state.turn===state.you?"내 차례 — 선을 선택하세요.":"상대 차례 — 기다려 주세요.");
     myScore=state.scores[state.you];opponentScore=state.scores[1-state.you];renderOnlineScores();
   }
-  function chooseOnlineDotLine(e){if(!dotsState||dotsState.turn!==dotsState.you||dotsState.finished)return;const canvas=$o("onlineDotsCanvas"),rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*640,y=(e.clientY-rect.top)/rect.height*640,n=dotsState.size||4,pad=42,step=(640-pad*2)/n;let best=null,dist=1e9;for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const d=Math.hypot(x-(pad+(c+.5)*step),y-(pad+r*step));if(d<dist){dist=d;best=`h-${r}-${c}`;}}for(let r=0;r<n;r++)for(let c=0;c<=n;c++){const d=Math.hypot(x-(pad+c*step),y-(pad+(r+.5)*step));if(d<dist){dist=d;best=`v-${r}-${c}`;}}if(dist<step*.34)sock.emit("dots:line",{line:best});}
+  function chooseOnlineDotLine(e){
+    if(!dotsState||dotsState.turn!==dotsState.you||dotsState.finished||dotsQuestionActive)return;
+    const canvas=$o("onlineDotsCanvas"),rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*640,y=(e.clientY-rect.top)/rect.height*640,n=dotsState.size||4,pad=42,step=(640-pad*2)/n;let best=null,dist=1e9;
+    for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const k=`h-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=Math.hypot(x-(pad+(c+.5)*step),y-(pad+r*step));if(d<dist){dist=d;best=k;}}
+    for(let r=0;r<n;r++)for(let c=0;c<=n;c++){const k=`v-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=Math.hypot(x-(pad+c*step),y-(pad+(r+.5)*step));if(d<dist){dist=d;best=k;}}
+    if(dist>=step*.38||!best)return;
+    pendingDotLine=best;dotsQuestionActive=true;
+    if(!onlinePool.length||onlineIndex>=onlinePool.length){onlinePool=getOnlinePool("가짜 판별");onlineIndex=0;}
+    const q=onlinePool[onlineIndex++],order=Math.random()<.5?[0,1]:[1,0],opts=order.map(i=>q.a[i]),correct=order.indexOf(q.c);
+    $o("onlineQuizArea").hidden=false;$o("onlineDotsArea").hidden=false;$o("onlineQuestion").textContent=q.q;
+    const box=$o("onlineOptions");box.replaceChildren();opts.forEach((opt,i)=>{const b=document.createElement("button");b.className="online-option";b.textContent=(i===0?"1. ":"2. ")+opt;b.onclick=()=>{if(!dotsQuestionActive)return;dotsQuestionActive=false;Array.from(box.children).forEach(x=>x.disabled=true);$o("onlineExplain").textContent=q.e||"";if(i===correct){$o("onlinePlayStatus").textContent="정답! 선을 연결합니다.";sock.emit("dots:line",{line:pendingDotLine});}else{$o("onlinePlayStatus").textContent="오답! 선은 연결되지 않았어. 다시 선을 골라 문제를 풀어 봐.";$o("onlineDotsStatus").textContent="오답! 내 차례가 유지됩니다. 다른 선을 선택하세요.";}pendingDotLine=null;};box.append(b);});
+    $o("onlineExplain").textContent="";$o("onlineNext").hidden=true;$o("onlinePlayStatus").textContent="선을 연결하려면 자료를 읽고 정답을 선택하세요!";
+  }
   function resetOnline() {
     roomCode = ""; isHost = false; showPanel("lobby"); $o("onlineJoinArea").hidden = true;
     if (sock) { sock.disconnect(); sock = null; }
@@ -1251,12 +1264,12 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     sock.on("room:closed", m => { alert(m); resetOnline(); });
     sock.on("game:started", r => {
       showPanel("play"); myScore = 0; opponentScore = 0; renderOnlineScores();
-      if(onlineMode==="dots"){$o("onlineQuizArea").hidden=true;$o("onlineDotsArea").hidden=false;$o("onlinePlayStatus").textContent="도트 앤 박스 대전";return;}
+      if(onlineMode==="dots"){$o("onlineQuizArea").hidden=false;$o("onlineDotsArea").hidden=false;onlineTopic="가짜 판별";onlinePool=getOnlinePool("가짜 판별");onlineIndex=0;$o("onlineQuestion").textContent="게임판에서 빈 선을 선택하면 자료 판별 문제가 나옵니다.";$o("onlineOptions").replaceChildren();$o("onlineExplain").textContent="";$o("onlinePlayStatus").textContent="선을 누르고 문제를 풀어 정답이면 선을 연결하세요.";return;}
       $o("onlineQuizArea").hidden=false;$o("onlineDotsArea").hidden=true;
       if (isHost) { onlinePool = getOnlinePool(onlineTopic); onlineIndex = 0; sendQuestion(); }
       else $o("onlinePlayStatus").textContent = "방장이 문제를 준비하고 있습니다…";
     });
-    sock.on("dots:state", state => { if(onlineMode==="dots") drawOnlineDots(state); });
+    sock.on("dots:state", state => { if(onlineMode==="dots") { drawOnlineDots(state); if(state.turn!==state.you)dotsQuestionActive=false; } });
     sock.on("dots:ended", state => { if(onlineMode==="dots"){drawOnlineDots(state);$o("onlineDotsStatus").textContent=`게임 종료! 나 ${state.scores[state.you]}칸 · 상대 ${state.scores[1-state.you]}칸`;}});
     sock.on("game:question", qn => {
       answered = false;
