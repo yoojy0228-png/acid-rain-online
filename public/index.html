@@ -1230,9 +1230,11 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
   function chooseOnlineDotLine(e){
     if(!dotsState||dotsState.turn!==dotsState.you||dotsState.finished||dotsQuestionActive)return;
     const canvas=$o("onlineDotsCanvas"),rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*640,y=(e.clientY-rect.top)/rect.height*640,n=dotsState.size||4,pad=42,step=(640-pad*2)/n;let best=null,dist=1e9;
-    for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const k=`h-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=Math.hypot(x-(pad+(c+.5)*step),y-(pad+r*step));if(d<dist){dist=d;best=k;}}
-    for(let r=0;r<n;r++)for(let c=0;c<=n;c++){const k=`v-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=Math.hypot(x-(pad+c*step),y-(pad+(r+.5)*step));if(d<dist){dist=d;best=k;}}
-    if(dist>=step*.38||!best)return;
+    // 선의 가운데점까지 거리가 아니라 실제 선분까지의 최단거리로 판정
+    const segmentDistance=(px,py,x1,y1,x2,y2)=>{const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy;const t=len?Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)):0;return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));};
+    for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const k=`h-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=segmentDistance(x,y,pad+c*step,pad+r*step,pad+(c+1)*step,pad+r*step);if(d<dist){dist=d;best=k;}}
+    for(let r=0;r<n;r++)for(let c=0;c<=n;c++){const k=`v-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=segmentDistance(x,y,pad+c*step,pad+r*step,pad+c*step,pad+(r+1)*step);if(d<dist){dist=d;best=k;}}
+    if(dist>Math.max(18,step*.16)||!best)return;
     pendingDotLine=best;dotsQuestionActive=true;
     if(!onlinePool.length||onlineIndex>=onlinePool.length){onlinePool=getOnlinePool("가짜 판별");onlineIndex=0;}
     const q=onlinePool[onlineIndex++],order=Math.random()<.5?[0,1]:[1,0],opts=order.map(i=>q.a[i]),correct=order.indexOf(q.c);
