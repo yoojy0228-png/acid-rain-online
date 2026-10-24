@@ -173,19 +173,24 @@ footer{text-align:center;padding:1.6rem 0 .5rem;color:#7386a0;font-size:.85rem}
 .territory-board-wrap .muted{font-size:.85rem;line-height:1.5;margin:.7rem 0 0}
 .case-controls{display:flex;justify-content:flex-end;margin-top:.9rem}
 
-/* 온라인 대전 */
-#onlineOverlay{position:fixed;inset:0;z-index:99999;background:rgba(2,8,20,.88);display:flex;align-items:center;justify-content:center;padding:.9rem;overflow:auto}
+/* 온라인 대전: 전체 화면 + 밝은 테마 */
+#onlineOverlay{position:fixed;inset:0;z-index:99999;background:rgba(224,239,255,.97);display:flex;align-items:stretch;justify-content:stretch;padding:0;overflow:auto}
 #onlineOverlay[hidden]{display:none}
-.online-card{width:min(520px,100%);max-height:92dvh;overflow:auto;background:#0c1728;color:#edf7ff;border:1px solid #29d9ef;border-radius:18px;padding:1.25rem;box-shadow:0 0 35px #00d9ff22}
-.online-card h2{margin:0 0 .75rem;color:#45e6ff}
-.online-card input,.online-card select{width:100%;padding:.75rem;margin:.4rem 0 .6rem;border-radius:9px;border:1px solid #3c526c;background:#101f34;color:#fff;font-size:1rem}
-.online-card button{padding:.75rem;border-radius:9px;border:0;font-weight:800;margin:.25rem 0;white-space:normal}
-.online-primary{background:#35d9ee;color:#06111d}.online-secondary{background:#24364c;color:#f1f7ff}
+.online-card{width:100%;height:100dvh;max-height:none;overflow:auto;background:linear-gradient(180deg,#ffffff 0%,#f1f7ff 100%);color:#172b45;border:0;border-radius:0;padding:clamp(.8rem,2vw,1.5rem);box-shadow:none;box-sizing:border-box}
+.online-card h2{margin:0 0 .75rem;color:#126b86;font-size:clamp(1.5rem,2.5vw,2.1rem)}
+.online-card input,.online-card select{width:100%;box-sizing:border-box;padding:.75rem;margin:.4rem 0 .6rem;border-radius:9px;border:1px solid #b9cce2;background:#fff;color:#172b45;font-size:1rem}
+.online-card button{padding:.75rem;border-radius:9px;border:1px solid #c6d5e7;font-weight:800;margin:.25rem 0;white-space:normal}
+.online-primary{background:#16b8c9;color:#062d3a;border-color:#0b9cae!important}.online-secondary{background:#e7eef8;color:#203b59}
 .online-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
-.online-score{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;padding:.75rem;background:#14243a;border-radius:10px;margin:.6rem 0}
-.online-option{display:block;width:100%;text-align:left;background:#172b45;color:#fff;border:1px solid #41617e!important;margin:.5rem 0!important;min-height:3.4rem}
-.online-status{padding:.65rem;border-radius:8px;background:#10233a;color:#bdeeff;white-space:pre-wrap}
-.online-small{font-size:.85rem;color:#a9bfd4}
+.online-score{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;padding:.75rem;background:#e2efff;border:1px solid #c5d8ee;color:#173b5e;border-radius:10px;margin:.6rem 0}
+.online-option{display:block;width:100%;text-align:left;background:#fff;color:#173b5e;border:2px solid #b7cbe2!important;margin:.5rem 0!important;min-height:3.4rem}
+.online-option:hover{background:#e8f8ff;border-color:#20a9c0!important}
+.online-status{padding:.75rem;border-radius:8px;background:#e5f5ff;border:1px solid #c0e0f2;color:#164765;white-space:pre-wrap}
+.online-small{font-size:.9rem;color:#526b85}
+#onlineDotsCanvas{width:min(100%,min(78vh,900px))!important;max-width:900px!important;max-height:78vh;background:#fff!important;border:2px solid #c6d8e9;box-shadow:0 4px 18px #284e7112}
+#onlinePlay{max-width:1500px;margin:0 auto}
+#onlineQuestion{font-size:clamp(1.25rem,2vw,1.8rem);line-height:1.4;background:#fff;border:1px solid #c8d8e8;border-radius:12px;padding:1rem;color:#172b45}
+@media(min-width:900px){#onlineDotsArea:not([hidden]){display:grid;grid-template-columns:minmax(300px,1fr) minmax(300px,1fr);align-items:start;gap:1rem}#onlineDotsArea:not([hidden]) #onlineDotsCanvas{grid-column:1;grid-row:1 / span 3;width:100%!important;max-height:72vh}#onlineDotsArea:not([hidden]) #onlineDotsStatus{grid-column:2}}
 
 @media(max-width:760px){
   .territory-layout{grid-template-columns:1fr}
