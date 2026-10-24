@@ -5,489 +5,296 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>리터러버</title>
 <style>
-:root{--bg:#f2f7ff;--panel:#ffffff;--line:#c9d8ee;--cyan:#00a99a;--pink:#e84f91;--yellow:#b87900}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(ellipse at top,#ffffff,#e8f2ff 70%);color:#20324b;font-family:Arial,"Malgun Gothic",sans-serif}
+/* 리터러버 – 정리된 스타일 (모든 글씨는 rem 기준, 메뉴의 글씨 크기 조절이 --fs 값을 바꿉니다) */
+:root{--fs:1;--bg:#f2f7ff;--panel:#fff;--line:#c9d8ee;--cyan:#00a99a;--pink:#e84f91;--yellow:#b87900;--ink:#20324b;--sub:#647994}
+*,*::before,*::after{box-sizing:border-box}
+html{font-size:calc(16px*var(--fs))}
+body{margin:0;background:radial-gradient(ellipse at top,#fff,#e8f2ff 70%);color:var(--ink);font-family:Arial,"Malgun Gothic",sans-serif;font-size:1.1rem;-webkit-text-size-adjust:100%;overflow-x:hidden}
 button{font:inherit;cursor:pointer}button:disabled{cursor:default}
-.app{max-width:900px;margin:auto;padding:16px}
-header{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:12px 0 20px;border-bottom:1px solid var(--line)}
-.logo{flex:1;min-width:0;display:flex;align-items:baseline;gap:clamp(8px,2vw,22px);white-space:nowrap;font-size:clamp(30px,5vw,48px);font-weight:900;letter-spacing:clamp(1px,.35vw,4px);color:var(--cyan);line-height:1.1}
-.logo small{display:inline;font-size:clamp(16px,2.5vw,25px);color:#617895;letter-spacing:clamp(1px,.25vw,3px);margin:0}
+h1,h2,h3,p,label,span{overflow-wrap:anywhere}
+.app{max-width:900px;margin:auto;padding:1rem}
+header{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.75rem 0 1.25rem;border-bottom:1px solid var(--line)}
+.logo{flex:1;min-width:0;white-space:nowrap;font-size:clamp(1.8rem,5vw,3rem);font-weight:900;letter-spacing:.1em;color:var(--cyan);line-height:1.1}
 .screen{display:none}.screen.active{display:block}
-/* 시작 시 표시되는 규칙 안내 포스터 */
-.rules-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(10,14,20,.88)}
-.rules-overlay[hidden]{display:none}
-.rules-poster{position:relative;width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;color:#20324b;border:3px double #c9d8ee;outline:1px solid #c9d8ee;outline-offset:-10px;padding:clamp(24px,5vw,48px);box-shadow:0 18px 60px #0008}
-.poster-title{text-align:center;border:2px solid #c9d8ee;background:#edf4ff;color:#20324b;padding:12px 8px;margin:8px auto 26px;font-size:clamp(22px,5vw,36px);font-weight:900;letter-spacing:1px}
-.poster-section{color:#007f73;font-size:22px;margin:22px 0 10px}
-.poster-rule{font-size:clamp(13px,2.5vw,17px);font-weight:700;line-height:1.8;margin:10px 0;color:#20324b}
-.poster-note{font-size:12px;color:#647994;line-height:1.7;margin:3px 0 12px}.poster-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:28px}.poster-actions button{min-width:135px}
-.rules-button{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#e7effb;color:#20324b;font-weight:700}
+.eyebrow{color:var(--cyan);letter-spacing:.2em;font-size:.8rem;margin:.4rem 0}
+h1{font-size:clamp(1.7rem,6vw,2.7rem);line-height:1.35;margin:.3em 0}
+h2{font-size:1.5rem}
+.muted{font-size:1rem;color:var(--sub);line-height:1.8}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.25rem;margin:1.1rem 0}
+.label{display:block;color:var(--sub);font-size:1rem;margin-bottom:.7rem}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}.choices.two{grid-template-columns:repeat(2,1fr)}.choices.four{grid-template-columns:repeat(2,1fr)}
+.choice{padding:.8rem .3rem;border-radius:9px;border:1px solid var(--line);background:#edf4ff;color:var(--ink);font-size:1.1rem}
+.choice.selected{border:2px solid var(--cyan);background:#d9f7f4;color:#075e58;box-shadow:0 0 0 3px #00a99a25;font-weight:900}
+.choice.selected::after{content:" ✓";}
+#modeScreen .choice{min-height:5.5rem;font-size:1.4rem;font-weight:800}
+.primary{padding:.85rem 1.25rem;background:var(--cyan);border:0;border-radius:9px;color:#fff;font-weight:900;font-size:1.1rem}
+.secondary{padding:.7rem 1rem;background:#e7effb;color:var(--ink);border:1px solid var(--line);border-radius:9px;font-size:1.1rem}
+.row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+
+/* 메뉴 */
 .menu-wrap{position:relative}
 .menu-toggle{width:48px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 3px 10px #20324b12}
-.menu-toggle span{display:block;width:23px;height:3px;background:#20324b;border-radius:3px}
-.menu-dropdown{position:absolute;right:0;top:52px;z-index:1000;width:190px;padding:10px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px #20324b25;display:grid;gap:8px}
+.menu-toggle span{display:block;width:23px;height:3px;background:var(--ink);border-radius:3px}
+.menu-dropdown{position:absolute;right:0;top:52px;z-index:1000;width:14rem;padding:.6rem;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px #20324b25;display:grid;gap:.5rem}
 .menu-dropdown[hidden]{display:none}
-.menu-dropdown button{width:100%;text-align:left;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#edf4ff;color:#20324b;font-weight:700}
-h1{font-size:clamp(28px,6vw,44px);line-height:1.35}h2{font-size:20px}
-.muted{font-size:13px;color:#647994;line-height:1.8}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}
-.setup{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-.label{display:block;color:#647994;font-size:12px;margin-bottom:10px}
-.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.choices.two{grid-template-columns:repeat(2,1fr)}
-.choice{padding:12px 5px;border-radius:9px;border:1px solid var(--line);background:#edf4ff;color:#20324b;font-size:12px}
-.choice.selected{border:2px solid var(--cyan);background:#d9f7f4;color:#075e58;box-shadow:0 0 0 3px #00a99a25;font-weight:900;position:relative}
-#modeScreen .choice.selected::after{content:"✓ 선택됨";display:block;font-size:13px;margin-top:8px;color:#087f75}
-#modeScreen .choice{min-height:100px;font-size:22px;font-weight:800}
-#modeScreen .choice[data-ai-count]{font-size:clamp(18px,4vw,24px);min-height:78px}
-/* Large colorful topic cards inspired by the requested reference. */
-#home .panel{background:transparent;border:0;padding:0;margin:22px 0}
-#home .label{font-size:clamp(18px,2.2vw,26px);font-weight:900;color:#20324b;margin:0 0 18px}
-#topics{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,1.8vw,22px)}
-#topics .choice{min-height:290px;padding:clamp(20px,2.5vw,32px);font-size:clamp(20px,2.4vw,30px);font-weight:900;text-align:left;border:0;border-radius:28px;color:white;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:12px;box-shadow:0 12px 20px #1c355322;transition:transform .16s,filter .16s;white-space:normal}
-#topics .choice:hover{transform:translateY(-3px);filter:brightness(1.04)}
-#topics .choice::before{font-size:clamp(42px,4.2vw,58px);line-height:1.25;margin-bottom:2px}
-#topics .choice:nth-child(1){background:linear-gradient(135deg,#4d8cf4,#2e63c9)}
-#topics .choice:nth-child(1)::before{content:"📖"}
-#topics .choice:nth-child(1)::after{content:"헷갈리는 낱말 바로잡기\A 산성비 퀴즈"}
-#topics .choice:nth-child(2){background:linear-gradient(135deg,#f05d9d,#d53280)}
-#topics .choice:nth-child(2)::before{content:"🔎"}
-#topics .choice:nth-child(2)::after{content:"진짜·가짜 맞히고 땅 차지\A 땅따먹기"}
-#topics .choice:nth-child(3){background:linear-gradient(135deg,#10b9aa,#00988c)}
-#topics .choice:nth-child(3)::before{content:"🤖"}
-#topics .choice:nth-child(3)::after{content:"AI 앞에서 책임 있는 선택\A 산성비 퀴즈"}
-#topics .choice::after{white-space:pre-line;font-size:clamp(14px,1.7vw,20px);font-weight:500;line-height:1.55;margin-top:0}
-#topics .choice.selected{border:0;color:white;box-shadow:0 12px 20px #1c355322;font-weight:900}
-#topics .choice:nth-child(1).selected{background:linear-gradient(135deg,#4d8cf4,#2e63c9)}
-#topics .choice:nth-child(2).selected{background:linear-gradient(135deg,#f05d9d,#d53280)}
-#topics .choice:nth-child(3).selected{background:linear-gradient(135deg,#10b9aa,#00988c)}
-@media(max-width:700px){#topics{grid-template-columns:1fr}#topics .choice{min-height:190px;padding:24px;border-radius:20px}#topics .choice::before{font-size:42px}}
-.primary{padding:14px 20px;background:var(--cyan);border:0;border-radius:9px;color:#ffffff;font-weight:900}
-.secondary{padding:11px 15px;background:#e7effb;color:#20324b;border:1px solid var(--line);border-radius:9px}
-.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.rule{padding:13px;border:1px solid var(--line);border-radius:10px;background:#f5f8ff}
-.rule b{display:block;color:var(--yellow);font-size:13px;margin-bottom:7px}.rule span{font-size:12px;color:#647994;line-height:1.6}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 12px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
-.stat span{display:block;font-size:11px;color:#647994;margin-bottom:7px}.stat strong{font-size:20px}
-.battle{display:none;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.battle.show{display:grid}
-.bcard{padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-size:12px}.bcard strong{float:right;color:var(--cyan);font-size:17px}.bcard.ai strong{color:var(--pink)}
+.menu-dropdown>button{width:100%;text-align:left;padding:.65rem .75rem;border:1px solid var(--line);border-radius:8px;background:#edf4ff;color:var(--ink);font-weight:700;font-size:1rem}
+#fontSizeControl{display:grid;gap:.5rem;padding:.4rem .1rem .1rem;font-size:.9rem}
+.font-size-label{font-weight:800}
+.font-size-buttons{display:flex;gap:.3rem}
+.font-size-buttons button{flex:1;padding:.5rem .3rem;background:#edf4ff;color:var(--ink);border:1px solid var(--line);border-radius:8px;font-weight:800;font-size:.9rem}
+
+/* 규칙 포스터 */
+.rules-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(10,14,20,.88)}
+.rules-overlay[hidden]{display:none}
+.rules-poster{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;color:var(--ink);border:3px double var(--line);padding:clamp(1.4rem,5vw,3rem);box-shadow:0 18px 60px #0008}
+.poster-title{text-align:center;border:2px solid var(--line);background:#edf4ff;padding:.7rem .5rem;margin:.5rem auto 1.6rem;font-size:clamp(1.5rem,5.5vw,2.4rem);font-weight:900}
+.poster-section{color:#007f73;font-size:1.6rem;margin:1.4rem 0 .6rem}
+.poster-rule{font-size:clamp(1.05rem,3vw,1.4rem);font-weight:700;line-height:1.8;margin:.6rem 0}
+.poster-note{font-size:1rem;color:var(--sub);line-height:1.7;margin:.2rem 0 .8rem}
+.poster-actions{display:flex;justify-content:center;gap:.6rem;flex-wrap:wrap;margin-top:1.8rem}
+
+/* 그림으로 보는 규칙 */
+.rule-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1rem .8rem;margin:.9rem 0 1rem}
+.rule-step{position:relative;border:1px solid var(--line);border-radius:14px;padding:.8rem .7rem .7rem;background:#f8fbff;display:flex;flex-direction:column;gap:.4rem}
+.rule-num{position:absolute;top:-.6rem;left:-.4rem;width:1.8rem;height:1.8rem;border-radius:50%;background:var(--cyan);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 2px 6px #0003}
+.rule-fig{display:flex;align-items:center;justify-content:center;min-height:7.5rem}
+.rule-fig svg{width:100%;max-width:9rem;height:auto}
+.rule-fig.keys{flex-direction:column;gap:.5rem;min-height:0;margin:.6rem 0}
+.rule-step b{font-size:1.1rem}
+.rule-step .t{font-size:.95rem;color:var(--sub);line-height:1.5}
+.mini-arena{position:relative;width:100%;height:9rem;border:1px solid #cbd9ea;background:#f4f8ff;border-radius:10px;overflow:hidden}
+.mini-q{position:absolute;top:.3rem;left:.4rem;right:.4rem;background:#fff;border:1px solid #cbd9ea;border-radius:7px;font-size:.78rem;padding:.25rem;text-align:center;font-weight:700}
+.mini-card{position:absolute;width:42%;height:2rem;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:.82rem;font-weight:800;background:#d9f7f4;border:1px solid var(--cyan);color:#17354a}
+.mini-card::before{content:"";position:absolute;top:-.7rem;left:50%;width:2px;height:.6rem;background:var(--cyan)}
+.mini-card.a{left:4%}
+.mini-card.b{right:4%;background:#ffe3ef;border-color:var(--pink)}
+.mini-card.b::before{background:var(--pink)}
+.mini-card.ok{box-shadow:0 0 0 3px #00a99a55;background:#b8f0e9}
+.mini-mark{position:absolute;left:50%;transform:translateX(-50%);font-size:1.3rem}
+.mini-floor{position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--pink);box-shadow:0 0 8px var(--pink)}
+.mini-arena.late .mini-floor{height:6px}
+.mini-quiz{width:100%;border:1px solid #cbd9ea;border-radius:10px;background:#fff;padding:.6rem}
+.mini-quiz-text{font-size:.9rem;font-weight:700;line-height:1.4;margin-bottom:.5rem;text-align:center}
+.mini-btns{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.mini-btns i{font-style:normal;font-size:.8rem;font-weight:800;text-align:center;padding:.4rem .1rem;border-radius:8px;background:var(--cyan);color:#fff}
+.mini-btns i.f{background:#d94678;box-shadow:0 0 0 3px #d9467855}
+.trophy{font-size:3.2rem;text-align:center;line-height:1.1}
+.mini-score{display:flex;gap:.8rem;justify-content:center;font-size:1rem;margin-top:.3rem}
+.hearts-fig{text-align:center;font-size:1.3rem;color:var(--pink);line-height:1.5}
+.hearts-fig small{display:block;font-size:.8rem;color:var(--sub)}
+.hearts-fig .arr{font-size:.95rem;color:var(--ink);font-weight:800;margin:.1rem 0}
+.hearts-fig .lost{color:#aab6c8}
+.bars{width:100%;display:grid;gap:.5rem}
+.bar-row{display:grid;grid-template-columns:2rem 1fr 2rem;align-items:center;gap:.4rem;font-size:.9rem;font-weight:800}
+.bar{height:1rem;background:#e3ecf8;border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:9px}
+.bar-row em{font-style:normal;text-align:right}
+.goal{font-size:.85rem;text-align:center;color:var(--ink);font-weight:800}
+.speed{font-size:2.4rem;text-align:center}.speed span{font-size:1.6rem;color:var(--sub)}
+.key-row{display:flex;align-items:center;justify-content:center;gap:.4rem}
+.key-row em{font-style:normal;font-size:1rem;color:var(--sub);margin-left:.4rem}
+.key-cap{display:inline-flex;align-items:center;justify-content:center;min-width:2.4rem;height:2.4rem;border:2px solid #9fb2cc;border-bottom-width:5px;border-radius:8px;background:#fff;font-weight:900;font-size:1.1rem}
+
+/* 홈 – 주제 카드 */
+.topic-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(.8rem,1.8vw,1.4rem)}
+.topic-card{min-height:18rem;padding:clamp(1.2rem,2.5vw,2rem);border:0;border-radius:28px;color:#fff;display:flex;flex-direction:column;align-items:flex-start;gap:.7rem;text-align:left;box-shadow:0 12px 20px #1c355322;transition:transform .16s,filter .16s}
+.topic-card:hover{transform:translateY(-3px);filter:brightness(1.04)}
+.topic-card .ic{font-size:3rem;line-height:1.2}
+.topic-card b{font-size:clamp(1.3rem,2.4vw,1.9rem);font-weight:900}
+.topic-card small{font-size:clamp(.95rem,1.7vw,1.2rem);line-height:1.55;font-weight:500}
+.c1{background:linear-gradient(135deg,#4d8cf4,#2e63c9)}.c2{background:linear-gradient(135deg,#f05d9d,#d53280)}.c3{background:linear-gradient(135deg,#10b9aa,#00988c)}
+#home .label{font-size:1.5rem;font-weight:900;color:var(--ink);margin-bottom:1rem}
+#home .panel{background:transparent;border:0;padding:0}
+#onlineEntry{margin-top:.8rem;width:100%;padding:.9rem;border:1px solid #27d9f2;border-radius:12px;background:linear-gradient(135deg,#102a45,#16213a);color:#eafaff;font-weight:800;font-size:1.05rem}
+
+/* 산성비 */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1.1rem 0 .7rem}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.7rem}
+.stat span{display:block;font-size:.9rem;color:var(--sub);margin-bottom:.4rem}.stat strong{font-size:1.6rem}
+.battle{display:none;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.7rem}.battle.show{display:grid}
+.bcard{padding:.7rem;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-size:1rem}.bcard strong{float:right;color:var(--cyan);font-size:1.4rem}.bcard.ai strong{color:var(--pink)}
+.bcard small{display:block;color:var(--sub);margin-top:.5rem}
 .arena{height:475px;position:relative;overflow:hidden;border:1px solid #cbd9ea;border-radius:14px;background:#f4f8ff}
-.arena:before{content:none}
 .question-area{position:absolute;top:8px;left:12px;right:12px;text-align:center;z-index:2}
-.topic{display:inline-block;color:var(--cyan);border:1px solid #315e62;border-radius:20px;padding:6px 10px;font-size:10px;letter-spacing:2px}
-#question{font-size:clamp(16px,3.5vw,23px);font-weight:bold;line-height:1.45;margin:12px auto 8px;max-width:750px;padding:14px 20px;background:#fff;color:#20324b;border:1px solid #cbd9ea;border-radius:12px;box-shadow:0 3px 12px #20324b12;white-space:normal;overflow-wrap:break-word;word-break:normal;min-width:0}
-#subquestion{font-size:11px;color:#647994}
+.topic{display:inline-block;color:var(--cyan);border:1px solid #315e62;border-radius:20px;padding:.3rem .65rem;font-size:.9rem;letter-spacing:.1em}
+#question{font-size:clamp(1.2rem,4.2vw,1.8rem);font-weight:bold;line-height:1.45;margin:.7rem auto .5rem;max-width:750px;padding:.8rem 1.2rem;background:#fff;border:1px solid #cbd9ea;border-radius:12px;box-shadow:0 3px 12px #20324b12}
+#subquestion{font-size:1rem;color:var(--sub)}
 .lanes{position:absolute;top:205px;bottom:24px;left:0;right:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px}
 .lane{position:relative;min-width:0;border-left:1px dashed #52617b55;border-right:1px dashed #52617b55}
-.lane-label{text-align:center;color:#647994;font-size:10px}
-.answer{position:absolute;top:30px;left:4%;width:92%;min-height:84px;padding:14px 7px;display:flex;align-items:center;justify-content:center;color:#17354a;background:#d9f7f4;border:1px solid var(--cyan);border-radius:11px;box-shadow:0 0 18px #00a99a25}
+.lane-label{text-align:center;color:var(--sub);font-size:.9rem}
+.answer{position:absolute;top:30px;left:4%;width:92%;min-height:84px;padding:.9rem .4rem;display:flex;align-items:center;justify-content:center;color:#17354a;background:#d9f7f4;border:1px solid var(--cyan);border-radius:11px;box-shadow:0 0 18px #00a99a25}
 .answer.pink{background:#ffe3ef;border-color:var(--pink);box-shadow:0 0 18px #e84f9125}
-.answer .txt{font-size:clamp(12px,2vw,15px);font-weight:bold;line-height:1.5;overflow-wrap:anywhere}
-.key{position:absolute;top:5px;left:7px;font-size:10px;color:var(--cyan)}.pink .key{color:var(--pink)}
+.answer .txt{font-size:clamp(1.05rem,2.7vw,1.4rem);font-weight:bold;line-height:1.5}
+.key{position:absolute;top:5px;left:7px;font-size:.9rem;color:var(--cyan)}.pink .key{color:var(--pink)}
 .rain-tail{position:absolute;top:-48px;left:50%;height:43px;width:3px;background:linear-gradient(transparent,var(--cyan));box-shadow:0 0 8px var(--cyan);pointer-events:none}
 .pink .rain-tail{background:linear-gradient(transparent,var(--pink));box-shadow:0 0 8px var(--pink)}
 .floor{position:absolute;bottom:0;left:0;right:0;height:5px;background:var(--pink);box-shadow:0 0 17px var(--pink)}
 .progress{height:4px;background:#d8e4f5;margin-top:12px;border-radius:5px;overflow:hidden}#progressFill{height:100%;width:0;background:var(--cyan)}
-.feedback{text-align:center;min-height:38px;padding:10px 0;font-size:13px;color:var(--yellow)}
-.controls{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.results{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
-.result{padding:12px 8px;background:#f4f8ff;border:1px solid var(--line);border-radius:10px}
-.result span{display:block;font-size:11px;color:#647994;margin-bottom:8px}.result strong{font-size:20px;color:var(--cyan)}
-.review-list{display:grid;gap:10px}.review{background:#f4f8ff;border:1px solid var(--line);border-radius:10px;padding:14px}
-.review h3{font-size:14px;line-height:1.6}.review p{font-size:13px;line-height:1.7;overflow-wrap:anywhere}
-.wrong{color:var(--pink)}.correct{color:var(--cyan)}.explain{border-top:1px solid var(--line);padding-top:8px;color:#526780}
-.empty{text-align:center;padding:20px;color:#647994}
-footer{text-align:center;padding:25px 0 8px;color:#7386a0;font-size:10px}
-@media(max-width:600px){.setup{grid-template-columns:1fr}.panel{padding:15px}.rules{grid-template-columns:1fr}.rule{padding:10px 12px}.arena{height:460px}.lanes{top:195px;padding:0 6px;gap:6px}.answer{left:2%;width:96%;padding:13px 4px}.stats{gap:5px}.stat{padding:10px 6px}.stat strong{font-size:16px}.results{gap:5px}.result{padding:10px 5px}.result strong{font-size:17px}}
+.feedback{text-align:center;min-height:2.4rem;padding:.6rem 0;font-size:1.1rem;color:var(--yellow)}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap}
 
-/* 전체 글씨 크기 확대: 게임 기능과 배치는 유지 */
-body{font-size:18px}
-.logo{font-size:27px}
-.logo small{font-size:12px}
-.poster-title{font-size:clamp(28px,5.5vw,42px)}
-.poster-section{font-size:28px}
-.poster-rule{font-size:clamp(17px,3vw,22px)}
-.poster-note{font-size:15px}
-.rules-button{font-size:16px}
-h2{font-size:25px}
-.muted{font-size:16px}
-.label{font-size:15px}
-.choice{font-size:16px}
-.primary,.secondary{font-size:17px}
-.rule b{font-size:16px}
-.rule span{font-size:15px}
-.stat span{font-size:14px}
-.stat strong{font-size:25px}
-.bcard{font-size:15px}
-.bcard strong{font-size:21px}
-.topic{font-size:13px}
-#question{font-size:clamp(20px,4vw,28px)}
-#subquestion{font-size:15px}
-.lane-label{font-size:13px}
-.answer .txt{font-size:clamp(16px,2.5vw,20px)}
-.key{font-size:13px}
-.feedback{font-size:16px}
-.result span{font-size:14px}
-.result strong{font-size:25px}
-.review h3{font-size:18px}
-.review p{font-size:16px}
-.empty{font-size:16px}
-footer{font-size:12px}
-header .row span{font-size:14px !important}
-#home>p[style],#result>p[style]{font-size:14px !important}
-.controls .muted,.app .row .muted{font-size:14px !important}
-@media(max-width:600px){
-  .logo{font-size:clamp(23px,6vw,32px);gap:7px;letter-spacing:1px}
-  .logo small{font-size:clamp(12px,3.2vw,17px);letter-spacing:1px}
-  h2{font-size:23px}
-  .choice{font-size:15px}
-  .stat span{font-size:13px}
-  .stat strong{font-size:20px}
-  .result span{font-size:13px}
-  .result strong{font-size:20px}
-  .answer .txt{font-size:clamp(15px,3.5vw,18px)}
-}
+/* 결과 */
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1.1rem 0}
+.result{padding:.7rem .5rem;background:#f4f8ff;border:1px solid var(--line);border-radius:10px}
+.result span{display:block;font-size:.95rem;color:var(--sub);margin-bottom:.5rem}.result strong{font-size:1.7rem;color:var(--cyan)}
+.review-list{display:grid;gap:.6rem}.review{background:#f4f8ff;border:1px solid var(--line);border-radius:10px;padding:.9rem}
+.review h3{font-size:1.2rem;line-height:1.6;margin:.2rem 0}.review p{font-size:1.05rem;line-height:1.7;margin:.3rem 0}
+.wrong{color:var(--pink)}.correct{color:var(--cyan)}.explain{border-top:1px solid var(--line);padding-top:.5rem;color:#526780}
+.empty{text-align:center;padding:1.2rem;color:var(--sub)}
+footer{text-align:center;padding:1.6rem 0 .5rem;color:#7386a0;font-size:.85rem}
 
-
-/* 글씨 크기 추가 확대 */
-body{font-size:20px}
-.logo{font-size:clamp(30px,5vw,48px)}
-.logo small{font-size:clamp(16px,2.5vw,25px)}
-.poster-title{font-size:clamp(30px,5.8vw,44px)}
-.poster-section{font-size:30px}
-.poster-rule{font-size:clamp(19px,3.2vw,24px)}
-.poster-note{font-size:17px}
-.rules-button{font-size:18px}
-h2{font-size:27px}
-.muted{font-size:18px}
-.label{font-size:17px}
-.choice{font-size:18px}
-.primary,.secondary{font-size:19px}
-.rule b{font-size:18px}
-.rule span{font-size:17px}
-.stat span{font-size:16px}
-.stat strong{font-size:27px}
-.bcard{font-size:17px}
-.bcard strong{font-size:23px}
-.topic{font-size:15px}
-#question{font-size:clamp(22px,4.2vw,30px)}
-#subquestion{font-size:17px}
-.lane-label{font-size:15px}
-.answer .txt{font-size:clamp(18px,2.7vw,22px)}
-.key{font-size:15px}
-.feedback{font-size:18px}
-.result span{font-size:16px}
-.result strong{font-size:27px}
-.review h3{font-size:20px}
-.review p{font-size:18px}
-.empty{font-size:18px}
-footer{font-size:14px}
-header .row span{font-size:16px !important}
-#home>p[style],#result>p[style]{font-size:16px !important}
-.controls .muted,.app .row .muted{font-size:16px !important}
-@media(max-width:600px){
-  .logo{font-size:clamp(23px,6vw,32px);gap:7px;letter-spacing:1px}
-  .logo small{font-size:clamp(12px,3.2vw,17px);letter-spacing:1px}
-  h2{font-size:25px}
-  .choice{font-size:17px}
-  .stat span{font-size:14px}
-  .stat strong{font-size:22px}
-  .result span{font-size:14px}
-  .result strong{font-size:22px}
-  .answer .txt{font-size:clamp(17px,3.7vw,20px)}
-}
-
-
-/* 삼선 메뉴 안 글씨 크기 조절 */
-#fontSizeControl{display:grid;gap:8px;padding:7px 2px 2px;color:#20324b;font-size:14px}
-#fontSizeControl .font-size-label{font-weight:800}
-#fontSizeControl .font-size-buttons{display:flex;gap:5px}
-#fontSizeControl .font-size-buttons button{flex:1;min-width:0;text-align:center;padding:8px 5px;background:#edf4ff;color:#20324b;border:1px solid var(--line);border-radius:8px;font-size:14px;font-weight:800}
-#fontSizeControl .font-size-buttons button:hover{background:#dbeafe}
-
-/* 가짜 판별 추리 모드 */
-.case-kicker{color:var(--cyan);letter-spacing:3px;font-size:13px;font-weight:800;margin:8px 0}
-.case-top{display:flex;gap:12px;justify-content:space-between;margin:20px 0}
-.case-top>div{flex:1;background:#111c2a;border:1px solid #29455a;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:5px}
-.case-top strong{font-size:24px;color:var(--cyan)}
-.case-small{font-size:13px;color:#9db1c9}
-.case-panel{background:linear-gradient(150deg,#101b29,#0d131d);border:1px solid #31506a;border-radius:18px;padding:clamp(18px,3vw,30px);box-shadow:0 12px 34px #0003}
-.case-badge{display:inline-block;background:#173a43;color:#8cecff;border:1px solid #2c6872;border-radius:20px;padding:6px 12px;font-size:13px;font-weight:800}
-.case-panel h2{font-size:clamp(25px,4vw,34px);margin:14px 0 8px}
-.case-story{font-size:19px;line-height:1.7;color:#e5edf7}
-.case-panel h3{font-size:21px;margin:25px 0 8px}
-.case-hint{font-size:15px}
-.evidence-list,.suspect-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
-.evidence-card,.suspect-card{display:flex;gap:10px;align-items:flex-start;text-align:left;background:#172334;color:#edf5ff;border:1px solid #354b64;border-radius:12px;padding:15px;cursor:pointer;font:inherit;line-height:1.55;min-width:0}
-.evidence-card.selected,.suspect-card.selected{border-color:#63e4f6;background:#183744;box-shadow:0 0 0 1px #63e4f6}
-.evidence-card input{margin-top:5px;accent-color:#63e4f6;flex-shrink:0}
-.evidence-card b,.suspect-card b{display:block;font-size:16px;margin-bottom:5px;color:#fff}
-.evidence-card span,.suspect-card span{font-size:15px;color:#c4d1e1}
-.suspect-card{display:block}
-.suspect-card .suspect-role{font-size:13px;color:#90a8c3;display:block;margin-bottom:4px}
-.case-submit{margin-top:20px;width:100%;font-size:18px!important}
-.case-feedback{font-size:17px;line-height:1.7;margin-top:14px;white-space:pre-line}
-.case-feedback.success{color:#86f2c0}.case-feedback.fail{color:#ff9eae}
-.case-controls{display:flex;justify-content:flex-end;margin-top:14px}
-@media(max-width:620px){.evidence-list,.suspect-list{grid-template-columns:1fr}.case-top strong{font-size:20px}.case-story{font-size:17px}.evidence-card,.suspect-card{padding:13px}}
-
-
-/* 자료를 하나씩 열어 자세히 읽는 조사 화면 */
-.evidence-progress{font-size:15px;color:#9fefff;margin:14px 0 4px;font-weight:800}
-.evidence-card{position:relative;display:block;width:100%;min-height:128px;padding:17px 17px 15px 58px}
-.evidence-card:before{content:"📄";position:absolute;left:17px;top:20px;font-size:25px}
-.evidence-card .file-status{display:block;font-size:13px;color:#82d8e8;margin-top:9px;font-weight:800}
-.evidence-card .file-summary{display:block;font-size:14px;color:#8fa6c0;margin-top:7px}
-.evidence-card.read{border-color:#466a7b}
-.evidence-card.read:after{content:"✓ 읽음";position:absolute;right:12px;top:10px;color:#86f2c0;font-size:12px;font-weight:800}
-.evidence-card.marked{border-color:#f2bf72;background:#382d1d}
-.evidence-card.marked .file-status{color:#ffd58c}
-.evidence-workbench{margin-top:20px;padding:15px;border:1px dashed #3d5871;border-radius:12px;background:#0e1926}
-.evidence-mark-chip{display:inline-block;margin:5px 5px 0 0;border:1px solid #98713c;border-radius:8px;background:#302718;color:#ffe0a6;padding:6px 9px;font-size:14px}
-.evidence-modal{position:fixed;inset:0;z-index:10020;background:rgba(3,8,15,.88);display:flex;align-items:center;justify-content:center;padding:16px}
-.evidence-modal[hidden]{display:none}
-.evidence-paper{width:min(760px,100%);max-height:92vh;overflow:auto;background:#f3efe5;color:#1d2937;border-radius:14px;padding:clamp(18px,4vw,34px);box-shadow:0 22px 70px #0009;border:1px solid #d8cfbd}
-.paper-top{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#526275;font-size:13px;font-weight:900;letter-spacing:1px}
-.paper-top .secondary{font-size:14px;padding:8px 12px}
-.paper-counter{margin-top:25px;font-size:14px;color:#7c8998;font-weight:800}
-.evidence-paper h2{font-size:clamp(25px,4vw,34px);line-height:1.3;margin:8px 0 13px;color:#162435}
-.paper-stamp{display:inline-block;border:1px solid #a74d3d;color:#a74d3d;padding:5px 9px;font-size:12px;font-weight:900;letter-spacing:1px;transform:rotate(-1deg);margin-bottom:14px}
-.paper-main{font-size:19px;line-height:1.9;white-space:pre-line;color:#26384b;margin:8px 0 22px}
-.paper-detail-block{border-top:1px solid #d5d0c5;padding:14px 0 4px}
-.paper-detail-block b{font-size:15px;color:#334b62}
-.paper-detail-block p{font-size:16px;line-height:1.7;margin:6px 0 12px;color:#455568;white-space:pre-line}
-.mark-suspicious{display:flex;gap:12px;align-items:flex-start;margin:18px 0;padding:15px;border:1px solid #d0b278;border-radius:10px;background:#fff8e7;cursor:pointer}
-.mark-suspicious input{width:20px;height:20px;margin-top:2px;accent-color:#a86c19;flex-shrink:0}
-.mark-suspicious b{display:block;font-size:16px;color:#563e18}
-.mark-suspicious small{display:block;font-size:13px;line-height:1.5;color:#76664b;margin-top:4px}
-.paper-nav{display:flex;justify-content:space-between;gap:12px;margin-top:20px}
-.paper-nav button{font-size:16px!important}
-@media(max-width:620px){.evidence-card{min-height:110px;padding-left:52px}.evidence-card:before{left:13px}.paper-main{font-size:17px;line-height:1.8}.paper-nav{position:sticky;bottom:0;background:#f3efe5;padding-top:10px}}
-
-
-/* 추리게임 색상만 변경: 흰색 배경과 읽기 쉬운 어두운 글씨 */
-#mystery{background:#ffffff;color:#20324b}
-#mystery .case-top>div{background:#ffffff;border-color:#c9d8ee}
-#mystery .case-small{color:#647994}
-#mystery .case-panel{background:#ffffff;color:#20324b;border-color:#c9d8ee;box-shadow:0 12px 34px #20324b12}
-#mystery .case-badge{background:#edf4ff;color:#20324b;border-color:#c9d8ee}
-#mystery .case-story{color:#20324b}
-#mystery .evidence-card,#mystery .suspect-card{background:#ffffff;color:#20324b;border-color:#c9d8ee}
-#mystery .evidence-card b,#mystery .suspect-card b{color:#20324b}
-#mystery .evidence-card span,#mystery .suspect-card span{color:#526780}
-#mystery .evidence-card.selected,#mystery .suspect-card.selected{border-color:#00a99a;background:#f0fffc;box-shadow:0 0 0 1px #00a99a}
-#mystery .evidence-progress{color:#007f73}
-#mystery .evidence-card .file-status{color:#007f73}
-#mystery .evidence-card .file-summary{color:#647994}
-#mystery .evidence-card.read:after{color:#007f73}
-#mystery .evidence-card.marked{border-color:#b87900;background:#fff8e7}
-#mystery .evidence-card.marked .file-status{color:#805300}
-#mystery .evidence-workbench{background:#f8fbff;border-color:#c9d8ee}
-#mystery .evidence-mark-chip{border-color:#c9a45d;background:#fff8e7;color:#674b18}
-#evidenceModal{background:rgba(255,255,255,.94)}
-
-
-/* 가짜 판별 도트 앤 박스 모드 — 깔끔한 보드와 턴제 UI */
-#territory{background:#f4f7fb;color:#18243a}
-#territory .case-kicker{color:#087f8c!important;letter-spacing:.14em;font-weight:900}
-#territory h1{margin:4px 0 8px}
-#territory .territory-intro{color:#62718a;margin:0 0 16px;line-height:1.55}
-.territory-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin:14px 0}
-.territory-player{border:1px solid #dbe3ee;border-radius:13px;padding:11px 12px;background:#fff;display:flex;align-items:center;gap:8px;font-size:14px;min-width:0;box-shadow:0 2px 8px #263c5a08}
-.territory-ai-setup{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#f7fbff}.territory-ai-count{display:block;width:100%;margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}.territory-player strong{margin-left:auto;white-space:nowrap}.territory-player.active-player{border-color:var(--player-color);box-shadow:0 0 0 2px color-mix(in srgb,var(--player-color) 20%,white);background:color-mix(in srgb,var(--player-color) 5%,white)}
+/* 가짜 판별 – 도트 앤 박스 */
+#territory .eyebrow{color:#087f8c;font-weight:900}
+.territory-intro{color:#62718a;margin:0 0 1rem;line-height:1.55;font-size:1rem}
+.territory-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:.55rem;margin:.9rem 0}
+.territory-player{border:1px solid #dbe3ee;border-radius:13px;padding:.65rem .75rem;background:#fff;display:flex;align-items:center;gap:.5rem;font-size:.95rem;min-width:0}
+.territory-player strong{margin-left:auto;white-space:nowrap}
+.territory-player.active-player{border-color:var(--player-color);box-shadow:0 0 0 2px color-mix(in srgb,var(--player-color) 20%,white);background:color-mix(in srgb,var(--player-color) 5%,white)}
 .player-dot{width:12px;height:12px;border-radius:50%;background:var(--player-color);flex-shrink:0}
-.territory-ai-questions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
-.territory-ai-card{border:1px solid #dce4ef;border-radius:12px;background:#fff;padding:9px 11px;min-width:0;font-size:12px;color:#52627a}
-.territory-ai-card b{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:5px;color:#25354d}.territory-ai-card span{display:block;line-height:1.4;overflow-wrap:anywhere;min-height:32px}
-.territory-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.9fr);gap:16px;align-items:start}
-.territory-player-question{margin:0 0 14px}
-.territory-board-wrap{border:1px solid #dce4ef;border-radius:18px;padding:16px;background:#fff;min-width:0;box-shadow:0 8px 28px #233b5b0b}
-.territory-question{border:1px solid #dce4ef;border-radius:18px;padding:18px;background:#fff;min-width:0;box-shadow:0 8px 28px #233b5b0b}
+.territory-ai-questions{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.5rem;margin:.8rem 0}
+.territory-ai-card{border:1px solid #dce4ef;border-radius:12px;background:#fff;padding:.55rem .7rem;min-width:0;font-size:.85rem;color:#52627a}
+.territory-ai-card b{display:flex;justify-content:space-between;gap:.5rem;margin-bottom:.3rem;color:#25354d}
+.territory-ai-card span.q{display:block;line-height:1.4;min-height:2.2em}
+.territory-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(17rem,.9fr);gap:1rem;align-items:start}
+.territory-layout.wide{grid-template-columns:minmax(0,1fr)}
+.territory-board-wrap,.territory-question{border:1px solid #dce4ef;border-radius:18px;padding:1rem;background:#fff;min-width:0;box-shadow:0 8px 28px #233b5b0b}
+.territory-question{padding:1.1rem}
 .territory-board{width:100%;max-width:560px;margin:auto;aspect-ratio:1/1}
-.territory-layout.four-player{grid-template-columns:minmax(0,1fr)}
-.territory-layout.four-player .territory-board{max-width:760px}
-.territory-layout.four-player .territory-board-wrap{padding:20px}
+.territory-layout.wide .territory-board{max-width:760px}
 .territory-board svg{display:block;width:100%;height:100%;overflow:visible}
-.territory-question h2{font-size:clamp(21px,2.7vw,30px);line-height:1.35;min-height:92px;overflow-wrap:anywhere;margin:12px 0}
-.territory-turn{color:#087f8c;font-weight:900;margin:8px 0}
-.territory-answer-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-.territory-answer-row button{font-size:17px;min-height:48px}.territory-answer-row .fake-answer{background:#d94678}
-.territory-board-wrap .muted{font-size:13px;line-height:1.5;margin:12px 2px 0}
-.territory-board-legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;font-size:12px;color:#62718a;margin-top:10px}
-.territory-board-legend span{display:flex;align-items:center;gap:5px}.territory-board-legend i{display:inline-block;width:9px;height:9px;border-radius:50%}
-@media(max-width:760px){.territory-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.territory-ai-questions{grid-template-columns:1fr 1fr;gap:6px}.territory-layout{grid-template-columns:1fr}.territory-board-wrap{order:2}.territory-player-question{order:1}.territory-question h2{min-height:unset;font-size:clamp(21px,5vw,28px)}.territory-question,.territory-board-wrap{padding:12px}}
+.case-badge{display:inline-block;background:#edf4ff;border:1px solid var(--line);border-radius:20px;padding:.3rem .75rem;font-size:.9rem;font-weight:800}
+.territory-turn{color:#087f8c;font-weight:900;margin:.5rem 0}
+#territoryPrompt{font-size:clamp(1.3rem,2.7vw,1.9rem);line-height:1.35;min-height:5em;margin:.7rem 0}
+.case-feedback{font-size:1rem;line-height:1.7;margin-top:.8rem;color:#52627a}
+.territory-answer-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:1rem}
+.territory-answer-row button{min-height:3rem}.fake-answer{background:#d94678}
+.territory-board-legend{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center;font-size:.8rem;color:#62718a;margin-top:.6rem}
+.territory-board-legend span{display:flex;align-items:center;gap:.3rem}.territory-board-legend i{display:inline-block;width:9px;height:9px;border-radius:50%}
+.territory-board-wrap .muted{font-size:.85rem;line-height:1.5;margin:.7rem 0 0}
+.case-controls{display:flex;justify-content:flex-end;margin-top:.9rem}
 
-/* Mobile-first touch layout */
-@media (max-width: 600px) {
-  body { -webkit-text-size-adjust: 100%; }
-  .app { width:100%; padding:10px; }
-  header { gap:8px; padding:8px 0 14px; align-items:center; }
-  .logo { min-width:0; white-space:normal; flex-wrap:wrap; gap:4px 8px; line-height:1.05; letter-spacing:1px; }
-  .logo small { white-space:normal; }
-  .menu-toggle { flex:0 0 44px; width:44px; height:44px; }
-  .panel { margin:12px 0; padding:13px; border-radius:12px; }
-  h1 { font-size:clamp(25px,7vw,34px); }
-  #home .panel { margin:14px 0; }
-  #topics { grid-template-columns:1fr; gap:12px; }
-  #topics .choice { min-height:130px; padding:18px; border-radius:18px; gap:7px; }
-  #topics .choice::before { font-size:38px; }
-  #topics .choice::after { font-size:15px; }
-  .choices { gap:8px; }
-  .choice { min-height:48px; padding:12px 8px; }
-  #modeScreen .choice { min-height:86px; font-size:clamp(17px,4.8vw,22px); }
-  .rules-poster { max-height:88dvh; padding:22px 18px; }
-  .poster-title { margin:6px auto 18px; font-size:clamp(21px,6vw,30px); }
-  .poster-section { font-size:22px; }
-  .poster-rule { font-size:16px; }
-  .poster-note { font-size:13px; }
-  .poster-actions button { min-height:44px; }
-  .stats { grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin:12px 0 8px; }
-  .stat { min-width:0; padding:9px 6px; }
-  .stat span { font-size:12px; }
-  .stat strong { font-size:18px; }
-  .battle { gap:6px; }
-  .bcard { padding:9px 8px; font-size:13px; }
-  .bcard strong { font-size:18px; }
-  .arena { height:min(58dvh,500px); min-height:340px; border-radius:12px; }
-  .question-area { top:8px; left:8px; right:8px; }
-  #question { font-size:clamp(17px,4.6vw,23px); line-height:1.45; margin:8px auto 6px; padding:12px 11px; max-width:100%; overflow-wrap:anywhere; }
-  #subquestion { font-size:13px; line-height:1.4; }
-  .lanes { top:clamp(175px,27vh,220px); bottom:18px; padding:0 5px; gap:5px; }
-  .lane-label { font-size:12px; }
-  .answer { top:28px; left:2%; width:96%; min-height:74px; padding:12px 5px; border-radius:10px; }
-  .answer .txt { font-size:clamp(14px,3.8vw,18px); line-height:1.4; }
-  .key { top:4px; left:5px; font-size:12px; }
-  .progress { margin-top:8px; }
-  .feedback { min-height:34px; padding:8px 0; font-size:15px; }
-  .controls { gap:8px; }
-  .controls button, .primary, .secondary { min-height:44px; }
-  .results { grid-template-columns:repeat(3,minmax(0,1fr)); }
-  .result { min-width:0; overflow-wrap:anywhere; }
-  .result strong { font-size:19px; }
-  .review { padding:11px; }
-  .review h3 { font-size:16px; }
-  .review p { font-size:14px; }
-  #fontSizeControl { left:8px; right:8px; bottom:8px; justify-content:center; max-width:none; }
-}
-@media (max-width:380px) {
-  .app { padding:8px; }
-  .logo { font-size:22px; }
-  .logo small { font-size:12px; }
-  #question { font-size:16px; }
-  .lanes { top:190px; }
-  .answer .txt { font-size:13px; }
-  .stat strong { font-size:16px; }
-}
+/* 온라인 대전 */
+#onlineOverlay{position:fixed;inset:0;z-index:99999;background:rgba(2,8,20,.88);display:flex;align-items:center;justify-content:center;padding:.9rem;overflow:auto}
+#onlineOverlay[hidden]{display:none}
+.online-card{width:min(520px,100%);max-height:92dvh;overflow:auto;background:#0c1728;color:#edf7ff;border:1px solid #29d9ef;border-radius:18px;padding:1.25rem;box-shadow:0 0 35px #00d9ff22}
+.online-card h2{margin:0 0 .75rem;color:#45e6ff}
+.online-card input,.online-card select{width:100%;padding:.75rem;margin:.4rem 0 .6rem;border-radius:9px;border:1px solid #3c526c;background:#101f34;color:#fff;font-size:1rem}
+.online-card button{padding:.75rem;border-radius:9px;border:0;font-weight:800;margin:.25rem 0;white-space:normal}
+.online-primary{background:#35d9ee;color:#06111d}.online-secondary{background:#24364c;color:#f1f7ff}
+.online-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.online-score{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;padding:.75rem;background:#14243a;border-radius:10px;margin:.6rem 0}
+.online-option{display:block;width:100%;text-align:left;background:#172b45;color:#fff;border:1px solid #41617e!important;margin:.5rem 0!important;min-height:3.4rem}
+.online-status{padding:.65rem;border-radius:8px;background:#10233a;color:#bdeeff;white-space:pre-wrap}
+.online-small{font-size:.85rem;color:#a9bfd4}
 
-
-/* Final mobile home layout: fit the title and all three topic cards without horizontal overflow */
-@media (max-width: 600px) {
-  html, body { width:100%; max-width:100%; overflow-x:hidden; }
-  .app { width:100%; max-width:100%; padding:8px 10px 16px; }
-  header { padding:6px 0 10px; gap:8px; }
-  .logo { font-size:clamp(29px, 8vw, 36px); line-height:1.05; letter-spacing:1px; white-space:nowrap; }
-  .menu-toggle { flex:0 0 40px; width:40px; height:40px; }
-  #home > p:first-child { margin:5px 0 3px !important; font-size:10px !important; letter-spacing:2px !important; }
-  #home h1 { margin:4px 0 8px; font-size:clamp(25px, 7.1vw, 31px) !important; line-height:1.22 !important; letter-spacing:0 !important; overflow-wrap:normal !important; word-break:keep-all !important; }
-  #home .muted { margin:6px 0 10px; font-size:13px; line-height:1.45; word-break:keep-all; overflow-wrap:normal; }
-  #home .panel { margin:8px 0 10px !important; padding:0 !important; }
-  #home .label { display:block; margin:0 0 8px !important; font-size:19px !important; line-height:1.25; word-break:keep-all; }
-  #home #topics { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:7px !important; width:100%; }
-  #home #topics .choice { min-width:0 !important; width:100%; min-height:104px !important; height:auto; padding:9px 4px !important; margin:0; border-radius:13px !important; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:4px !important; text-align:center; font-size:clamp(15px,4.3vw,18px) !important; line-height:1.25 !important; white-space:normal !important; word-break:keep-all !important; overflow-wrap:normal !important; }
-  #home #topics .choice::before { font-size:29px !important; line-height:1.1 !important; margin:0 0 2px !important; }
-  #home #topics .choice::after { display:block; margin-top:2px !important; font-size:clamp(9px,2.5vw,11px) !important; line-height:1.25 !important; font-weight:500; white-space:pre-line !important; word-break:keep-all !important; overflow-wrap:normal !important; }
-  #home #topics .choice.selected::after { font-size:clamp(9px,2.5vw,11px) !important; }
-  #home { min-width:0; }
-  #onlineEntry { width:100%; max-width:100%; padding:11px 8px; font-size:14px; line-height:1.3; white-space:normal; overflow-wrap:normal; }
+@media(max-width:760px){
+  .territory-layout{grid-template-columns:1fr}
+  .territory-board-wrap{order:2}.territory-question{order:1}
+  #territoryPrompt{min-height:unset}
 }
-@media (max-width: 360px) {
-  #home h1 { font-size:24px !important; }
-  #home #topics { gap:5px !important; }
-  #home #topics .choice { font-size:14px !important; padding:8px 2px !important; }
-  #home #topics .choice::after { font-size:9px !important; }
+@media(max-width:700px){
+  .topic-grid{grid-template-columns:1fr}
+  .topic-card{min-height:unset;padding:1.1rem;border-radius:20px;flex-direction:row;flex-wrap:wrap;align-items:center}
+  .topic-card .ic{font-size:2.4rem}
+  .topic-card small{flex-basis:100%}
+}
+@media(max-width:600px){
+  .app{padding:.6rem}
+  header{padding:.4rem 0 .7rem}
+  .panel{padding:.9rem;margin:.8rem 0}
+  .menu-toggle{width:40px;height:40px}
+  .stats,.results{gap:.3rem}.stat{padding:.55rem .4rem}.stat strong{font-size:1.25rem}.result strong{font-size:1.3rem}
+  .arena{min-height:340px}
+  .lanes{padding:0 5px;gap:5px}
+  .answer{left:2%;width:96%;min-height:74px}
+  .controls button,.primary,.secondary{min-height:44px}
+  .online-actions{gap:.35rem}
 }
 
 </style>
-  <link rel="stylesheet" href="assets/enhancements.css">
+<link rel="stylesheet" href="assets/enhancements.css">
 </head>
 <body>
+
 <div id="rulesOverlay" class="rules-overlay" role="dialog" aria-modal="true" aria-labelledby="posterTitle" hidden>
-  <div class="rules-poster">
-    <div id="posterTitle" class="poster-title">ACID RAIN · 게임 소개 및 규칙</div>
-    <div class="poster-section">게임 소개</div>
-    <p class="poster-rule">내려오는 두 선택지 중 정답을 골라 살아남으세요.</p>
-    <p class="poster-note">문해력과 AI 윤리는 내려오는 선택지를 고르는 산성비 퀴즈입니다. 가짜 판별은 자료의 진위를 맞히며 선을 이어 칸을 차지하는 도트 앤 박스 게임입니다.</p>
-    <div class="poster-section">기본 규칙</div>
-    <p class="poster-rule">1. 싱글 모드는 생명 3개로 시작합니다.</p><p class="poster-note">오답 또는 시간 초과 시 생명이 1개 줄어들며, 생명을 모두 잃으면 종료됩니다.</p>
-    <p class="poster-rule">2. AI 대전은 먼저 100점 이상을 달성하면 승리합니다.</p><p class="poster-note">정답 +10점, 오답 또는 시간 초과 -10점입니다. AI가 정답을 맞히면 AI 점수가 10점 올라갑니다.</p>
-    <p class="poster-rule">3. 선택지가 바닥에 닿기 전에 답을 선택하세요.</p><p class="poster-note">진행할수록 판단 시간이 짧아집니다.</p>
-    <p class="poster-rule">4. 마우스 또는 키보드로 답을 고를 수 있습니다.</p><p class="poster-note">왼쪽: 1 또는 A · 오른쪽: 2 또는 L</p>
-    <p class="poster-rule">5. 가짜 판별 모드에서는 진짜·가짜를 맞혀 땅을 차지하세요. AI와 1대1 또는 1대1대1대1로 대결할 수 있습니다.</p><p class="poster-note">문해력·AI 윤리는 기존 산성비 퀴즈 방식으로 진행됩니다.</p>
-    <div class="poster-actions"><button id="closeRules" class="primary" type="button">확인하고 게임하기</button></div>
-  </div>
+  <div class="rules-poster" id="rulesPoster"></div>
 </div>
+
 <div class="app">
-<header><div class="logo"><div>리터러버</div></div><div class="menu-wrap"><button class="menu-toggle" id="menuToggle" type="button" aria-label="메뉴 열기" aria-expanded="false"><span></span><span></span><span></span></button><div class="menu-dropdown" id="menuDropdown" hidden><button id="openRules" class="rules-button" type="button">📜 게임 규칙</button><button id="soundToggle" type="button" aria-pressed="true">🔊 사운드 ON</button><div id="fontSizeControl" aria-label="글씨 크기 조절"><span class="font-size-label">글씨 크기 <b id="fontSizeValue">100%</b></span><div class="font-size-buttons"><button type="button" id="fontSmaller" aria-label="글씨 작게">A−</button><button type="button" id="fontReset" aria-label="글씨 크기 초기화">기본</button><button type="button" id="fontLarger" aria-label="글씨 크게">A＋</button></div></div></div></div></header>
+<header>
+  <div class="logo">리터러버</div>
+  <div class="menu-wrap">
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="메뉴 열기" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="menu-dropdown" id="menuDropdown" hidden>
+      <button id="openRules" type="button">📜 게임 규칙</button>
+      <button id="soundToggle" type="button" aria-pressed="true">🔊 사운드 ON</button>
+      <div id="fontSizeControl" aria-label="글씨 크기 조절">
+        <span class="font-size-label">글씨 크기 <b id="fontSizeValue">100%</b></span>
+        <div class="font-size-buttons">
+          <button type="button" id="fontSmaller" aria-label="글씨 작게">A−</button>
+          <button type="button" id="fontReset" aria-label="글씨 크기 초기화">기본</button>
+          <button type="button" id="fontLarger" aria-label="글씨 크게">A＋</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
 <section id="home" class="screen active">
-<p style="color:var(--cyan);letter-spacing:3px;font-size:11px">KNOWLEDGE STORM</p>
-<h1>지식의 비를 피하라.<br><span style="color:var(--cyan)">정답을 먼저 잡아라.</span></h1>
-<p class="muted">싱글플레이에서는 생명을 지키고, AI 대전에서는 먼저 100점을 달성해라!</p>
-
-
-
-<div class="panel">
-<label class="label">3가지 주제로 도전!</label>
-<div class="choices" id="topics"><button class="choice" data-v="문해력">문해력</button><button class="choice" data-v="가짜 판별">가짜 판별</button><button class="choice" data-v="AI 윤리">AI 윤리</button></div>
-
-</div>
-
+  <p class="eyebrow">KNOWLEDGE STORM</p>
+  <h1>지식의 비를 피하라.<br><span style="color:var(--cyan)">정답을 먼저 잡아라.</span></h1>
+  <p class="muted">싱글플레이에서는 생명을 지키고, AI 대전에서는 먼저 100점을 달성해라!</p>
+  <div class="panel">
+    <label class="label">3가지 주제로 도전!</label>
+    <div class="topic-grid" id="topics">
+      <button class="topic-card c1" data-v="문해력"><span class="ic">📖</span><b>문해력</b><small>헷갈리는 낱말 바로잡기<br>산성비 퀴즈</small></button>
+      <button class="topic-card c2" data-v="가짜 판별"><span class="ic">🔎</span><b>가짜 판별</b><small>진짜·가짜 맞히고 땅 차지<br>도트 앤 박스</small></button>
+      <button class="topic-card c3" data-v="AI 윤리"><span class="ic">🤖</span><b>AI 윤리</b><small>AI 앞에서 책임 있는 선택<br>산성비 퀴즈</small></button>
+    </div>
+  </div>
 </section>
 
-
 <section id="modeScreen" class="screen">
-<p style="color:var(--cyan);letter-spacing:3px;font-size:11px">SETUP · 02</p>
-<h1>플레이 모드 선택</h1>
-<p class="muted">선택한 주제: <strong id="chosenTopic">문해력</strong></p>
-<div class="panel">
-<label class="label" id="modeChoiceLabel">02 / 모드 선택</label>
-<div class="choices two" id="modes"><button class="choice selected" data-v="single">싱글</button><button class="choice" data-v="ai">AI 대전</button></div>
-<p class="muted" id="modeSelectionStatus" aria-live="polite">현재 선택: 싱글</p>
-<div id="territoryAISetup" class="territory-ai-setup" hidden></div>
-<div class="row" style="margin-top:22px"><button class="secondary" id="backToTopics">← 주제 선택</button><button class="primary" id="toNextSetup">다음 →</button></div>
-</div>
-<button id="onlineEntry" type="button">🌐 친구와 온라인 1대1 대전</button>
+  <p class="eyebrow">SETUP · 02</p>
+  <h1>플레이 모드 선택</h1>
+  <p class="muted">선택한 주제: <strong id="chosenTopic">문해력</strong></p>
+  <div class="panel">
+    <label class="label" id="modeChoiceLabel">02 / 모드 선택</label>
+    <div class="choices two" id="modes"></div>
+    <p class="muted" id="modeSelectionStatus" aria-live="polite"></p>
+    <div class="row" style="margin-top:1.4rem"><button class="secondary" id="backToTopics">← 주제 선택</button><button class="primary" id="toNextSetup">다음 →</button></div>
+  </div>
+  <button id="onlineEntry" type="button">🌐 친구와 온라인 1대1 대전</button>
 </section>
 
 <section id="levelScreen" class="screen">
-<p style="color:var(--cyan);letter-spacing:3px;font-size:11px">SETUP · 03</p>
-<h1>난이도 선택</h1>
-<p class="muted">선택한 설정: <strong id="chosenSetup">문해력 · AI 대전</strong></p>
-<div class="panel">
-<label class="label">03 / AI 난이도</label>
-<div class="choices" id="levels"><button class="choice selected" data-v="easy">쉬움</button><button class="choice" data-v="medium">보통</button><button class="choice" data-v="hard">어려움</button></div>
-<div class="row" style="margin-top:22px"><button class="secondary" id="backToModes">← 모드 선택</button><button class="primary" id="beginGame">▶ 게임 시작</button></div>
-</div>
+  <p class="eyebrow">SETUP · 03</p>
+  <h1>난이도 선택</h1>
+  <p class="muted">선택한 설정: <strong id="chosenSetup"></strong></p>
+  <div class="panel">
+    <label class="label">03 / AI 난이도</label>
+    <div class="choices" id="levels"><button class="choice selected" data-v="easy">쉬움</button><button class="choice" data-v="medium">보통</button><button class="choice" data-v="hard">어려움</button></div>
+    <div class="row" style="margin-top:1.4rem"><button class="secondary" id="backToModes">← 모드 선택</button><button class="primary" id="beginGame">▶ 게임 시작</button></div>
+  </div>
 </section>
 
 <section id="territory" class="screen">
-  <p class="case-kicker">FAKE CHECK · DOTS AND BOXES</p>
+  <p class="eyebrow">FAKE CHECK · DOTS AND BOXES</p>
   <h1>가짜 판별 도트 앤 박스</h1>
-  <p class="territory-intro">차례대로 선 하나를 선택하고, 자료가 진짜인지 가짜인지 판별하세요. 정답이면 선이 연결되고, 네 변을 완성한 칸을 차지합니다.</p>
+  <p class="territory-intro">차례대로 선 하나를 선택하고, 자료가 진짜인지 가짜인지 판별하세요. 정답이면 선이 연결되고, 네 변을 완성한 칸을 차지합니다. 오답이면 -1점이 되지만 차례는 유지됩니다.</p>
   <div class="territory-stats" id="territoryStats"></div>
   <div class="territory-ai-questions" id="territoryAIQuestions" aria-label="AI의 차례와 문제"></div>
-  <div class="territory-layout">
+  <div class="territory-layout" id="territoryLayout">
     <div class="territory-board-wrap">
       <div id="territoryBoard" class="territory-board" aria-label="도트 앤 박스 게임판"></div>
-      <div class="territory-board-legend"><span><i style="background:#0e9f9a"></i>나</span><span><i style="background:#e45486"></i>AI 1</span><span><i style="background:#6577e8"></i>AI 2</span><span><i style="background:#e3a52f"></i>AI 3</span><span><i style="background:#8b5cf6"></i>AI 4</span></div>
-      <p class="muted" id="territoryHint">점과 점 사이의 선을 눌러 선택하세요. 선을 그을 때마다 가짜 판별 문제를 풉니다.</p>
+      <div class="territory-board-legend" id="territoryLegend"></div>
+      <p class="muted" id="territoryHint"></p>
     </div>
-    <article class="territory-question territory-player-question">
+    <article class="territory-question">
       <div class="case-badge">내 차례 · 1 또는 2로 답하기</div>
-      <p id="territoryTurn" class="territory-turn">내 차례입니다. 게임판에서 선을 선택하세요.</p>
-      <h2 id="territoryPrompt">게임판의 빈 선을 선택하면 판별할 자료가 여기에 표시됩니다.</h2>
-      <p id="territoryFeedback" class="case-feedback" aria-live="polite">정답이면 선이 연결됩니다. 오답이면 자기 점수가 -1점 됩니다.</p>
+      <p id="territoryTurn" class="territory-turn"></p>
+      <h2 id="territoryPrompt"></h2>
+      <p id="territoryFeedback" class="case-feedback" aria-live="polite"></p>
       <div class="territory-answer-row"><button id="realAnswer" class="primary" disabled>1️⃣ 진짜</button><button id="fakeAnswer" class="primary fake-answer" disabled>2️⃣ 가짜</button></div>
     </article>
   </div>
@@ -495,708 +302,1019 @@ header .row span{font-size:16px !important}
 </section>
 
 <section id="game" class="screen">
-<div class="stats"><div class="stat"><span>STAGE</span><strong id="stage">01</strong></div><div class="stat"><span id="healthLabel">HEALTH</span><strong id="hearts" style="color:var(--pink)">♥ ♥ ♥</strong></div><div class="stat"><span>MY SCORE</span><strong id="score">0</strong></div></div>
-<div id="battle" class="battle"><div class="bcard">YOU <strong id="youScore">0</strong><div style="color:#647994;margin-top:8px">목표: 100점</div></div><div class="bcard ai">AI <strong id="cpuScore">0</strong><div style="color:#647994;margin-top:8px">목표: 100점</div></div></div>
-<div class="arena"><div class="question-area"><span class="topic" id="topicName">문해력</span><div id="question">문제</div><div id="subquestion">정답을 선택하세요!</div></div>
-<div class="lanes"><div class="lane"><div class="lane-label">OPTION 01 · KEY 1</div><button class="answer" id="opt0"><span class="rain-tail"></span><span class="key">1 / A</span><span class="txt"></span></button></div><div class="lane"><div class="lane-label">OPTION 02 · KEY 2</div><button class="answer pink" id="opt1"><span class="rain-tail"></span><span class="key">2 / L</span><span class="txt"></span></button></div></div><div class="floor" id="floor"></div></div>
-<div class="progress"><div id="progressFill"></div></div><div class="feedback" id="feedback" aria-live="polite">시작!</div><div class="controls"><span class="muted" style="font-size:11px">1/A 왼쪽 · 2/L 오른쪽</span><button class="secondary" id="quit">게임 종료</button></div>
+  <div class="stats">
+    <div class="stat"><span>STAGE</span><strong id="stage">01</strong></div>
+    <div class="stat"><span id="healthLabel">HEALTH</span><strong id="hearts" style="color:var(--pink)">♥ ♥ ♥</strong></div>
+    <div class="stat"><span>MY SCORE</span><strong id="score">0</strong></div>
+  </div>
+  <div id="battle" class="battle">
+    <div class="bcard">YOU <strong id="youScore">0</strong><small>목표: 100점</small></div>
+    <div class="bcard ai">AI <strong id="cpuScore">0</strong><small>목표: 100점</small></div>
+  </div>
+  <div class="arena" id="arena">
+    <div class="question-area"><span class="topic" id="topicName">문해력</span><div id="question">문제</div><div id="subquestion">정답을 선택하세요!</div></div>
+    <div class="lanes">
+      <div class="lane"><div class="lane-label">OPTION 01 · KEY 1</div><button class="answer" id="opt0"><span class="rain-tail"></span><span class="key">1 / A</span><span class="txt"></span></button></div>
+      <div class="lane"><div class="lane-label">OPTION 02 · KEY 2</div><button class="answer pink" id="opt1"><span class="rain-tail"></span><span class="key">2 / L</span><span class="txt"></span></button></div>
+    </div>
+    <div class="floor" id="floor"></div>
+  </div>
+  <div class="progress"><div id="progressFill"></div></div>
+  <div class="feedback" id="feedback" aria-live="polite">시작!</div>
+  <div class="controls"><span class="muted">1/A 왼쪽 · 2/L 오른쪽</span><button class="secondary" id="quit">게임 종료</button></div>
 </section>
+
 <section id="result" class="screen">
-<p style="color:var(--cyan);letter-spacing:3px;font-size:11px">MISSION REPORT</p><h1 id="resultTitle">GAME OVER</h1><p class="muted" id="resultMessage"></p>
-<div class="panel"><h2>최종 결과</h2><div class="results"><div class="result"><span>내 점수</span><strong id="finalScore">0</strong></div><div class="result"><span>스테이지</span><strong id="finalStage">1</strong></div><div class="result"><span>정답률</span><strong id="accuracy">0%</strong></div></div>
-<p class="muted" id="battleResult"></p><h2>⌁ 오답 노트</h2><div id="reviews" class="review-list"></div><div class="row" style="margin-top:20px"><button class="primary" id="retry">↻ 다시 하기</button><button class="secondary" id="homeBtn">메인 화면</button></div></div>
+  <p class="eyebrow">MISSION REPORT</p><h1 id="resultTitle">GAME OVER</h1><p class="muted" id="resultMessage"></p>
+  <div class="panel">
+    <h2>최종 결과</h2>
+    <div class="results">
+      <div class="result"><span>내 점수</span><strong id="finalScore">0</strong></div>
+      <div class="result"><span>스테이지</span><strong id="finalStage">1</strong></div>
+      <div class="result"><span>정답률</span><strong id="accuracy">0%</strong></div>
+    </div>
+    <p class="muted" id="bestScore"></p>
+    <p class="muted" id="battleResult"></p>
+    <h2>⌁ 오답 노트</h2>
+    <div id="reviews" class="review-list"></div>
+    <div class="row" style="margin-top:1.2rem"><button class="primary" id="retry">↻ 다시 하기</button><button class="secondary" id="homeBtn">메인 화면</button></div>
+  </div>
 </section>
-<footer>ACID RAIN · QUIZ BATTLE</footer>
+
+<footer>리터러버 · QUIZ BATTLE</footer>
 </div>
+
+<div id="onlineOverlay" hidden>
+  <div class="online-card">
+    <h2>🌐 온라인 1대1 대전</h2>
+    <div id="onlineLobby">
+      <label for="onlineName">내 닉네임</label><input id="onlineName" maxlength="18" placeholder="예: 산성비고수" value="플레이어">
+      <label for="onlineTopic">대전 주제</label><select id="onlineTopic"><option>문해력</option><option>가짜 판별</option><option>AI 윤리</option></select>
+      <div class="online-actions"><button id="onlineCreate" class="online-primary">방 만들기</button><button id="onlineJoinShow" class="online-secondary">방 코드 입력</button></div>
+      <div id="onlineJoinArea" hidden><label for="onlineCode">6자리 방 코드</label><input id="onlineCode" inputmode="numeric" maxlength="6" placeholder="123456"><button id="onlineJoin" class="online-primary" style="width:100%">참가하기</button></div>
+    </div>
+    <div id="onlineWaiting" hidden>
+      <div class="online-status" id="onlineRoomStatus">방을 준비하는 중…</div>
+      <div class="online-score" id="onlinePlayers"></div>
+      <button id="onlineStart" class="online-primary" style="width:100%" disabled>두 명이 모이면 시작</button>
+    </div>
+    <div id="onlinePlay" hidden>
+      <div class="online-score"><span id="onlineMyScore">나: 0점</span><span id="onlineOppScore">상대: 0점</span></div>
+      <div class="online-status" id="onlinePlayStatus">문제를 기다리는 중…</div>
+      <h3 id="onlineQuestion"></h3>
+      <div id="onlineOptions"></div>
+      <div id="onlineExplain" class="online-small"></div>
+      <button id="onlineNext" class="online-primary" style="width:100%" hidden>다음 문제</button>
+    </div>
+    <p class="online-small">온라인 대전은 두 사람이 같은 사이트에 접속해야 하며, 대전 서버가 켜져 있어야 합니다. 방을 닫으면 대전이 종료됩니다.</p>
+    <button id="onlineClose" class="online-secondary" style="width:100%">닫기</button>
+  </div>
+</div>
+
 <script>
-/* Built-in synthesized sound effects and looping background music. */
-(function(){
-  let ctx=null, enabled=true, musicTimer=null, step=0, master=null;
-  const melody=[220,261.63,329.63,293.66,196,246.94,293.66,261.63,220,329.63,392,329.63,196,246.94,293.66,220];
-  function audio(){
-    if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;ctx=new AC();master=ctx.createGain();master.gain.value=.22;master.connect(ctx.destination);}
-    if(ctx.state==='suspended')ctx.resume();return ctx;
+/* 합성 효과음과 배경 음악 */
+(function () {
+  "use strict";
+  let ctx = null, enabled = true, musicTimer = null, step = 0, master = null;
+  const melody = [220, 261.63, 329.63, 293.66, 196, 246.94, 293.66, 261.63, 220, 329.63, 392, 329.63, 196, 246.94, 293.66, 220];
+
+  function audio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = 0.22;
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
   }
-  function tone(freq,duration,type='sine',volume=.12,when){
-    const c=audio();if(!c||!enabled)return;const t=when??c.currentTime;
-    const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);
-    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.001,volume),t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
-    o.connect(g);g.connect(master);o.start(t);o.stop(t+duration+.03);
+  function tone(freq, duration, type = "sine", volume = 0.12, when) {
+    const c = audio();
+    if (!c || !enabled) return;
+    const t = when ?? c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.001, volume), t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + duration + 0.03);
   }
-  function musicStep(){if(!enabled||!ctx)return;const c=audio();if(!c)return;const t=c.currentTime;const f=melody[step%melody.length];tone(f,.28,'triangle',.045,t);if(step%4===0)tone(f/2,.42,'sine',.035,t);step++;}
-  function startMusic(){if(!enabled||musicTimer!==null)return;audio();musicStep();musicTimer=setInterval(musicStep,330);}
-  function stopMusic(){if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null;}}
-  const patterns={click:()=>tone(620,.07,'square',.055),correct:()=>{tone(660,.12,'triangle',.09);tone(880,.18,'triangle',.075,ctx.currentTime+.09);},wrong:()=>{tone(180,.22,'sawtooth',.075);tone(130,.25,'sawtooth',.05,ctx.currentTime+.1);},timeout:()=>{tone(145,.3,'sawtooth',.09);tone(110,.35,'sawtooth',.07,ctx.currentTime+.18);},start:()=>{tone(440,.12,'triangle',.07);tone(660,.18,'triangle',.07,ctx.currentTime+.1);},win:()=>{[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,.22,'triangle',.07,ctx.currentTime+i*.12));},lose:()=>{[392,329.63,261.63,196].forEach((f,i)=>tone(f,.25,'sawtooth',.05,ctx.currentTime+i*.13));}};
-  window.AcidAudio={play(name){if(!enabled)return;audio();(patterns[name]||patterns.click)();},isEnabled(){return enabled;},setEnabled(on){enabled=!!on;if(enabled){audio();startMusic();}else{stopMusic();if(ctx&&master){master.gain.setTargetAtTime(.0001,ctx.currentTime,.025);setTimeout(()=>{if(ctx&&master&&enabled)master.gain.setTargetAtTime(.22,ctx.currentTime,.04);},80);}}}};
-  document.addEventListener('pointerdown',()=>{if(enabled){audio();startMusic();}},{passive:true});
+  function musicStep() {
+    if (!enabled || !ctx) return;
+    const t = ctx.currentTime, f = melody[step % melody.length];
+    tone(f, 0.28, "triangle", 0.045, t);
+    if (step % 4 === 0) tone(f / 2, 0.42, "sine", 0.035, t);
+    step++;
+  }
+  function startMusic() {
+    if (!enabled || musicTimer !== null) return;
+    audio(); musicStep();
+    musicTimer = setInterval(musicStep, 330);
+  }
+  function stopMusic() {
+    if (musicTimer !== null) { clearInterval(musicTimer); musicTimer = null; }
+  }
+  const now = () => ctx.currentTime;
+  const patterns = {
+    click: () => tone(620, 0.07, "square", 0.055),
+    correct: () => { tone(660, 0.12, "triangle", 0.09); tone(880, 0.18, "triangle", 0.075, now() + 0.09); },
+    wrong: () => { tone(180, 0.22, "sawtooth", 0.075); tone(130, 0.25, "sawtooth", 0.05, now() + 0.1); },
+    timeout: () => { tone(145, 0.3, "sawtooth", 0.09); tone(110, 0.35, "sawtooth", 0.07, now() + 0.18); },
+    start: () => { tone(440, 0.12, "triangle", 0.07); tone(660, 0.18, "triangle", 0.07, now() + 0.1); },
+    win: () => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, 0.22, "triangle", 0.07, now() + i * 0.12)),
+    lose: () => [392, 329.63, 261.63, 196].forEach((f, i) => tone(f, 0.25, "sawtooth", 0.05, now() + i * 0.13))
+  };
+  window.AcidAudio = {
+    play(name) { if (!enabled || !audio()) return; (patterns[name] || patterns.click)(); },
+    isEnabled() { return enabled; },
+    setEnabled(on) { enabled = !!on; if (enabled) startMusic(); else stopMusic(); }
+  };
+  document.addEventListener("pointerdown", () => { if (enabled) startMusic(); }, { passive: true });
 })();
+
 </script>
 <script>
 "use strict";
-
-/* 모든 문제는 아래 BANK에 직접 작성되어 있습니다.
-   자동 생성, 사례 조합, 문제 문장 변형 기능은 없습니다.
-   각 게임은 선택한 주제의 고정 문제만 무작위 순서로 출제합니다. */
+/* 모든 문제는 직접 작성한 고정 문제입니다. q=문제, a=선택지 2개, c=정답 번호(0/1), e=해설 */
 const BANK = {
-
 "문해력": [
-  {
-    q: "학교 게시판에 '금일 도서관은 오후 5시에 문을 닫습니다.'라고 적혀 있다. '금일'의 뜻은?",
-    a: ["오늘", "내일"],
-    c: 0,
-    e: "금일은 오늘이고, 명일은 내일이다."
-  },
-  {
-    q: "물건을 구매하고 카드로 값을 치렀다. 알맞은 표현은?",
-    a: ["결재했다", "결제했다"],
-    c: 1,
-    e: "결제는 돈을 치르는 것이고, 결재는 안건을 승인하는 것이다."
-  },
-  {
-    q: "학교가 공사 때문에 과제 제출 기한을 일주일 미뤄 주었다. 알맞은 말은?",
-    a: ["유예", "유보"],
-    c: 0,
-    e: "유예는 기한을 미루는 것이고, 유보는 결정을 보류하는 것이다."
-  },
-  {
-    q: "우리 동아리는 일회용품 사용을 줄이고 환경 보호를 목표로 삼았다. 알맞은 표현은?",
-    a: ["환경 보호를 지양한다", "환경 보호를 지향한다"],
-    c: 1,
-    e: "지향은 목표로 삼아 나아가는 것이고, 지양은 피하거나 하지 않으려는 것이다."
-  },
-  {
-    q: "친구의 설명을 듣고 그 이유가 타당하다고 이해하여 받아들였다. 알맞은 말은?",
-    a: ["납득했다", "설득했다"],
-    c: 0,
-    e: "납득은 이해하고 받아들이는 것이고, 설득은 상대방이 받아들이도록 하는 것이다."
-  },
-  {
-    q: "회의에서 담당자는 한 가지 중요한 위험을 미처 살피지 못했다. 알맞은 표현은?",
-    a: ["위험을 간과했다", "위험을 간주했다"],
-    c: 0,
-    e: "간과는 대수롭지 않게 여기거나 놓치는 것이고, 간주는 무엇을 어떤 것으로 여기는 것이다."
-  },
-  {
-    q: "지원서를 작성하면서 이름과 연락처를 빈칸에 적었다. 알맞은 말은?",
-    a: ["기재했다", "게재했다"],
-    c: 0,
-    e: "기재는 문서에 내용을 적는 것이고, 게재는 글이나 자료를 매체에 싣는 것이다."
-  },
-  {
-    q: "편집자가 사실과 다른 내용으로 기사를 작성해 사건의 의미를 잘못 전달했다. 알맞은 표현은?",
-    a: ["사실을 훼손했다", "사실을 왜곡했다"],
-    c: 1,
-    e: "훼손은 손상하는 것이고, 왜곡은 사실이나 의미를 비뚤어지게 바꾸는 것이다."
-  },
-  {
-    q: "안내문에 적힌 장소를 다른 장소로 잘못 알고 찾아갔다. 알맞은 말은?",
-    a: ["장소를 오인했다", "장소를 오해했다"],
-    c: 0,
-    e: "오인은 사실이나 대상을 잘못 인식하는 것이고, 오해는 뜻이나 의도를 잘못 이해하는 것이다."
-  },
-  {
-    q: "친구와 다투었지만 화를 참으며 심한 말을 하지 않았다. 알맞은 말은?",
-    a: ["감정을 자제했다", "감정을 절제했다"],
-    c: 0,
-    e: "자제는 감정이나 행동을 억누르는 것이고, 절제는 정도가 지나치지 않도록 조절하는 것이다."
-  },
-  {
-    q: "새로운 안전 규칙이 실제 사고를 줄이는 효과가 있는지 조사했다. 알맞은 말은?",
-    a: ["실효성", "실현성"],
-    c: 0,
-    e: "실효성은 실제 효과가 있는 성질이고, 실현성은 실제로 이루어질 가능성이다."
-  },
-  {
-    q: "탐정은 발자국과 목격자 진술을 근거로 범인이 지나간 길을 논리적으로 판단했다. 알맞은 말은?",
-    a: ["추론", "추측"],
-    c: 0,
-    e: "추론은 근거와 논리로 결론을 이끌어 내는 것이고, 추측은 확실하지 않은 내용을 짐작하는 것이다."
-  },
-  {
-    q: "과학자가 실험 증거를 제시해 기존 가설이 틀렸음을 밝혀냈다. 알맞은 말은?",
-    a: ["반증했다", "반박했다"],
-    c: 0,
-    e: "반증은 증거로 주장이 틀렸음을 밝히는 것이고, 반박은 상대의 주장에 논리적으로 맞서는 것이다."
-  }
+  {q:"학교 게시판에 '금일 도서관은 오후 5시에 문을 닫습니다.'라고 적혀 있다. '금일'의 뜻은?",a:["오늘","내일"],c:0,e:"금일은 오늘이고, 명일은 내일이다."},
+  {q:"물건을 구매하고 카드로 값을 치렀다. 알맞은 표현은?",a:["결재했다","결제했다"],c:1,e:"결제는 돈을 치르는 것이고, 결재는 안건을 승인하는 것이다."},
+  {q:"학교가 공사 때문에 과제 제출 기한을 일주일 미뤄 주었다. 알맞은 말은?",a:["유예","유보"],c:0,e:"유예는 기한을 미루는 것이고, 유보는 결정을 보류하는 것이다."},
+  {q:"우리 동아리는 일회용품 사용을 줄이고 환경 보호를 목표로 삼았다. 알맞은 표현은?",a:["환경 보호를 지양한다","환경 보호를 지향한다"],c:1,e:"지향은 목표로 삼아 나아가는 것이고, 지양은 피하거나 하지 않으려는 것이다."},
+  {q:"친구의 설명을 듣고 그 이유가 타당하다고 이해하여 받아들였다. 알맞은 말은?",a:["납득했다","설득했다"],c:0,e:"납득은 이해하고 받아들이는 것이고, 설득은 상대방이 받아들이도록 하는 것이다."},
+  {q:"회의에서 담당자는 한 가지 중요한 위험을 미처 살피지 못했다. 알맞은 표현은?",a:["위험을 간과했다","위험을 간주했다"],c:0,e:"간과는 대수롭지 않게 여기거나 놓치는 것이고, 간주는 무엇을 어떤 것으로 여기는 것이다."},
+  {q:"지원서를 작성하면서 이름과 연락처를 빈칸에 적었다. 알맞은 말은?",a:["기재했다","게재했다"],c:0,e:"기재는 문서에 내용을 적는 것이고, 게재는 글이나 자료를 매체에 싣는 것이다."},
+  {q:"편집자가 사실과 다른 내용으로 기사를 작성해 사건의 의미를 잘못 전달했다. 알맞은 표현은?",a:["사실을 훼손했다","사실을 왜곡했다"],c:1,e:"훼손은 손상하는 것이고, 왜곡은 사실이나 의미를 비뚤어지게 바꾸는 것이다."},
+  {q:"안내문에 적힌 장소를 다른 장소로 잘못 알고 찾아갔다. 알맞은 말은?",a:["장소를 오인했다","장소를 오해했다"],c:0,e:"오인은 사실이나 대상을 잘못 인식하는 것이고, 오해는 뜻이나 의도를 잘못 이해하는 것이다."},
+  {q:"친구와 다투었지만 화를 참으며 심한 말을 하지 않았다. 알맞은 말은?",a:["감정을 자제했다","감정을 절제했다"],c:0,e:"자제는 감정이나 행동을 억누르는 것이고, 절제는 정도가 지나치지 않도록 조절하는 것이다."},
+  {q:"새로운 안전 규칙이 실제 사고를 줄이는 효과가 있는지 조사했다. 알맞은 말은?",a:["실효성","실현성"],c:0,e:"실효성은 실제 효과가 있는 성질이고, 실현성은 실제로 이루어질 가능성이다."},
+  {q:"탐정은 발자국과 목격자 진술을 근거로 범인이 지나간 길을 논리적으로 판단했다. 알맞은 말은?",a:["추론","추측"],c:0,e:"추론은 근거와 논리로 결론을 이끌어 내는 것이고, 추측은 확실하지 않은 내용을 짐작하는 것이다."},
+  {q:"과학자가 실험 증거를 제시해 기존 가설이 틀렸음을 밝혀냈다. 알맞은 말은?",a:["반증했다","반박했다"],c:0,e:"반증은 증거로 주장이 틀렸음을 밝히는 것이고, 반박은 상대의 주장에 논리적으로 맞서는 것이다."},
+  {q:"퀴즈에서 정답을 알아냈다. 알맞은 표현은?",a:["정답을 맞췄다","정답을 맞혔다"],c:1,e:"문제의 답을 옳게 고르는 것은 '맞히다', 둘 이상을 서로 대어 보는 것은 '맞추다'이다."},
+  {q:"감기가 빨리 좋아지기를 바란다. 알맞은 표현은?",a:["감기가 빨리 낳기를","감기가 빨리 낫기를"],c:1,e:"병이 없어지는 것은 '낫다', 아기를 출산하는 것은 '낳다'이다."},
+  {q:"나와 친구는 좋아하는 음식이 서로 같지 않다. 알맞은 표현은?",a:["서로 다르다","서로 틀리다"],c:0,e:"같지 않은 것은 '다르다', 맞지 않거나 옳지 않은 것은 '틀리다'이다."},
+  {q:"조금 뒤에 전화하겠다고 말하려 한다. 알맞은 표현은?",a:["이따가 전화할게","있다가 전화할게"],c:0,e:"'이따가'는 조금 지난 뒤를, '있다가'는 어떤 상태가 계속되다가를 뜻한다."},
+  {q:"그렇게 하면 문제가 생기니 하지 말라는 뜻으로 말하려 한다. 알맞은 표현은?",a:["그렇게 하면 안 돼","그렇게 하면 안 되"],c:0,e:"문장을 끝맺을 때는 '되어'의 준말인 '돼'를 쓴다."},
+  {q:"선생님이 손가락으로 칠판의 글자를 짚어 보이셨다. 알맞은 말은?",a:["가르켰다","가리켰다"],c:1,e:"방향이나 대상을 짚어 보이는 것은 '가리키다', 지식을 알려 주는 것은 '가르치다'이다."},
+  {q:"우체국에서 소포를 우편으로 보냈다. 알맞은 말은?",a:["부쳤다","붙였다"],c:0,e:"우편으로 보내는 것은 '부치다', 맞닿게 하는 것은 '붙이다'이다."},
+  {q:"내일 제출할 숙제는 틀림없이 해 오겠다고 다짐했다. 알맞은 말은?",a:["반듯이","반드시"],c:1,e:"'반드시'는 틀림없이, '반듯이'는 비뚤어지지 않고 바르게를 뜻한다."},
+  {q:"올림픽에서 세계 최고 기록을 새로 세웠다. 알맞은 말은?",a:["기록 경신","기록 갱신"],c:0,e:"기록을 깨고 새로 세우는 것은 '경신', 계약처럼 기존 내용을 새롭게 바꾸는 것은 '갱신'이다."},
+  {q:"참석할지 안 할지를 알려 달라는 안내문이다. 알맞은 표현은?",a:["참석 여부","참석 유무"],c:0,e:"'여부'는 ~인지 아닌지를, '유무'는 있음과 없음을 뜻한다."},
+  {q:"'심심한 사과의 말씀을 드립니다.'에서 '심심한'의 뜻은?",a:["깊고 간절한","지루하고 따분한"],c:0,e:"여기서 '심심(甚深)하다'는 마음의 표현이 매우 깊고 간절하다는 뜻이다."},
+  {q:"'사흘 뒤에 만나자.'에서 '사흘'은 며칠인가?",a:["3일","4일"],c:0,e:"사흘은 3일, 나흘은 4일이다."},
+  {q:"시험 합격한 사람의 비율을 나타내는 알맞은 표기는?",a:["합격률","합격율"],c:0,e:"받침이 없거나 'ㄴ' 받침 뒤에서는 '율'이 아니라 '률'을 쓴다."},
+  {q:"오늘이 몇 월 몇 일인지 물으려 한다. 알맞은 표현은?",a:["오늘 몇일이야?","오늘 며칠이야?"],c:1,e:"'몇일'이라는 말은 없고 '며칠'이 표준어이다."},
+  {q:"여행 생각에 마음이 들떠 두근거린다. 알맞은 표현은?",a:["설레는 마음","설레이는 마음"],c:0,e:"기본형은 '설레다'이므로 '설레는'이 바르다."},
+  {q:"연극에서 맡은 일을 가리키는 알맞은 표기는?",a:["역활","역할"],c:1,e:"'역할'이 바른 표기이다."},
+  {q:"이유는 모르겠지만 오늘따라 기분이 이상하다. 알맞은 표현은?",a:["웬지","왠지"],c:1,e:"'왠지'는 '왜인지'의 준말이다. '웬'은 '어찌 된'을 뜻한다."},
+  {q:"숙제가 쉬워서 아주 짧은 시간 안에 끝났다. 알맞은 표현은?",a:["금세","금새"],c:0,e:"'금세'는 '금시에'가 줄어든 말이다."},
+  {q:"부모님의 큰 기대를 충족하도록 열심히 노력했다. 알맞은 말은?",a:["기대에 부응했다","기대에 순응했다"],c:0,e:"부응은 요구나 기대에 맞게 응하는 것이고, 순응은 환경이나 명령에 따르는 것이다."},
+  {q:"토론에서 상대의 주장이 지닌 문제점을 근거를 들어 따져 보았다. 알맞은 말은?",a:["비판","비난"],c:0,e:"비판은 옳고 그름을 따져 평가하는 것이고, 비난은 잘못을 책잡아 나쁘게 말하는 것이다."},
+  {q:"학교 규칙의 일부 조항을 새로 고쳐 바꾸었다. 알맞은 말은?",a:["개정","개선"],c:0,e:"개정은 법이나 규칙을 고치는 것이고, 개선은 부족한 점을 더 좋게 만드는 것이다."}
 ],
 
 "AI 윤리": [
-{q:"AI로 과제를 작성했다면?",a:["학교 규칙을 지키고 필요한 경우 사용 사실을 밝힌다","AI가 썼으니 내 글이라고 한다"],c:0,e:"AI 사용 규칙을 지키고 결과물에 책임져야 한다."},
-{q:"AI가 자신 있게 틀린 답을 말한다.",a:["자신 있게 말했으니 사실이다","신뢰할 만한 자료로 확인한다"],c:1,e:"AI는 그럴듯하지만 틀린 정보를 만들 수 있다."},
-{q:"다른 사람의 개인정보를 AI에 입력하려 한다.",a:["불필요한 개인정보 입력을 피한다","항상 완벽하게 비밀이라고 가정한다"],c:0,e:"서비스의 데이터 처리 방식을 확인하고 개인정보를 보호해야 한다."},
-{q:"AI가 특정 집단을 불리하게 평가한다.",a:["AI는 항상 공정하다","학습 자료와 결과의 편향을 점검한다"],c:1,e:"학습 데이터의 편견이 결과에 반영될 수 있다."},
-{q:"AI 생성 사진을 실제 뉴스처럼 게시한다.",a:["AI 생성 여부를 명확히 밝힌다","실제 촬영 출처를 꾸며낸다"],c:0,e:"사람들이 실제 사건으로 오해하지 않도록 해야 한다."},
-{q:"AI가 채용 결정을 내린다면?",a:["결과를 검토하지 않는다","공정성을 점검하고 사람이 감독한다"],c:1,e:"중요한 결정에는 편향 점검과 인간의 감독이 필요하다."},
-{q:"인터넷 그림을 AI에 사용해도 될까?",a:["저작권과 이용 조건을 확인한다","인터넷에 있으면 무조건 자유롭게 쓴다"],c:0,e:"공개된 자료에도 저작권이나 이용 조건이 있을 수 있다."},
-{q:"AI가 잘못된 조언을 해서 피해가 생겼다.",a:["AI가 했으니 책임이 없다","관련된 책임과 시정 방법을 살펴본다"],c:1,e:"AI를 사용했다는 이유만으로 책임이 사라지지 않는다."},
-{q:"책임 있는 AI 활용은?",a:["성능만 좋으면 괜찮다","안전, 공정성, 개인정보도 고려한다"],c:1,e:"AI의 성능뿐 아니라 사람과 사회에 미치는 영향도 고려해야 한다."},
-{q:"친구의 전화번호를 AI에 입력하려 한다.",a:["친구의 개인정보를 보호하고 입력하지 않는다","허락 없이 입력해도 된다"],c:0,e:"타인의 개인정보를 함부로 공유하면 안 된다."},
-{q:"AI가 존재하지 않는 책을 인용했다.",a:["그럴듯하니 그대로 제출한다","실제 책과 출처가 존재하는지 확인한다"],c:1,e:"AI는 존재하지 않는 출처를 생성할 수 있다."},
-{q:"유명인의 목소리를 AI로 합성하려 한다.",a:["동의와 사용 목적, 피해 가능성을 확인한다","유명인은 누구나 마음대로 합성해도 된다"],c:0,e:"목소리 합성은 권리와 사생활에 영향을 줄 수 있다."},
-{q:"친구를 놀리는 가짜 영상을 AI로 만들었다.",a:["장난이면 언제나 괜찮다","당사자에게 피해를 줄 수 있으므로 만들거나 퍼뜨리지 않는다"],c:1,e:"합성 영상은 괴롭힘과 명예 훼손의 피해를 일으킬 수 있다."},
-{q:"AI 답을 과학 보고서에 사용하려 한다.",a:["검증 없이 그대로 사용한다","신뢰할 만한 자료로 사실을 확인한다"],c:1,e:"보고서에는 정확한 정보와 확인 가능한 근거가 필요하다."},
-{q:"AI 서비스가 위치 정보를 요구한다.",a:["필요성과 이용 목적을 확인한다","모든 권한을 무조건 허용한다"],c:0,e:"서비스에 꼭 필요한 정보인지 판단해야 한다."},
-{q:"AI가 만든 그림을 내 작품이라고 발표한다.",a:["출처와 AI 사용 여부를 정직하게 밝힌다","직접 그렸다고 거짓말한다"],c:0,e:"창작 과정과 AI 사용 사실을 투명하게 알리는 것이 바람직하다."},
-{q:"AI 숙제를 제출하기 전에는?",a:["내용을 이해하지 않고 바로 낸다","사실을 확인하고 직접 이해한 뒤 규칙에 맞게 제출한다"],c:1,e:"사용자는 결과를 확인하고 학습에 책임을 져야 한다."},
-{q:"AI가 만든 가짜 뉴스를 발견했다.",a:["확산을 멈추고 확인된 정보를 살핀다","더 많은 사람에게 무조건 전달한다"],c:0,e:"허위 정보의 확산을 막고 사실 여부를 확인해야 한다."},
-{q:"AI가 의료 관련 답을 제공한다.",a:["전문가의 판단을 대신한다고 믿는다","공식 자료와 자격 있는 전문가에게 확인한다"],c:1,e:"중요한 건강 결정은 신뢰할 만한 전문 정보를 통해 확인해야 한다."},
-{q:"AI 윤리의 핵심은 무엇인가?",a:["기술의 이익과 위험을 함께 고려하는 것","기술이 가능하면 무엇이든 하는 것"],c:0,e:"AI 활용은 사람과 사회에 미치는 영향을 함께 고려해야 한다."}
+  {q:"AI로 과제를 작성했다면?",a:["학교 규칙을 지키고 필요한 경우 사용 사실을 밝힌다","AI가 썼으니 내 글이라고 한다"],c:0,e:"AI 사용 규칙을 지키고 결과물에 책임져야 한다."},
+  {q:"AI가 자신 있게 틀린 답을 말한다.",a:["자신 있게 말했으니 사실이다","신뢰할 만한 자료로 확인한다"],c:1,e:"AI는 그럴듯하지만 틀린 정보를 만들 수 있다."},
+  {q:"다른 사람의 개인정보를 AI에 입력하려 한다.",a:["불필요한 개인정보 입력을 피한다","항상 완벽하게 비밀이라고 가정한다"],c:0,e:"서비스의 데이터 처리 방식을 확인하고 개인정보를 보호해야 한다."},
+  {q:"AI가 특정 집단을 불리하게 평가한다.",a:["AI는 항상 공정하다","학습 자료와 결과의 편향을 점검한다"],c:1,e:"학습 데이터의 편견이 결과에 반영될 수 있다."},
+  {q:"AI 생성 사진을 실제 뉴스처럼 게시한다.",a:["AI 생성 여부를 명확히 밝힌다","실제 촬영 출처를 꾸며낸다"],c:0,e:"사람들이 실제 사건으로 오해하지 않도록 해야 한다."},
+  {q:"AI가 채용 결정을 내린다면?",a:["결과를 검토하지 않는다","공정성을 점검하고 사람이 감독한다"],c:1,e:"중요한 결정에는 편향 점검과 인간의 감독이 필요하다."},
+  {q:"인터넷 그림을 AI에 사용해도 될까?",a:["저작권과 이용 조건을 확인한다","인터넷에 있으면 무조건 자유롭게 쓴다"],c:0,e:"공개된 자료에도 저작권이나 이용 조건이 있을 수 있다."},
+  {q:"AI가 잘못된 조언을 해서 피해가 생겼다.",a:["AI가 했으니 책임이 없다","관련된 책임과 시정 방법을 살펴본다"],c:1,e:"AI를 사용했다는 이유만으로 책임이 사라지지 않는다."},
+  {q:"책임 있는 AI 활용은?",a:["성능만 좋으면 괜찮다","안전, 공정성, 개인정보도 고려한다"],c:1,e:"AI의 성능뿐 아니라 사람과 사회에 미치는 영향도 고려해야 한다."},
+  {q:"친구의 전화번호를 AI에 입력하려 한다.",a:["친구의 개인정보를 보호하고 입력하지 않는다","허락 없이 입력해도 된다"],c:0,e:"타인의 개인정보를 함부로 공유하면 안 된다."},
+  {q:"AI가 존재하지 않는 책을 인용했다.",a:["그럴듯하니 그대로 제출한다","실제 책과 출처가 존재하는지 확인한다"],c:1,e:"AI는 존재하지 않는 출처를 생성할 수 있다."},
+  {q:"유명인의 목소리를 AI로 합성하려 한다.",a:["동의와 사용 목적, 피해 가능성을 확인한다","유명인은 누구나 마음대로 합성해도 된다"],c:0,e:"목소리 합성은 권리와 사생활에 영향을 줄 수 있다."},
+  {q:"친구를 놀리는 가짜 영상을 AI로 만들었다.",a:["장난이면 언제나 괜찮다","당사자에게 피해를 줄 수 있으므로 만들거나 퍼뜨리지 않는다"],c:1,e:"합성 영상은 괴롭힘과 명예 훼손의 피해를 일으킬 수 있다."},
+  {q:"AI 답을 과학 보고서에 사용하려 한다.",a:["검증 없이 그대로 사용한다","신뢰할 만한 자료로 사실을 확인한다"],c:1,e:"보고서에는 정확한 정보와 확인 가능한 근거가 필요하다."},
+  {q:"AI 서비스가 위치 정보를 요구한다.",a:["필요성과 이용 목적을 확인한다","모든 권한을 무조건 허용한다"],c:0,e:"서비스에 꼭 필요한 정보인지 판단해야 한다."},
+  {q:"AI가 만든 그림을 내 작품이라고 발표한다.",a:["출처와 AI 사용 여부를 정직하게 밝힌다","직접 그렸다고 거짓말한다"],c:0,e:"창작 과정과 AI 사용 사실을 투명하게 알리는 것이 바람직하다."},
+  {q:"AI 숙제를 제출하기 전에는?",a:["내용을 이해하지 않고 바로 낸다","사실을 확인하고 직접 이해한 뒤 규칙에 맞게 제출한다"],c:1,e:"사용자는 결과를 확인하고 학습에 책임을 져야 한다."},
+  {q:"AI가 만든 가짜 뉴스를 발견했다.",a:["확산을 멈추고 확인된 정보를 살핀다","더 많은 사람에게 무조건 전달한다"],c:0,e:"허위 정보의 확산을 막고 사실 여부를 확인해야 한다."},
+  {q:"AI가 의료 관련 답을 제공한다.",a:["전문가의 판단을 대신한다고 믿는다","공식 자료와 자격 있는 전문가에게 확인한다"],c:1,e:"중요한 건강 결정은 신뢰할 만한 전문 정보를 통해 확인해야 한다."},
+  {q:"AI 윤리의 핵심은 무엇인가?",a:["기술의 이익과 위험을 함께 고려하는 것","기술이 가능하면 무엇이든 하는 것"],c:0,e:"AI 활용은 사람과 사회에 미치는 영향을 함께 고려해야 한다."}
 ]
 };
 
-
-// 질문 앞에 붙는 자동 생성 사례 문구를 제거하는 안전장치
-// 예: "설명문에서 표가 함께 제시됐을 때 (3번째 사례): 질문" → "질문"
-function cleanQuestionText(value){
-  let text=String(value ?? "").trim();
-  text=text.replace(/^.*?\(\d+\s*번째\s*사례\)\s*[:：—-]\s*/u, "");
-  text=text.replace(/^\d+\s*번째\s*사례\s*[:：—-]\s*/u, "");
-  return text.trim();
-}
-for(const questions of Object.values(BANK)){
-  for(const item of questions){
-    item.q=cleanQuestionText(item.q);
-  }
-}
-
-const $=id=>document.getElementById(id);
-const buttons=[$("opt0"),$("opt1")];
-function fitQuestionLayout(){
-  const area=document.querySelector(".question-area"), lanes=document.querySelector(".lanes"), arena=document.querySelector(".arena");
-  if(!area||!lanes||!arena)return;
-  const desired=Math.ceil(area.offsetTop+area.offsetHeight+12);
-  const minTop=window.matchMedia("(max-width:600px)").matches?195:205;
-  lanes.style.top=Math.max(minTop,desired)+"px";
-} 
-window.addEventListener("resize",fitQuestionLayout);
-function playSfx(name){if(window.AcidAudio)window.AcidAudio.play(name);}
-$("soundToggle").addEventListener("click",()=>{const on=!window.AcidAudio.isEnabled();window.AcidAudio.setEnabled(on);$("soundToggle").textContent=on?"🔊 사운드 ON":"🔇 사운드 OFF";$("soundToggle").setAttribute("aria-pressed",String(on));if(on)playSfx("click");});
-const menuToggle=$("menuToggle"),menuDropdown=$("menuDropdown");menuToggle.addEventListener("click",()=>{const opening=menuDropdown.hidden;menuDropdown.hidden=!opening;menuToggle.setAttribute("aria-expanded",String(opening));});document.addEventListener("click",e=>{if(!e.target.closest(".menu-wrap")){menuDropdown.hidden=true;menuToggle.setAttribute("aria-expanded","false");}});$("openRules").addEventListener("click",()=>{menuDropdown.hidden=true;menuToggle.setAttribute("aria-expanded","false");});$("soundToggle").addEventListener("click",()=>{menuDropdown.hidden=true;menuToggle.setAttribute("aria-expanded","false");});
-const AI_LEVEL={easy:{aiDelay:4300,aiChance:.45},medium:{aiDelay:2600,aiChance:.70},hard:{aiDelay:1200,aiChance:.90}};
-let settings={topic:"문해력",mode:"single",level:"easy",territoryAIs:1};
-let game=null,pool=[],q=null,raf=0,timer=null,locked=false,aiAnswered=false,lastFrame=0;
-function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active");}
-function shuffle(arr){arr=[...arr];for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
-function stop(){if(raf)cancelAnimationFrame(raf);raf=0;if(timer!==null)clearTimeout(timer);timer=null;}
-function bind(group,key){$(group).addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;settings[key]=b.dataset.v;$(group).querySelectorAll(".choice").forEach(x=>x.classList.toggle("selected",x===b));});}
-bind("topics","topic");bind("levels","level");
-function updateSetupLabels(){const fake=settings.topic==="가짜 판별";
-const modes=$("modes");
-$("modeChoiceLabel").textContent=fake?"02 / AI 수 선택":"02 / 모드 선택";
-if(fake){
- modes.className="choices";modes.style.gridTemplateColumns="repeat(2,minmax(0,1fr))";
- modes.innerHTML=[1,2,3,4].map(n=>`<button class="choice ${settings.territoryAIs===n?'selected':''}" data-ai-count="${n}">AI ${n}명</button>`).join("");
- $("territoryAISetup").hidden=true;
-}else{
- modes.className="choices two";modes.style.gridTemplateColumns="";
- modes.innerHTML=`<button class="choice ${settings.mode==='single'?'selected':''}" data-v="single">싱글</button><button class="choice ${settings.mode==='ai'?'selected':''}" data-v="ai">AI 대전</button>`;
- $("territoryAISetup").hidden=true;
-}
-$("modeSelectionStatus").textContent="현재 선택: "+(fake?`도트 앤 박스 · 나 + AI ${settings.territoryAIs}명`:(settings.mode==="ai"?"AI 대전":"싱글"));
-$("chosenTopic").textContent=settings.topic;
-$("chosenSetup").textContent=settings.topic+" · "+(fake?`AI ${settings.territoryAIs}명`:(settings.mode==="ai"?"AI 대전":"싱글"));}
-updateSetupLabels();$("topics").addEventListener("click",()=>{updateSetupLabels();show("modeScreen");});
-$("modes").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.aiCount){settings.territoryAIs=Number(b.dataset.aiCount);}else if(b.dataset.v){settings.mode=b.dataset.v;}updateSetupLabels();});
-function continueFromMode(){if(settings.mode==="ai"&&settings.topic!=="가짜 판별"){updateSetupLabels();show("levelScreen");}else{startGame();}}
-
-$("backToTopics").addEventListener("click",()=>show("home"));
-$("toNextSetup").addEventListener("click",continueFromMode);
-$("backToModes").addEventListener("click",()=>show("modeScreen"));
-$("beginGame").addEventListener("click",startGame);
-function launchGame(){if(settings.topic==="가짜 판별"){playSfx("start");startTerritoryGame();return;}playSfx("start");stop();pool=shuffle(BANK[settings.topic]);game={stage:0,hp:3,score:0,aiScore:0,attempts:0,correct:0,wrong:[],used:0,running:true};$("battle").classList.toggle("show",settings.mode==="ai");$("healthLabel").textContent=settings.mode==="ai"?"BATTLE":"HEALTH";$("hearts").textContent=settings.mode==="ai"?"NO LIVES":"♥ ♥ ♥";$("topicName").textContent=settings.topic;show("game");nextQuestion();}
-function nextQuestion(){if(!game?.running)return;if(settings.mode==="single"&&game.hp<=0){endGame("GAME OVER","생명을 모두 잃었습니다.");return;}if(game.used>=pool.length){endGame("QUIZ COMPLETE","이 주제의 고정 문제를 모두 풀었습니다!");return;}
-const item=pool[game.used++],order=Math.random()<.5?[0,1]:[1,0];q={...item,options:order.map(i=>item.a[i]),correctPosition:order.indexOf(item.c),elapsed:0,duration:Math.max(2800,9500-Math.floor(game.stage/5)*700)};game.stage++;locked=false;aiAnswered=false;lastFrame=0;$("question").textContent=q.q;$("subquestion").textContent=settings.mode==="ai"?"먼저 100점에 도달하면 승리!":"정답을 선택하세요!";fitQuestionLayout();$("feedback").textContent="산성비가 내려옵니다...";$("feedback").style.color="var(--yellow)";$("progressFill").style.width="0%";buttons.forEach((b,i)=>{b.disabled=false;b.style.top="30px";b.style.opacity="1";b.querySelector(".txt").textContent=q.options[i];});updateStats();raf=requestAnimationFrame(tick);}
-function tick(now){if(!game?.running||locked)return;if(!lastFrame)lastFrame=now;const dt=Math.min((now-lastFrame)/1000,.05);lastFrame=now;q.elapsed+=dt*1000;const lane=buttons[0].parentElement.parentElement,maxY=Math.max(35,lane.clientHeight-110),progress=Math.min(1,q.elapsed/q.duration),y=30+progress*maxY;buttons.forEach(b=>b.style.top=y+"px");$("progressFill").style.width=(progress*100)+"%";
-if(settings.mode==="ai"&&!aiAnswered&&q.elapsed>=AI_LEVEL[settings.level].aiDelay){aiAnswered=true;if(Math.random()<AI_LEVEL[settings.level].aiChance){game.aiScore+=10;updateStats();if(game.aiScore>=100){endGame("AI WIN","AI가 먼저 100점에 도달했습니다!");return;}finishRound("AI");return;}else{finishRound("AI_WRONG");return;}}
-if(progress>=1){timeoutRound();return;}raf=requestAnimationFrame(tick);}
-function choose(i){if(!game?.running||locked||buttons[i].disabled)return;playSfx("click");game.attempts++;if(i===q.correctPosition){playSfx("correct");game.correct++;game.score+=10;updateStats();if(settings.mode==="ai"&&game.score>=100){endGame("YOU WIN","축하합니다! 먼저 100점에 도달했습니다.");return;}finishRound("PLAYER");return;}
-playSfx("wrong");game.wrong.push({q:q.q,chosen:q.options[i],correct:q.options[q.correctPosition],explain:q.e});if(settings.mode==="ai"){game.score-=10;updateStats();finishRound("PLAYER_WRONG");}else{game.hp=Math.max(0,game.hp-1);updateStats();locked=true;stop();buttons.forEach(b=>b.disabled=true);$("feedback").textContent="✕ 오답! ♥ -1 · 다음 문제로 이동!";$("feedback").style.color="var(--pink)";$("subquestion").textContent="정답: "+q.options[q.correctPosition];timer=setTimeout(()=>{if(!game?.running)return;if(game.hp<=0)endGame("GAME OVER","생명을 모두 잃었습니다.");else nextQuestion();},500);}}
-function finishRound(winner){if(locked||!game?.running)return;locked=true;stop();buttons.forEach(b=>b.disabled=true);if(winner==="PLAYER"){$("feedback").textContent="✓ 정답! +10점";$("feedback").style.color="var(--cyan)";}else if(winner==="AI"){$("feedback").textContent="🤖 AI 정답! +10점";$("feedback").style.color="var(--pink)";}else if(winner==="AI_WRONG"){$("feedback").textContent="🤖 AI 오답! 점수 변화 없음.";$("feedback").style.color="var(--yellow)";}else{$("feedback").textContent="✕ 오답! -10점 · 다음 문제로 이동!";$("feedback").style.color="var(--pink)";$("subquestion").textContent="정답: "+q.options[q.correctPosition];}timer=setTimeout(()=>{if(game?.running)nextQuestion();},500);}
-function timeoutRound(){if(locked||!game?.running)return;playSfx("timeout");locked=true;stop();if(settings.mode==="ai"){game.score-=10;game.attempts++;game.wrong.push({q:q.q,chosen:"시간 초과",correct:q.options[q.correctPosition],explain:q.e});$("feedback").textContent="💥 시간 초과! -10점";}else{game.hp=Math.max(0,game.hp-1);game.attempts++;game.wrong.push({q:q.q,chosen:"시간 초과",correct:q.options[q.correctPosition],explain:q.e});$("feedback").textContent="💥 바닥에 닿았습니다! ♥ -1";}$("feedback").style.color="var(--pink)";buttons.forEach(b=>b.disabled=true);$("subquestion").textContent="정답: "+q.options[q.correctPosition];$("floor").animate([{opacity:1},{opacity:.2},{opacity:1}],300);updateStats();timer=setTimeout(()=>{if(!game?.running)return;if(settings.mode==="single"&&game.hp<=0)endGame("GAME OVER","생명을 모두 잃었습니다.");else nextQuestion();},500);}
-function updateStats(){$("stage").textContent=String(game.stage).padStart(2,"0");$("hearts").textContent=settings.mode==="ai"?"—":(game.hp?"♥ ".repeat(game.hp).trim():"♡ ♡ ♡");$("score").textContent=game.score;$("youScore").textContent=game.score;$("cpuScore").textContent=game.aiScore;}
-function endGame(title,message){if(!game||!game.running)return;playSfx(title==="YOU WIN"?"win":title==="AI WIN"||title==="GAME OVER"?"lose":"click");game.running=false;locked=true;stop();buttons.forEach(b=>b.disabled=true);$("resultTitle").textContent=title;$("resultMessage").textContent=message;$("finalScore").textContent=game.score;$("finalStage").textContent=game.stage;$("accuracy").textContent=game.attempts?Math.round(game.correct/game.attempts*100)+"%":"0%";$("battleResult").textContent=settings.mode==="ai"?"내 점수 "+game.score+"점 · AI "+game.aiScore+"점":"";const list=$("reviews");list.replaceChildren();if(!game.wrong.length){const el=document.createElement("div");el.className="empty";el.textContent="오답이 없습니다! 훌륭합니다.";list.append(el);}else{game.wrong.forEach((w,i)=>{const card=document.createElement("article");card.className="review";const h=document.createElement("h3");h.textContent=(i+1)+". "+w.q;const a=document.createElement("p");a.className="wrong";a.textContent="내 선택: "+w.chosen;const c=document.createElement("p");c.className="correct";c.textContent="정답: "+w.correct;const e=document.createElement("p");e.className="explain";e.textContent="해설: "+w.explain;card.append(h,a,c,e);list.append(card);});}show("result");}
-
-// 가짜 판별은 산성비 퀴즈와 분리된 땅따먹기 대전입니다.
+/* 가짜 판별 자료 (진짜=real, 가짜=fake). 중복·경계가 모호한 문항은 제외했습니다. */
+const R = (text, why) => ({text, answer: "real", why});
+const F = (text, why) => ({text, answer: "fake", why});
 const TERRITORY_FACTS = [
- {text:"대한민국의 수도는 서울이다.",answer:"real",why:"서울은 대한민국의 수도입니다."},
- {text:"번개가 치면 천둥 소리가 날 수 있다.",answer:"real",why:"번개로 공기가 급격히 가열되며 천둥이 발생합니다."},
- {text:"사람은 잠을 전혀 자지 않아도 건강하게 지낼 수 있다.",answer:"fake",why:"수면은 신체와 뇌 기능을 유지하는 데 필요합니다."},
- {text:"물은 해수면에서 약 100℃에 끓는다.",answer:"real",why:"일반적인 해수면 기압에서 물의 끓는점은 약 100℃입니다."},
- {text:"인터넷에서 많이 공유된 정보는 무조건 사실이다.",answer:"fake",why:"공유 횟수는 사실 여부를 증명하지 않습니다."},
- {text:"사진은 언제나 촬영 당시의 상황을 정확히 보여 준다.",answer:"fake",why:"사진은 편집되거나 다른 시점·장소의 사진이 재사용될 수 있습니다."},
- {text:"달은 스스로 빛을 만들어 낸다.",answer:"fake",why:"달은 태양빛을 반사해 밝게 보입니다."},
- {text:"공식 발표인지 확인할 때 기관의 공식 홈페이지를 살펴볼 수 있다.",answer:"real",why:"공식 홈페이지는 발표 내용을 확인할 수 있는 중요한 출처입니다."},
- {text:"AI가 만든 글은 항상 정확하고 오류가 없다.",answer:"fake",why:"AI는 그럴듯하지만 틀린 내용을 생성할 수 있습니다."},
- {text:"같은 소문이 여러 게시판에 있으면 독립적으로 검증된 것이다.",answer:"fake",why:"여러 게시판이 하나의 출처를 복사했을 수 있습니다."},
- {text:"정보를 확인할 때 작성 날짜와 출처를 함께 보는 것이 도움이 된다.",answer:"real",why:"날짜와 출처는 정보가 현재 상황에 맞는지 판단하는 데 도움이 됩니다."},
- {text:"지구는 태양 주위를 돈다.",answer:"real",why:"지구는 태양 주위를 공전합니다."},
- {text:"모든 바이러스는 항생제로 치료할 수 있다.",answer:"fake",why:"항생제는 세균에 작용하며 바이러스 감염에 일반적으로 효과가 없습니다."},
- {text:"문맥이 잘린 영상은 원래 의미와 다르게 보일 수 있다.",answer:"real",why:"앞뒤 상황이 빠지면 발언이나 행동의 의미가 달라질 수 있습니다."},
- {text:"검색 결과 첫 번째 페이지는 반드시 가장 정확하다.",answer:"fake",why:"검색 순위는 정확성을 보장하지 않습니다."},
- {text:"출처가 불분명한 링크에 개인정보를 입력하기 전에는 확인해야 한다.",answer:"real",why:"피싱과 개인정보 유출을 예방하기 위해 출처를 확인해야 합니다."},
- {text:"지구에는 중력이 없다.",answer:"fake",why:"지구의 중력은 물체를 지표면 쪽으로 끌어당깁니다."},
- {text:"두 사건이 동시에 일어났다는 사실만으로 서로 원인과 결과라고 단정할 수 없다.",answer:"real",why:"동시에 일어났다는 사실만으로 인과관계가 입증되지는 않습니다."},
- {text:"인터넷에 공개된 모든 사진은 마음대로 사용해도 된다.",answer:"fake",why:"사진에도 저작권과 이용 조건이 적용될 수 있습니다."},
- {text:"가짜 정보인지 판단할 때 다른 신뢰할 만한 출처와 비교할 수 있다.",answer:"real",why:"독립적인 출처를 비교하면 정보의 신뢰성을 평가하는 데 도움이 됩니다."},
- {text:"모든 구름은 땅에 비를 내린다.",answer:"fake",why:"구름의 종류와 대기 상태에 따라 비가 내리지 않을 수 있습니다."},
- {text:"지구는 대략 24시간에 한 번 자전한다.",answer:"real",why:"지구는 약 하루를 주기로 자전합니다."},
- {text:"인터넷 게시물에 전문가 사진이 있으면 내용은 반드시 사실이다.",answer:"fake",why:"사진이나 직함만으로 게시물의 사실 여부를 확인할 수 없습니다."},
- {text:"주장의 근거가 되는 원문을 직접 확인하는 것은 도움이 된다.",answer:"real",why:"요약이나 전달 과정에서 빠진 맥락을 확인할 수 있습니다."},
- {text:"사람은 눈을 뜨고 재채기를 절대로 할 수 없다.",answer:"fake",why:"재채기할 때 눈을 감는 경우가 많지만 절대 불가능한 것은 아닙니다."},
- {text:"물체는 지구의 중력 때문에 아래로 떨어질 수 있다.",answer:"real",why:"중력은 물체를 지구 중심 방향으로 끌어당깁니다."},
- {text:"조회 수가 높은 영상은 조작될 가능성이 없다.",answer:"fake",why:"조회 수는 영상이 조작되지 않았다는 증거가 아닙니다."},
- {text:"뉴스의 게시 날짜를 확인하면 오래된 정보를 구분하는 데 도움이 된다.",answer:"real",why:"예전에 사실이었던 정보도 현재에는 달라졌을 수 있습니다."},
- {text:"모든 금속은 자석에 붙는다.",answer:"fake",why:"철처럼 자석에 잘 붙는 금속도 있지만 모든 금속이 그런 것은 아닙니다."},
- {text:"지구 표면의 상당 부분은 바다로 덮여 있다.",answer:"real",why:"지구 표면의 약 71%가 물로 덮여 있습니다."},
- {text:"같은 문장을 여러 계정이 올리면 각각 독립적으로 확인한 것이다.",answer:"fake",why:"계정들이 한 게시물을 복사했을 수 있으므로 별도 확인이 필요합니다."},
- {text:"사진의 촬영 장소와 날짜를 확인하면 맥락을 파악하는 데 도움이 된다.",answer:"real",why:"장소와 날짜가 다르면 사진이 설명하는 사건도 달라질 수 있습니다."},
- {text:"인공지능이 자신 있게 답하면 그 답은 틀릴 수 없다.",answer:"fake",why:"AI는 확신에 찬 표현으로도 잘못된 정보를 말할 수 있습니다."},
- {text:"주장을 확인할 때는 근거와 출처를 함께 살펴야 한다.",answer:"real",why:"주장만 반복하는 것보다 확인 가능한 근거가 중요합니다."},
- {text:"인터넷에서 찾은 모든 자료는 저작권 제한 없이 자유롭게 쓸 수 있다.",answer:"fake",why:"온라인 자료에도 저작권과 이용 조건이 적용될 수 있습니다."},
- {text:"태양은 별이다.",answer:"real",why:"태양은 스스로 빛과 에너지를 내는 별입니다."},
- {text:"태양은 지구보다 작다.",answer:"fake",why:"태양의 지름은 지구보다 훨씬 큽니다."},
- {text:"달의 모양은 지구에서 보이는 햇빛을 받은 부분에 따라 달라진다.",answer:"real",why:"달의 위상은 태양·지구·달의 상대적인 위치에 따라 달라집니다."},
- {text:"계절은 지구와 태양 사이의 거리만으로 결정된다.",answer:"fake",why:"계절의 주된 원인은 지구 자전축의 기울기입니다."},
- {text:"물은 얼면 부피가 늘어날 수 있다.",answer:"real",why:"물은 얼음이 될 때 일반적으로 부피가 증가합니다."},
- {text:"소리는 진공 속에서도 공기 중처럼 전달된다.",answer:"fake",why:"소리는 전달할 매질이 필요하므로 진공에서는 전파되지 않습니다."},
- {text:"빛은 소리보다 빠르게 이동한다.",answer:"real",why:"빛의 속도는 공기 중 소리의 속도보다 훨씬 빠릅니다."},
- {text:"사람의 혈액은 몸속에서 파란색이다.",answer:"fake",why:"혈액은 산소량에 따라 밝기 차이가 있지만 파란색이 아닙니다."},
- {text:"식물은 광합성을 통해 빛에너지를 화학에너지로 바꾼다.",answer:"real",why:"광합성은 빛에너지를 이용해 유기물을 만드는 과정입니다."},
- {text:"선인장은 물을 전혀 필요로 하지 않는다.",answer:"fake",why:"선인장도 살아가기 위해 물이 필요하지만 건조한 환경에 적응했습니다."},
- {text:"모든 세균은 사람에게 해롭다.",answer:"fake",why:"많은 세균은 무해하거나 소화 등 생명 활동에 도움을 줍니다."},
- {text:"백신은 면역계가 특정 병원체에 대응하도록 준비시키는 데 도움을 준다.",answer:"real",why:"백신은 면역 반응을 유도해 감염이나 중증 위험을 줄이는 데 도움을 줍니다."},
- {text:"항생제를 처방받은 경우에도 증상이 나아지면 임의로 복용을 중단해도 된다.",answer:"fake",why:"복용 방법은 처방 지침을 따라야 하며 임의로 변경하지 말고 의료진과 상의해야 합니다."},
- {text:"사람의 지문은 사람마다 다를 수 있어 신원 확인에 활용된다.",answer:"real",why:"지문은 개인 식별에 활용되지만 실제 확인에는 적절한 절차가 필요합니다."},
- {text:"인간은 뇌의 10%만 사용한다는 말은 과학적으로 확인된 사실이다.",answer:"fake",why:"뇌의 다양한 영역은 상황에 따라 활동하며 10%만 사용한다는 주장은 신화입니다."},
- {text:"우주에서 우주비행사가 소리를 들을 때는 소리를 전달하는 매질이 필요하다.",answer:"real",why:"우주 공간의 진공에서는 소리가 직접 전파되지 않으며 통신 장치가 필요합니다."},
- {text:"번개는 같은 장소에 두 번 칠 수 없다.",answer:"fake",why:"높은 건물이나 탑 등에는 번개가 여러 번 칠 수 있습니다."},
- {text:"지진이 발생한 뒤에는 여진이 이어질 수 있다.",answer:"real",why:"큰 지진 이후 주변 단층이 조정되며 여진이 발생할 수 있습니다."},
- {text:"지진이 오기 전에 모든 동물이 항상 정확히 예측한다.",answer:"fake",why:"동물 행동만으로 지진을 신뢰성 있게 예측할 수 있다는 근거는 없습니다."},
- {text:"바닷물은 소금 등 용해된 물질 때문에 민물보다 짜다.",answer:"real",why:"바닷물에는 여러 염류가 녹아 있습니다."},
- {text:"북극과 남극은 같은 대륙 위에 있다.",answer:"fake",why:"남극은 대륙이고 북극은 주로 바다 위의 해빙으로 이루어져 있습니다."},
- {text:"지구의 대기는 지표면에서 멀어질수록 일반적으로 희박해진다.",answer:"real",why:"고도가 높아질수록 대기압과 공기 밀도가 대체로 낮아집니다."},
- {text:"사막은 모두 낮과 밤의 기온이 항상 똑같다.",answer:"fake",why:"사막의 기온 변화는 지역과 계절, 습도 등에 따라 다릅니다."},
- {text:"무지개는 빛이 물방울에서 굴절·반사·분산되며 나타날 수 있다.",answer:"real",why:"물방울이 햇빛을 분산시켜 여러 색으로 보이게 합니다."},
- {text:"얼음은 항상 물보다 무겁기 때문에 가라앉는다.",answer:"fake",why:"같은 부피라면 얼음은 액체 물보다 밀도가 낮아 뜹니다."},
- {text:"철은 습기와 산소가 있는 환경에서 녹슬 수 있다.",answer:"real",why:"철의 부식에는 산소와 물이 관여합니다."},
- {text:"유리는 어떤 조건에서도 절대 깨지지 않는다.",answer:"fake",why:"유리는 충격이나 온도 변화 등으로 깨질 수 있습니다."},
- {text:"소금은 물에 녹으면 사라져서 질량이 없어지는 것이다.",answer:"fake",why:"소금은 물에 녹아 분산되지만 물 전체의 질량에서 없어지지 않습니다."},
- {text:"자석의 같은 극끼리는 서로 밀어낸다.",answer:"real",why:"자석은 같은 극끼리 밀고 다른 극끼리 끌어당깁니다."},
- {text:"사람은 물 없이 몇 달 동안 건강하게 살 수 있다.",answer:"fake",why:"물은 생명 유지에 필수이며 심한 탈수는 위험합니다."},
- {text:"운동 후 심박수가 높아지는 것은 몸이 산소와 에너지를 더 공급하려는 반응일 수 있다.",answer:"real",why:"운동 중에는 근육의 산소와 영양소 수요가 증가합니다."},
- {text:"잠을 더 적게 잘수록 누구나 집중력이 좋아진다.",answer:"fake",why:"수면 부족은 집중력과 기억력에 악영향을 줄 수 있습니다."},
- {text:"손을 비누와 흐르는 물로 씻으면 많은 병원체를 제거하는 데 도움이 된다.",answer:"real",why:"올바른 손 씻기는 감염 전파를 줄이는 방법입니다."},
- {text:"천연 성분이라는 표시만 있으면 어떤 제품이든 안전하다.",answer:"fake",why:"천연 성분도 알레르기나 독성 등 위험을 일으킬 수 있습니다."},
- {text:"식품의 유통기한과 보관 방법을 확인하는 것은 안전에 도움이 된다.",answer:"real",why:"표시된 보관 조건과 날짜를 확인하면 식품 안전 판단에 도움이 됩니다."},
- {text:"모든 사람에게 같은 식단이 가장 건강하다.",answer:"fake",why:"건강한 식단은 나이, 활동량, 건강 상태 등 개인 조건에 따라 달라집니다."},
- {text:"물은 모든 오염 물질을 끓이기만 하면 제거할 수 있다.",answer:"fake",why:"끓이기는 많은 병원체를 줄이지만 일부 화학 오염물질은 제거하지 못합니다."},
- {text:"분리배출 기준은 지역과 품목에 따라 다를 수 있다.",answer:"real",why:"재활용 처리 체계가 달라 지자체와 제품 표시를 확인하는 것이 좋습니다."},
- {text:"종이는 무한히 재활용할 수 있어 품질이 전혀 떨어지지 않는다.",answer:"fake",why:"종이 섬유는 재활용 과정에서 짧아져 재활용 횟수에 한계가 있습니다."},
- {text:"태양광 발전은 햇빛을 이용해 전기를 생산한다.",answer:"real",why:"태양광 패널은 빛을 전기에너지로 변환합니다."},
- {text:"풍력 발전기는 바람이 전혀 없어도 바람의 힘으로 계속 전기를 만든다.",answer:"fake",why:"풍력 발전은 적절한 바람이 필요합니다."},
- {text:"재생에너지도 설치 장소와 방식에 따라 환경 영향을 줄 수 있다.",answer:"real",why:"모든 에너지원은 설계와 입지에 따라 환경 영향을 평가해야 합니다."},
- {text:"기후와 날씨는 완전히 같은 뜻이다.",answer:"fake",why:"날씨는 단기 상태이고 기후는 장기간의 평균적 특성입니다."},
- {text:"하루의 추운 날씨 하나만으로 지구 온난화가 없다고 결론 내릴 수 있다.",answer:"fake",why:"장기 기후 추세는 하루의 날씨만으로 판단할 수 없습니다."},
- {text:"온실가스는 지구에서 나가는 열의 일부를 흡수해 온난화에 영향을 준다.",answer:"real",why:"온실가스는 지구의 복사 에너지 균형에 영향을 줍니다."},
- {text:"오존층 파괴와 지구 온난화는 완전히 같은 현상이다.",answer:"fake",why:"두 현상은 원인과 작용이 다르지만 일부 물질이 두 문제 모두에 영향을 줄 수 있습니다."},
- {text:"숲은 탄소를 저장하는 역할을 할 수 있다.",answer:"real",why:"나무와 토양은 탄소를 저장할 수 있습니다."},
- {text:"나무 한 그루를 심으면 어떤 탄소 배출도 완전히 상쇄된다.",answer:"fake",why:"흡수량과 생존, 시간, 배출 규모 등을 따져야 하며 단순히 상쇄된다고 할 수 없습니다."},
- {text:"지구 온난화가 진행되면 모든 지역의 기온이 매일 똑같이 오른다.",answer:"fake",why:"지역별 변화는 다르고 날씨의 일시적 변동도 계속됩니다."},
- {text:"바다의 평균 수위는 얼음의 녹음과 바닷물의 열팽창 등의 영향을 받는다.",answer:"real",why:"육상 빙하의 손실과 따뜻해진 바닷물의 팽창은 해수면 상승 원인입니다."},
- {text:"모든 홍수는 기후 변화 하나만으로 발생한다.",answer:"fake",why:"홍수에는 강수, 지형, 토지 이용, 배수 시설 등 다양한 요인이 작용합니다."},
- {text:"공식 통계는 조사 대상과 조사 방법을 함께 확인하는 것이 좋다.",answer:"real",why:"표본과 정의, 조사 방법에 따라 통계의 해석이 달라질 수 있습니다."},
- {text:"그래프의 세로축이 0에서 시작하지 않으면 차이가 실제보다 크게 보일 수 있다.",answer:"real",why:"축 범위를 좁히면 변화가 시각적으로 과장될 수 있습니다."},
- {text:"그래프에 숫자가 적혀 있으면 출처를 확인할 필요가 없다.",answer:"fake",why:"숫자가 표시되어도 측정 방법과 출처를 확인해야 신뢰성을 평가할 수 있습니다."},
- {text:"평균값 하나만 알면 자료 속 모든 사람의 상황을 알 수 있다.",answer:"fake",why:"평균은 분포와 개인 간 차이를 보여주지 않을 수 있습니다."},
- {text:"상관관계가 발견되면 한 변수가 다른 변수의 원인이라고 확정된다.",answer:"fake",why:"상관관계만으로 인과관계를 증명할 수 없습니다."},
- {text:"조사에서 응답하지 않은 사람들의 특성은 결과에 영향을 줄 수 있다.",answer:"real",why:"무응답 편향이 결과의 대표성에 영향을 줄 수 있습니다."},
- {text:"설문 결과를 해석할 때는 응답자 수와 질문 문구를 확인하는 것이 좋다.",answer:"real",why:"표본 크기와 질문 방식은 응답 결과에 영향을 줄 수 있습니다."},
- {text:"설문 응답자 10명만 조사하면 언제나 전국민의 의견을 정확히 알 수 있다.",answer:"fake",why:"작고 편향된 표본은 전체를 대표하지 못할 수 있습니다."},
- {text:"통계에서 퍼센트와 퍼센트포인트는 항상 같은 뜻이다.",answer:"fake",why:"퍼센트 변화와 퍼센트포인트 차이는 서로 다른 개념입니다."},
- {text:"기사 제목만 읽어도 본문 전체의 의미를 항상 정확히 알 수 있다.",answer:"fake",why:"제목은 내용을 축약하므로 본문과 맥락을 확인해야 합니다."},
- {text:"인용문은 원문에서 앞뒤 문장을 확인하면 의미를 더 정확히 알 수 있다.",answer:"real",why:"인용 맥락은 발언의 의도를 이해하는 데 중요합니다."},
- {text:"익명 계정의 주장은 모두 거짓이다.",answer:"fake",why:"익명이라는 이유만으로 참·거짓을 확정할 수는 없고 근거를 확인해야 합니다."},
- {text:"유명인이 말한 내용이라도 근거를 확인할 필요가 있다.",answer:"real",why:"유명세는 주장의 정확성을 보장하지 않습니다."},
- {text:"전문가의 의견을 인용할 때는 해당 분야의 전문성인지 확인하는 것이 좋다.",answer:"real",why:"전문성은 분야별로 다를 수 있습니다."},
- {text:"반대 의견이 하나라도 있으면 과학적 합의는 존재할 수 없다.",answer:"fake",why:"과학적 합의는 모든 사람이 동의한다는 뜻이 아닙니다."},
- {text:"한 연구의 결과는 언제나 모든 상황과 사람에게 그대로 적용된다.",answer:"fake",why:"연구 결과는 대상과 조건, 한계에 따라 적용 범위가 달라집니다."},
- {text:"연구를 평가할 때는 연구 방법과 한계를 확인하는 것이 도움이 된다.",answer:"real",why:"방법과 한계를 알아야 결과를 적절히 해석할 수 있습니다."},
- {text:"논문 제목에 '연구 결과'라고 적혀 있으면 동료 평가가 끝난 논문이다.",answer:"fake",why:"제목이나 표현만으로 심사 여부를 알 수 없습니다."},
- {text:"보도자료와 독립적인 연구 결과는 같은 종류의 자료다.",answer:"fake",why:"보도자료는 기관의 발표이고 연구 논문 등과 목적과 검토 과정이 다를 수 있습니다."},
- {text:"팩트체크 기사는 어떤 주장과 근거를 검토했는지 확인해야 한다.",answer:"real",why:"판정 이유와 원자료를 확인하면 검토의 타당성을 평가할 수 있습니다."},
- {text:"팩트체크 사이트에 올라온 글은 출처를 볼 필요 없이 무조건 믿어도 된다.",answer:"fake",why:"팩트체크도 근거와 방법을 확인하며 읽는 것이 좋습니다."},
- {text:"게시물이 수정되었다면 수정 시점과 내용을 확인하는 것이 도움이 된다.",answer:"real",why:"수정 이력은 정보가 어떻게 바뀌었는지 파악하게 해 줍니다."},
- {text:"웹 주소에 자물쇠 표시가 있으면 그 사이트의 정보는 모두 사실이다.",answer:"fake",why:"HTTPS는 연결을 암호화하지만 사이트 내용의 진실성을 보증하지 않습니다."},
- {text:"인터넷 주소의 철자가 공식 사이트와 비슷해도 가짜 사이트일 수 있다.",answer:"real",why:"유사한 도메인을 이용한 사칭 사이트가 있을 수 있습니다."},
- {text:"공공기관을 사칭하는 메시지는 발신 주소와 공식 안내를 따로 확인해야 한다.",answer:"real",why:"발신자 표시만으로 진위를 판단하지 말고 공식 채널을 확인해야 합니다."},
- {text:"급하게 돈을 보내라고 압박하는 메시지는 사기 여부를 확인할 필요가 있다.",answer:"real",why:"긴급성을 이용해 판단을 흐리는 것은 사기에서 자주 쓰이는 수법입니다."},
- {text:"비밀번호를 여러 사이트에서 똑같이 쓰면 한 곳이 유출돼도 안전하다.",answer:"fake",why:"한 사이트에서 비밀번호가 유출되면 다른 계정도 위험해질 수 있습니다."},
- {text:"이중 인증은 비밀번호만 사용하는 것보다 계정 보안을 강화할 수 있다.",answer:"real",why:"추가 인증 단계는 계정 탈취 위험을 줄이는 데 도움이 됩니다."},
- {text:"공용 와이파이에 연결하면 모든 정보가 자동으로 공개된다.",answer:"fake",why:"위험은 네트워크와 보안 설정에 따라 다르지만 민감한 정보 보호에 주의해야 합니다."},
- {text:"개인정보를 공개하기 전에 꼭 필요한 정보인지 생각하는 것이 좋다.",answer:"real",why:"불필요한 개인정보 공개를 줄이면 오용 위험을 낮출 수 있습니다."},
- {text:"온라인에서 본 사람의 프로필 사진만으로 실제 신원을 확정할 수 있다.",answer:"fake",why:"사진은 도용되거나 다른 사람의 사진일 수 있습니다."},
- {text:"딥페이크 영상은 실제 인물의 모습과 목소리를 합성해 만들 수 있다.",answer:"real",why:"AI 기술로 얼굴이나 음성을 합성한 영상·음성이 만들어질 수 있습니다."},
- {text:"영상에 입 모양이 맞는 것처럼 보이면 조작이 절대 불가능하다.",answer:"fake",why:"정교한 합성은 눈으로만 판별하기 어려울 수 있습니다."},
- {text:"이미지 역검색은 사진이 다른 곳에서 사용됐는지 확인하는 데 도움이 된다.",answer:"real",why:"역이미지 검색은 원본이나 과거 게시 사례를 찾는 데 활용할 수 있습니다."},
- {text:"사진 속 그림자나 반사만 확인하면 합성 여부를 항상 확정할 수 있다.",answer:"fake",why:"시각적 단서 하나만으로 조작 여부를 확정하기는 어렵습니다."},
- {text:"이미지의 메타데이터는 편집되거나 제거될 수 있다.",answer:"real",why:"메타데이터는 변경 가능하므로 단독 증거로 사용하기 어렵습니다."},
- {text:"오래된 재난 사진이 새로운 사건의 사진으로 재사용될 수 있다.",answer:"real",why:"과거 사진을 현재 사건처럼 퍼뜨리는 오정보가 발생할 수 있습니다."},
- {text:"영상의 일부만 잘라 공유하면 발언의 의미가 달라질 수 있다.",answer:"real",why:"편집 범위에 따라 발언의 맥락이 사라질 수 있습니다."},
- {text:"자막이 붙어 있는 영상의 자막은 항상 원래 발언과 일치한다.",answer:"fake",why:"자막은 잘못 번역되거나 의도적으로 바뀔 수 있습니다."},
- {text:"번역기를 사용한 결과는 원문과 뉘앙스가 달라질 수 있어 원문 확인이 도움이 된다.",answer:"real",why:"자동 번역은 문맥과 관용 표현을 놓칠 수 있습니다."},
- {text:"AI가 제시한 참고문헌은 실제 존재하는지 확인하지 않아도 된다.",answer:"fake",why:"AI가 존재하지 않는 논문이나 링크를 제시할 수 있으므로 직접 확인해야 합니다."},
- {text:"AI 답변에 출처 링크가 있으면 링크의 내용이 답변을 반드시 뒷받침한다.",answer:"fake",why:"링크가 실제로 열리는지와 해당 내용을 뒷받침하는지 확인해야 합니다."},
- {text:"AI는 학습 자료의 오류나 편향을 답변에 반영할 수 있다.",answer:"real",why:"AI 출력은 학습 자료와 설계의 영향을 받을 수 있습니다."},
- {text:"AI가 만든 이미지나 글은 언제나 사람이 만든 것과 쉽게 구분된다.",answer:"fake",why:"생성 결과가 정교하면 육안만으로 구분하기 어려울 수 있습니다."},
- {text:"AI에게 같은 질문을 여러 번 하면 매번 정확히 같은 답을 한다.",answer:"fake",why:"설정과 문맥에 따라 답변이 달라질 수 있습니다."},
- {text:"AI 답변을 중요한 결정에 사용할 때는 신뢰할 수 있는 자료로 재확인하는 것이 좋다.",answer:"real",why:"AI는 보조 도구이며 중요한 사실은 별도 검증이 필요합니다."},
- {text:"AI가 계산한 결과도 식이나 다른 계산 방법으로 검산할 수 있다.",answer:"real",why:"검산은 계산 오류를 발견하는 데 도움이 됩니다."},
- {text:"AI가 사과하면 이전에 제시한 정보가 자동으로 사실이 된다.",answer:"fake",why:"사과 표현은 사실 확인을 대신하지 않습니다."},
- {text:"출처가 있는 주장이라도 출처가 그 주장을 실제로 말하는지 확인해야 한다.",answer:"real",why:"출처를 인용했더라도 맥락이나 내용이 왜곡될 수 있습니다."},
- {text:"정보를 공유하기 전에 날짜·출처·원문·다른 보도를 확인하는 것이 좋다.",answer:"real",why:"여러 확인 방법을 함께 사용하면 오정보 확산을 줄이는 데 도움이 됩니다."},
- {text:"내 생각과 일치하는 정보는 반대되는 정보보다 항상 더 정확하다.",answer:"fake",why:"자신의 믿음과 일치하는지보다 근거와 검증 가능성을 따져야 합니다."},
- {text:"감정을 강하게 자극하는 글일수록 사실 확인 없이 즉시 공유하는 것이 좋다.",answer:"fake",why:"감정적인 표현은 빠른 공유를 유도할 수 있으므로 먼저 확인해야 합니다."},
- {text:"풍자나 농담으로 만든 글이 사실 뉴스처럼 오해될 수 있다.",answer:"real",why:"맥락이 사라지면 풍자 콘텐츠가 실제 사건으로 받아들여질 수 있습니다."},
- {text:"패러디 계정은 공식 계정과 구별되는지 확인하는 것이 좋다.",answer:"real",why:"계정 이름과 설명, 공식 연결 여부를 확인해야 합니다."},
- {text:"뉴스 사진의 설명문이 사진 자체와 다른 사건을 가리킬 수 있다.",answer:"real",why:"사진과 캡션이 서로 맞는지 확인해야 합니다."},
- {text:"기사에 전문가 이름이 적혀 있으면 실제로 인터뷰했는지 확인할 필요가 없다.",answer:"fake",why:"이름이나 발언이 허위로 인용됐을 가능성을 배제할 수 없습니다."},
- {text:"여러 매체가 같은 보도를 했더라도 모두 같은 통신사 기사를 인용했을 수 있다.",answer:"real",why:"보도의 독립성을 판단하려면 원출처를 확인해야 합니다."},
- {text:"익숙한 브랜드 로고가 있으면 메시지가 반드시 해당 회사에서 온 것이다.",answer:"fake",why:"로고는 복사할 수 있으므로 공식 발신 경로를 확인해야 합니다."},
- {text:"온라인 투표 결과는 참여자가 누구였는지에 따라 전체 여론과 다를 수 있다.",answer:"real",why:"자발적 참여 방식은 표본 편향을 만들 수 있습니다."},
- {text:"소수의 사례만 보고 모든 사람에게 같은 일이 일어난다고 결론 내릴 수 있다.",answer:"fake",why:"일부 사례만으로 전체를 일반화하면 성급한 결론이 될 수 있습니다."},
- {text:"주장의 근거가 반증 가능하고 검증 가능하면 평가하기가 더 쉽다.",answer:"real",why:"확인 가능한 근거는 주장을 독립적으로 검토하는 데 도움이 됩니다."},
- {text:"틀렸다는 증거가 나와도 최초 주장을 절대로 수정하지 않는 것이 과학적 태도다.",answer:"fake",why:"새로운 증거에 따라 주장을 수정하는 것은 과학적 탐구의 일부입니다."},
- {text:"문제의 원인을 설명할 때 대안 설명도 고려하면 성급한 판단을 줄일 수 있다.",answer:"real",why:"다른 가능성을 검토하면 인과관계 오판을 줄이는 데 도움이 됩니다."},
- {text:"정보의 신뢰성은 글꼴이나 디자인이 세련됐는지만으로 판단할 수 있다.",answer:"fake",why:"전문적으로 보이는 디자인도 거짓 정보에 사용될 수 있습니다."},
- {text:"오탈자가 하나라도 있는 글은 반드시 가짜 정보다.",answer:"fake",why:"오탈자는 편집 실수일 수 있어 진위 여부를 단독으로 결정하지 못합니다."},
- {text:"공식 기관의 자료도 발표 날짜와 적용 범위를 확인하는 것이 좋다.",answer:"real",why:"공식 자료도 특정 시점이나 상황을 대상으로 할 수 있습니다."},
- {text:"정책이나 법률에 관한 정보는 최신 공식 자료를 확인하는 것이 좋다.",answer:"real",why:"법과 정책은 변경될 수 있으므로 최신 원문이 중요합니다."},
- {text:"인터넷에서 찾은 통계의 단위가 다르면 직접 비교하기 어려울 수 있다.",answer:"real",why:"단위와 정의가 다르면 수치 비교가 잘못될 수 있습니다."},
- {text:"숫자가 크면 언제나 중요한 영향이 크다고 할 수 있다.",answer:"fake",why:"비교 기준과 비율, 맥락을 함께 살펴야 의미를 해석할 수 있습니다."},
- {text:"기준 연도나 비교 대상을 바꾸면 같은 자료도 다르게 보일 수 있다.",answer:"real",why:"비교 기준은 그래프와 통계 해석에 영향을 줍니다."},
- {text:"자료를 인용할 때 원래 의미를 바꾸지 않고 정확하게 전달해야 한다.",answer:"real",why:"맥락을 왜곡하면 출처가 있어도 잘못된 주장이 될 수 있습니다."},
- {text:"누군가의 주장을 반박할 때는 실제로 한 말을 확인하는 것이 좋다.",answer:"real",why:"상대의 주장을 왜곡하지 않고 원문에 근거해 평가해야 합니다."},
- {text:"주장과 의견, 사실은 언제나 완전히 같은 개념이다.",answer:"fake",why:"사실은 증거로 확인할 수 있는 내용이고 의견은 평가나 선호를 포함할 수 있습니다."},
- {text:"출처를 확인할 수 없는 캡처 화면만으로 사건의 전말을 확정하기는 어렵다.",answer:"real",why:"캡처는 맥락이 빠졌거나 편집되었을 수 있습니다."},
- {text:"인터넷 게시물의 날짜는 다른 시간대나 재게시 여부 때문에 혼동될 수 있다.",answer:"real",why:"시간대와 재게시 표시를 확인하면 게시 시점을 더 정확히 이해할 수 있습니다."},
- {text:"정보를 확인할 때 원문을 찾지 않고 요약문만 보는 것이 항상 더 정확하다.",answer:"fake",why:"요약문은 중요한 조건이나 예외를 생략할 수 있습니다."},
- {text:"모든 온라인 리뷰는 실제 구매자가 작성한다.",answer:"fake",why:"리뷰는 광고, 조작, 또는 구매하지 않은 사람의 글일 수도 있습니다."},
- {text:"별점 평균만으로 상품의 품질을 완벽하게 판단할 수 있다.",answer:"fake",why:"리뷰 수, 내용, 작성 시점, 사용 조건 등을 함께 봐야 합니다."},
- {text:"협찬이나 광고 여부를 확인하면 리뷰의 맥락을 이해하는 데 도움이 된다.",answer:"real",why:"경제적 이해관계는 리뷰의 해석에 영향을 줄 수 있습니다."},
- {text:"무료라는 광고 문구가 있으면 숨겨진 비용이 절대 없다.",answer:"fake",why:"조건이나 추가 요금이 있을 수 있으므로 약관을 확인해야 합니다."},
- {text:"당첨됐다는 메시지를 받으면 링크를 누르기 전에 발신자를 확인해야 한다.",answer:"real",why:"가짜 경품 메시지는 개인정보나 결제를 유도할 수 있습니다."},
- {text:"공식 고객센터 번호는 검색 광고에 나온 번호와 항상 같다.",answer:"fake",why:"사칭 광고가 있을 수 있으므로 공식 홈페이지의 연락처를 확인하는 것이 안전합니다."},
- {text:"긴급 경고문이 있다고 해서 첨부 파일을 즉시 열어야 하는 것은 아니다.",answer:"real",why:"긴급성을 이용한 악성 파일 유포 가능성이 있어 확인이 필요합니다."},
- {text:"파일 이름만 보고 안전한 파일인지 확정할 수 있다.",answer:"fake",why:"파일 이름은 바꿀 수 있으므로 출처와 보안 검사를 확인해야 합니다."},
- {text:"소프트웨어 업데이트는 보안 취약점을 수정하는 데 도움이 될 수 있다.",answer:"real",why:"업데이트에는 보안 패치가 포함될 수 있습니다."},
- {text:"공식 앱 스토어에 있는 앱은 권한을 확인하지 않아도 된다.",answer:"fake",why:"공식 스토어 앱도 요청 권한과 개인정보 처리 방식을 살펴보는 것이 좋습니다."},
- {text:"앱이 기능과 관계없는 과도한 권한을 요구하면 주의할 필요가 있다.",answer:"real",why:"권한 요구가 목적에 적절한지 확인하는 것은 개인정보 보호에 도움이 됩니다."},
- {text:"온라인에서 공개된 개인정보는 언제나 완전히 삭제할 수 있다.",answer:"fake",why:"복사본이나 저장된 기록이 남을 수 있어 완전한 삭제를 보장하기 어렵습니다."},
- {text:"공유하기 전에 사진에 주소나 학교 이름이 드러나는지 확인하는 것이 좋다.",answer:"real",why:"이미지에 포함된 단서는 위치나 신상 정보를 노출할 수 있습니다."},
- {text:"비밀번호를 친구와 공유하면 계정 보안이 더 강해진다.",answer:"fake",why:"비밀번호 공유는 계정 통제와 보안 위험을 높입니다."},
- {text:"개인정보 유출이 의심되면 비밀번호 변경과 공식 안내 확인이 도움이 될 수 있다.",answer:"real",why:"계정 보호 조치를 신속히 취하고 공식 안내를 따르는 것이 좋습니다."},
- {text:"모든 QR 코드는 안전한 웹사이트로 연결된다.",answer:"fake",why:"QR 코드가 악성 사이트나 사칭 사이트로 연결될 수도 있습니다."},
- {text:"QR 코드를 스캔한 뒤 열린 주소를 확인하는 것은 도움이 된다.",answer:"real",why:"주소를 확인하면 의도하지 않은 사이트 방문을 줄일 수 있습니다."},
- {text:"온라인에서 사실과 다른 정보를 발견하면 근거를 확인한 뒤 정정 정보를 공유할 수 있다.",answer:"real",why:"검증된 정정 정보를 공유하면 오정보 확산을 줄이는 데 도움이 됩니다."},
- {text:"가짜 정보는 항상 문법이 엉망이고 쉽게 알아볼 수 있다.",answer:"fake",why:"오정보도 전문적으로 작성되거나 정교하게 편집될 수 있습니다."},
- {text:"사실과 거짓이 섞인 게시물은 일부 사실만으로 전체가 정확하다고 볼 수 없다.",answer:"real",why:"각 주장과 맥락을 따로 검증해야 합니다."},
- {text:"주장에 숫자나 과학 용어가 많이 들어가면 자동으로 사실이 된다.",answer:"fake",why:"전문 용어와 숫자는 근거의 정확성을 보장하지 않습니다."},
- {text:"자료를 검증할 때는 주장에 맞는 증거뿐 아니라 반대 증거도 살펴보는 것이 좋다.",answer:"real",why:"반대 증거를 검토하면 확증 편향을 줄일 수 있습니다."},
- {text:"확인되지 않은 소문을 사실처럼 전달하면 다른 사람에게 피해를 줄 수 있다.",answer:"real",why:"허위 정보는 평판, 안전, 의사결정에 피해를 줄 수 있습니다."},
- {text:"누군가의 사진과 이름이 게시물에 있다는 사실만으로 그 사람이 실제로 말한 내용이라고 확정할 수 있다.",answer:"fake",why:"이름이나 사진이 도용되거나 발언이 조작됐을 수 있습니다."},
- {text:"정보를 만든 사람의 목적과 이해관계를 살펴보면 신뢰성 평가에 도움이 된다.",answer:"real",why:"작성 목적과 이해관계는 정보의 표현과 선택에 영향을 줄 수 있습니다."},
- {text:"정보를 많이 반복해서 읽으면 그 정보가 사실이라는 증거가 생긴다.",answer:"fake",why:"반복 노출은 익숙함을 만들 수 있지만 진실성을 증명하지는 않습니다."},
- {text:"정확한 정보라도 오래되면 현재 상황을 설명하기에 부적절할 수 있다.",answer:"real",why:"정보의 최신성은 상황에 따라 중요합니다."},
- {text:"한 출처가 틀렸다는 이유만으로 그 출처의 모든 말이 반드시 거짓이라고 결론 내릴 수 있다.",answer:"fake",why:"각 주장마다 근거를 따로 평가해야 합니다."},
- {text:"신뢰성 높은 출처를 찾을 때는 전문성, 근거, 최신성, 투명성을 함께 고려할 수 있다.",answer:"real",why:"여러 기준을 종합하면 출처를 더 균형 있게 평가할 수 있습니다."},
+ R("대한민국의 수도는 서울이다.","서울은 대한민국의 수도입니다."),
+ R("번개가 치면 천둥 소리가 날 수 있다.","번개로 공기가 급격히 가열되며 천둥이 발생합니다."),
+ F("사람은 잠을 전혀 자지 않아도 건강하게 지낼 수 있다.","수면은 신체와 뇌 기능을 유지하는 데 필요합니다."),
+ R("물은 해수면에서 약 100℃에 끓는다.","일반적인 해수면 기압에서 물의 끓는점은 약 100℃입니다."),
+ F("인터넷에서 많이 공유된 정보는 무조건 사실이다.","공유 횟수는 사실 여부를 증명하지 않습니다."),
+ F("사진은 언제나 촬영 당시의 상황을 정확히 보여 준다.","사진은 편집되거나 다른 시점·장소의 사진이 재사용될 수 있습니다."),
+ F("달은 스스로 빛을 만들어 낸다.","달은 태양빛을 반사해 밝게 보입니다."),
+ R("공식 발표인지 확인할 때 기관의 공식 홈페이지를 살펴볼 수 있다.","공식 홈페이지는 발표 내용을 확인할 수 있는 중요한 출처입니다."),
+ F("AI가 만든 글은 항상 정확하고 오류가 없다.","AI는 그럴듯하지만 틀린 내용을 생성할 수 있습니다."),
+ F("같은 소문이 여러 게시판에 있으면 독립적으로 검증된 것이다.","여러 게시판이 하나의 출처를 복사했을 수 있습니다."),
+ R("정보를 확인할 때 작성 날짜와 출처를 함께 보는 것이 도움이 된다.","날짜와 출처는 정보가 현재 상황에 맞는지 판단하는 데 도움이 됩니다."),
+ R("지구는 태양 주위를 돈다.","지구는 태양 주위를 공전합니다."),
+ F("모든 바이러스는 항생제로 치료할 수 있다.","항생제는 세균에 작용하며 바이러스 감염에는 일반적으로 효과가 없습니다."),
+ R("문맥이 잘린 영상은 원래 의미와 다르게 보일 수 있다.","앞뒤 상황이 빠지면 발언이나 행동의 의미가 달라질 수 있습니다."),
+ F("검색 결과 첫 번째 페이지는 반드시 가장 정확하다.","검색 순위는 정확성을 보장하지 않습니다."),
+ R("출처가 불분명한 링크에 개인정보를 입력하기 전에는 확인해야 한다.","피싱과 개인정보 유출을 예방하기 위해 출처를 확인해야 합니다."),
+ F("지구에는 중력이 없다.","지구의 중력은 물체를 지표면 쪽으로 끌어당깁니다."),
+ R("두 사건이 동시에 일어났다는 사실만으로 서로 원인과 결과라고 단정할 수 없다.","동시에 일어났다는 사실만으로 인과관계가 입증되지는 않습니다."),
+ F("인터넷에 공개된 모든 사진은 마음대로 사용해도 된다.","사진에도 저작권과 이용 조건이 적용될 수 있습니다."),
+ R("가짜 정보인지 판단할 때 다른 신뢰할 만한 출처와 비교할 수 있다.","독립적인 출처를 비교하면 정보의 신뢰성을 평가하는 데 도움이 됩니다."),
+ F("모든 구름은 땅에 비를 내린다.","구름의 종류와 대기 상태에 따라 비가 내리지 않을 수 있습니다."),
+ R("지구는 대략 24시간에 한 번 자전한다.","지구는 약 하루를 주기로 자전합니다."),
+ F("인터넷 게시물에 전문가 사진이 있으면 내용은 반드시 사실이다.","사진이나 직함만으로 게시물의 사실 여부를 확인할 수 없습니다."),
+ R("주장의 근거가 되는 원문을 직접 확인하는 것은 도움이 된다.","요약이나 전달 과정에서 빠진 맥락을 확인할 수 있습니다."),
+ F("사람은 눈을 뜨고 재채기를 절대로 할 수 없다.","재채기할 때 눈을 감는 경우가 많지만 절대 불가능한 것은 아닙니다."),
+ F("조회 수가 높은 영상은 조작될 가능성이 없다.","조회 수는 영상이 조작되지 않았다는 증거가 아닙니다."),
+ R("뉴스의 게시 날짜를 확인하면 오래된 정보를 구분하는 데 도움이 된다.","예전에 사실이었던 정보도 현재에는 달라졌을 수 있습니다."),
+ F("모든 금속은 자석에 붙는다.","철처럼 자석에 잘 붙는 금속도 있지만 모든 금속이 그런 것은 아닙니다."),
+ R("지구 표면의 상당 부분은 바다로 덮여 있다.","지구 표면의 약 71%가 물로 덮여 있습니다."),
+ F("같은 문장을 여러 계정이 올리면 각각 독립적으로 확인한 것이다.","계정들이 한 게시물을 복사했을 수 있으므로 별도 확인이 필요합니다."),
+ R("사진의 촬영 장소와 날짜를 확인하면 맥락을 파악하는 데 도움이 된다.","장소와 날짜가 다르면 사진이 설명하는 사건도 달라질 수 있습니다."),
+ F("인공지능이 자신 있게 답하면 그 답은 틀릴 수 없다.","AI는 확신에 찬 표현으로도 잘못된 정보를 말할 수 있습니다."),
+ F("인터넷에서 찾은 모든 자료는 저작권 제한 없이 자유롭게 쓸 수 있다.","온라인 자료에도 저작권과 이용 조건이 적용될 수 있습니다."),
+ R("태양은 별이다.","태양은 스스로 빛과 에너지를 내는 별입니다."),
+ F("태양은 지구보다 작다.","태양의 지름은 지구보다 훨씬 큽니다."),
+ R("달의 모양은 지구에서 보이는 햇빛을 받은 부분에 따라 달라진다.","달의 위상은 태양·지구·달의 상대적인 위치에 따라 달라집니다."),
+ F("계절은 지구와 태양 사이의 거리만으로 결정된다.","계절의 주된 원인은 지구 자전축의 기울기입니다."),
+ R("물은 얼면 부피가 늘어날 수 있다.","물은 얼음이 될 때 일반적으로 부피가 증가합니다."),
+ F("소리는 진공 속에서도 공기 중처럼 전달된다.","소리는 전달할 매질이 필요하므로 진공에서는 전파되지 않습니다."),
+ R("빛은 소리보다 빠르게 이동한다.","빛의 속도는 공기 중 소리의 속도보다 훨씬 빠릅니다."),
+ F("사람의 혈액은 몸속에서 파란색이다.","혈액은 산소량에 따라 밝기 차이가 있지만 파란색이 아닙니다."),
+ R("식물은 광합성을 통해 빛에너지를 화학에너지로 바꾼다.","광합성은 빛에너지를 이용해 유기물을 만드는 과정입니다."),
+ F("선인장은 물을 전혀 필요로 하지 않는다.","선인장도 물이 필요하지만 건조한 환경에 적응했습니다."),
+ F("모든 세균은 사람에게 해롭다.","많은 세균은 무해하거나 소화 등 생명 활동에 도움을 줍니다."),
+ R("백신은 면역계가 특정 병원체에 대응하도록 준비시키는 데 도움을 준다.","백신은 면역 반응을 유도해 감염이나 중증 위험을 줄이는 데 도움을 줍니다."),
+ F("항생제를 처방받은 경우에도 증상이 나아지면 임의로 복용을 중단해도 된다.","복용 방법은 처방 지침을 따르고, 변경이 필요하면 의료진과 상의해야 합니다."),
+ R("사람의 지문은 사람마다 달라 신원 확인에 활용된다.","지문은 개인 식별에 활용됩니다."),
+ F("인간은 뇌의 10%만 사용한다는 말은 과학적으로 확인된 사실이다.","뇌의 다양한 영역이 상황에 따라 활동하며, 10%만 쓴다는 주장은 속설입니다."),
+ R("우주비행사가 우주 공간에서 대화할 때는 소리를 전달할 통신 장치가 필요하다.","진공에서는 소리가 직접 전파되지 않습니다."),
+ F("번개는 같은 장소에 두 번 칠 수 없다.","높은 건물이나 탑에는 번개가 여러 번 칠 수 있습니다."),
+ R("지진이 발생한 뒤에는 여진이 이어질 수 있다.","큰 지진 이후 주변 단층이 조정되며 여진이 발생할 수 있습니다."),
+ F("지진이 오기 전에 모든 동물이 항상 정확히 예측한다.","동물 행동만으로 지진을 신뢰성 있게 예측할 수 있다는 근거는 없습니다."),
+ R("바닷물은 소금 등 용해된 물질 때문에 민물보다 짜다.","바닷물에는 여러 염류가 녹아 있습니다."),
+ F("북극과 남극은 모두 대륙 위에 있다.","남극은 대륙이고 북극은 주로 바다 위의 해빙으로 이루어져 있습니다."),
+ R("지구의 대기는 지표면에서 멀어질수록 일반적으로 희박해진다.","고도가 높아질수록 대기압과 공기 밀도가 대체로 낮아집니다."),
+ R("무지개는 빛이 물방울에서 굴절·반사·분산되며 나타날 수 있다.","물방울이 햇빛을 분산시켜 여러 색으로 보이게 합니다."),
+ F("같은 부피라면 얼음은 물보다 무거워서 가라앉는다.","얼음은 액체 물보다 밀도가 낮아 물에 뜹니다."),
+ R("철은 습기와 산소가 있는 환경에서 녹슬 수 있다.","철의 부식에는 산소와 물이 관여합니다."),
+ F("유리는 어떤 조건에서도 절대 깨지지 않는다.","유리는 충격이나 온도 변화 등으로 깨질 수 있습니다."),
+ F("소금은 물에 녹으면 질량이 없어진다.","소금은 물에 퍼져 보이지 않을 뿐 질량은 그대로 남아 있습니다."),
+ R("자석의 같은 극끼리는 서로 밀어낸다.","자석은 같은 극끼리 밀고 다른 극끼리 끌어당깁니다."),
+ F("사람은 물 없이 몇 달 동안 건강하게 살 수 있다.","물은 생명 유지에 필수이며 심한 탈수는 위험합니다."),
+ R("운동 후 심박수가 높아지는 것은 몸이 산소와 에너지를 더 공급하려는 반응일 수 있다.","운동 중에는 근육의 산소와 영양소 수요가 증가합니다."),
+ F("잠을 적게 잘수록 누구나 집중력이 좋아진다.","수면 부족은 집중력과 기억력에 악영향을 줄 수 있습니다."),
+ R("손을 비누와 흐르는 물로 씻으면 많은 병원체를 제거하는 데 도움이 된다.","올바른 손 씻기는 감염 전파를 줄이는 방법입니다."),
+ F("천연 성분이라는 표시만 있으면 어떤 제품이든 안전하다.","천연 성분도 알레르기나 독성 등 위험을 일으킬 수 있습니다."),
+ R("식품의 유통기한과 보관 방법을 확인하는 것은 안전에 도움이 된다.","표시된 보관 조건과 날짜를 확인하면 식품 안전 판단에 도움이 됩니다."),
+ F("모든 사람에게 같은 식단이 가장 건강하다.","건강한 식단은 나이, 활동량, 건강 상태 등 개인 조건에 따라 달라집니다."),
+ F("물은 끓이기만 하면 모든 오염 물질이 제거된다.","끓이기는 많은 병원체를 줄이지만 일부 화학 오염물질은 제거하지 못합니다."),
+ R("분리배출 기준은 지역과 품목에 따라 다를 수 있다.","재활용 처리 체계가 달라 지자체와 제품 표시를 확인하는 것이 좋습니다."),
+ F("종이는 무한히 재활용할 수 있어 품질이 전혀 떨어지지 않는다.","종이 섬유는 재활용 과정에서 짧아져 재활용 횟수에 한계가 있습니다."),
+ R("태양광 발전은 햇빛을 이용해 전기를 생산한다.","태양광 패널은 빛을 전기에너지로 변환합니다."),
+ F("풍력 발전기는 바람이 전혀 없어도 계속 전기를 만든다.","풍력 발전은 적절한 바람이 필요합니다."),
+ R("재생에너지도 설치 장소와 방식에 따라 환경 영향을 줄 수 있다.","모든 에너지원은 설계와 입지에 따라 환경 영향을 평가해야 합니다."),
+ F("기후와 날씨는 완전히 같은 뜻이다.","날씨는 단기 상태이고 기후는 장기간의 평균적 특성입니다."),
+ F("하루의 추운 날씨 하나만으로 지구 온난화가 없다고 결론 내릴 수 있다.","장기 기후 추세는 하루의 날씨만으로 판단할 수 없습니다."),
+ R("온실가스는 지구에서 나가는 열의 일부를 흡수해 온난화에 영향을 준다.","온실가스는 지구의 복사 에너지 균형에 영향을 줍니다."),
+ R("숲은 탄소를 저장하는 역할을 할 수 있다.","나무와 토양은 탄소를 저장할 수 있습니다."),
+ F("나무 한 그루를 심으면 어떤 탄소 배출도 완전히 상쇄된다.","흡수량, 생존, 시간, 배출 규모 등을 따져야 하며 단순히 상쇄된다고 할 수 없습니다."),
+ R("바다의 평균 수위는 얼음의 녹음과 바닷물의 열팽창 등의 영향을 받는다.","육상 빙하의 손실과 따뜻해진 바닷물의 팽창은 해수면 상승 원인입니다."),
+ F("모든 홍수는 기후 변화 하나만으로 발생한다.","홍수에는 강수, 지형, 토지 이용, 배수 시설 등 다양한 요인이 작용합니다."),
+ R("공식 통계는 조사 대상과 조사 방법을 함께 확인하는 것이 좋다.","표본과 정의, 조사 방법에 따라 통계의 해석이 달라질 수 있습니다."),
+ R("그래프의 세로축이 0에서 시작하지 않으면 차이가 실제보다 크게 보일 수 있다.","축 범위를 좁히면 변화가 시각적으로 과장될 수 있습니다."),
+ F("그래프에 숫자가 적혀 있으면 출처를 확인할 필요가 없다.","숫자가 표시되어도 측정 방법과 출처를 확인해야 신뢰성을 평가할 수 있습니다."),
+ F("평균값 하나만 알면 자료 속 모든 사람의 상황을 알 수 있다.","평균은 분포와 개인 간 차이를 보여주지 않을 수 있습니다."),
+ F("상관관계가 발견되면 한 변수가 다른 변수의 원인이라고 확정된다.","상관관계만으로 인과관계를 증명할 수 없습니다."),
+ R("조사에서 응답하지 않은 사람들의 특성은 결과에 영향을 줄 수 있다.","무응답 편향이 결과의 대표성에 영향을 줄 수 있습니다."),
+ R("설문 결과를 해석할 때는 응답자 수와 질문 문구를 확인하는 것이 좋다.","표본 크기와 질문 방식은 응답 결과에 영향을 줄 수 있습니다."),
+ F("설문 응답자 10명만 조사하면 언제나 전국민의 의견을 정확히 알 수 있다.","작고 편향된 표본은 전체를 대표하지 못할 수 있습니다."),
+ F("통계에서 퍼센트와 퍼센트포인트는 항상 같은 뜻이다.","퍼센트 변화와 퍼센트포인트 차이는 서로 다른 개념입니다."),
+ F("기사 제목만 읽어도 본문 전체의 의미를 항상 정확히 알 수 있다.","제목은 내용을 축약하므로 본문과 맥락을 확인해야 합니다."),
+ R("인용문은 원문의 앞뒤 문장을 확인하면 의미를 더 정확히 알 수 있다.","인용 맥락은 발언의 의도를 이해하는 데 중요합니다."),
+ F("익명 계정의 주장은 모두 거짓이다.","익명이라는 이유만으로 참·거짓을 확정할 수는 없고 근거를 확인해야 합니다."),
+ R("유명인이 말한 내용이라도 근거를 확인할 필요가 있다.","유명세는 주장의 정확성을 보장하지 않습니다."),
+ R("전문가의 의견을 인용할 때는 해당 분야의 전문성인지 확인하는 것이 좋다.","전문성은 분야별로 다를 수 있습니다."),
+ F("반대 의견이 하나라도 있으면 과학적 합의는 존재할 수 없다.","과학적 합의는 모든 사람이 동의한다는 뜻이 아닙니다."),
+ F("한 연구의 결과는 언제나 모든 상황과 사람에게 그대로 적용된다.","연구 결과는 대상과 조건, 한계에 따라 적용 범위가 달라집니다."),
+ R("연구를 평가할 때는 연구 방법과 한계를 확인하는 것이 도움이 된다.","방법과 한계를 알아야 결과를 적절히 해석할 수 있습니다."),
+ F("논문 제목에 '연구 결과'라고 적혀 있으면 동료 평가가 끝난 논문이다.","제목이나 표현만으로 심사 여부를 알 수 없습니다."),
+ R("팩트체크 기사는 어떤 주장과 근거를 검토했는지 확인해야 한다.","판정 이유와 원자료를 확인하면 검토의 타당성을 평가할 수 있습니다."),
+ R("게시물이 수정되었다면 수정 시점과 내용을 확인하는 것이 도움이 된다.","수정 이력은 정보가 어떻게 바뀌었는지 파악하게 해 줍니다."),
+ F("웹 주소에 자물쇠 표시가 있으면 그 사이트의 정보는 모두 사실이다.","HTTPS는 연결을 암호화하지만 사이트 내용의 진실성을 보증하지 않습니다."),
+ R("인터넷 주소의 철자가 공식 사이트와 비슷해도 가짜 사이트일 수 있다.","유사한 도메인을 이용한 사칭 사이트가 있을 수 있습니다."),
+ R("공공기관을 사칭하는 메시지는 발신 주소와 공식 안내를 따로 확인해야 한다.","발신자 표시만으로 진위를 판단하지 말고 공식 채널을 확인해야 합니다."),
+ R("급하게 돈을 보내라고 압박하는 메시지는 사기 여부를 확인할 필요가 있다.","긴급성을 이용해 판단을 흐리는 것은 사기에서 자주 쓰이는 수법입니다."),
+ F("비밀번호를 여러 사이트에서 똑같이 쓰면 한 곳이 유출돼도 안전하다.","한 사이트에서 비밀번호가 유출되면 다른 계정도 위험해질 수 있습니다."),
+ R("이중 인증은 비밀번호만 사용하는 것보다 계정 보안을 강화할 수 있다.","추가 인증 단계는 계정 탈취 위험을 줄이는 데 도움이 됩니다."),
+ R("개인정보를 공개하기 전에 꼭 필요한 정보인지 생각하는 것이 좋다.","불필요한 개인정보 공개를 줄이면 오용 위험을 낮출 수 있습니다."),
+ F("온라인에서 본 사람의 프로필 사진만으로 실제 신원을 확정할 수 있다.","사진은 도용되거나 다른 사람의 사진일 수 있습니다."),
+ R("딥페이크 영상은 실제 인물의 모습과 목소리를 합성해 만들 수 있다.","AI 기술로 얼굴이나 음성을 합성한 영상·음성이 만들어질 수 있습니다."),
+ F("영상에서 입 모양이 맞는 것처럼 보이면 조작이 절대 불가능하다.","정교한 합성은 눈으로만 판별하기 어려울 수 있습니다."),
+ R("이미지 역검색은 사진이 다른 곳에서 사용됐는지 확인하는 데 도움이 된다.","역이미지 검색은 원본이나 과거 게시 사례를 찾는 데 활용할 수 있습니다."),
+ F("사진 속 그림자나 반사만 확인하면 합성 여부를 항상 확정할 수 있다.","시각적 단서 하나만으로 조작 여부를 확정하기는 어렵습니다."),
+ R("이미지의 메타데이터는 편집되거나 제거될 수 있다.","메타데이터는 변경 가능하므로 단독 증거로 사용하기 어렵습니다."),
+ R("오래된 재난 사진이 새로운 사건의 사진으로 재사용될 수 있다.","과거 사진을 현재 사건처럼 퍼뜨리는 오정보가 발생할 수 있습니다."),
+ F("자막이 붙어 있는 영상의 자막은 항상 원래 발언과 일치한다.","자막은 잘못 번역되거나 의도적으로 바뀔 수 있습니다."),
+ R("번역기를 사용한 결과는 원문과 뉘앙스가 달라질 수 있어 원문 확인이 도움이 된다.","자동 번역은 문맥과 관용 표현을 놓칠 수 있습니다."),
+ F("AI가 제시한 참고문헌은 실제 존재하는지 확인하지 않아도 된다.","AI가 존재하지 않는 논문이나 링크를 제시할 수 있으므로 직접 확인해야 합니다."),
+ F("AI 답변에 출처 링크가 있으면 링크의 내용이 답변을 반드시 뒷받침한다.","링크가 실제로 열리는지와 해당 내용을 뒷받침하는지 확인해야 합니다."),
+ R("AI는 학습 자료의 오류나 편향을 답변에 반영할 수 있다.","AI 출력은 학습 자료와 설계의 영향을 받을 수 있습니다."),
+ F("AI가 만든 이미지나 글은 언제나 사람이 만든 것과 쉽게 구분된다.","생성 결과가 정교하면 육안만으로 구분하기 어려울 수 있습니다."),
+ F("AI에게 같은 질문을 여러 번 하면 매번 정확히 같은 답을 한다.","설정과 문맥에 따라 답변이 달라질 수 있습니다."),
+ R("AI 답변을 중요한 결정에 사용할 때는 신뢰할 수 있는 자료로 재확인하는 것이 좋다.","AI는 보조 도구이며 중요한 사실은 별도 검증이 필요합니다."),
+ F("AI가 사과하면 이전에 제시한 정보가 자동으로 사실이 된다.","사과 표현은 사실 확인을 대신하지 않습니다."),
+ R("출처가 있는 주장이라도 출처가 그 주장을 실제로 말하는지 확인해야 한다.","출처를 인용했더라도 맥락이나 내용이 왜곡될 수 있습니다."),
+ R("정보를 공유하기 전에 날짜·출처·원문·다른 보도를 확인하는 것이 좋다.","여러 확인 방법을 함께 사용하면 오정보 확산을 줄이는 데 도움이 됩니다."),
+ F("내 생각과 일치하는 정보는 반대되는 정보보다 항상 더 정확하다.","자신의 믿음과 일치하는지보다 근거와 검증 가능성을 따져야 합니다."),
+ F("감정을 강하게 자극하는 글일수록 사실 확인 없이 즉시 공유하는 것이 좋다.","감정적인 표현은 빠른 공유를 유도할 수 있으므로 먼저 확인해야 합니다."),
+ R("풍자나 농담으로 만든 글이 사실 뉴스처럼 오해될 수 있다.","맥락이 사라지면 풍자 콘텐츠가 실제 사건으로 받아들여질 수 있습니다."),
+ R("패러디 계정은 공식 계정과 구별되는지 확인하는 것이 좋다.","계정 이름과 설명, 공식 연결 여부를 확인해야 합니다."),
+ R("뉴스 사진의 설명문이 사진 자체와 다른 사건을 가리킬 수 있다.","사진과 캡션이 서로 맞는지 확인해야 합니다."),
+ F("기사에 전문가 이름이 적혀 있으면 실제로 인터뷰했는지 확인할 필요가 없다.","이름이나 발언이 허위로 인용됐을 가능성을 배제할 수 없습니다."),
+ R("여러 매체가 같은 보도를 했더라도 모두 같은 통신사 기사를 인용했을 수 있다.","보도의 독립성을 판단하려면 원출처를 확인해야 합니다."),
+ F("익숙한 브랜드 로고가 있으면 메시지가 반드시 해당 회사에서 온 것이다.","로고는 복사할 수 있으므로 공식 발신 경로를 확인해야 합니다."),
+ R("온라인 투표 결과는 참여자가 누구였는지에 따라 전체 여론과 다를 수 있다.","자발적 참여 방식은 표본 편향을 만들 수 있습니다."),
+ F("소수의 사례만 보고 모든 사람에게 같은 일이 일어난다고 결론 내릴 수 있다.","일부 사례만으로 전체를 일반화하면 성급한 결론이 될 수 있습니다."),
+ F("틀렸다는 증거가 나와도 최초 주장을 절대 수정하지 않는 것이 과학적 태도다.","새로운 증거에 따라 주장을 수정하는 것은 과학적 탐구의 일부입니다."),
+ R("문제의 원인을 설명할 때 대안 설명도 고려하면 성급한 판단을 줄일 수 있다.","다른 가능성을 검토하면 인과관계 오판을 줄이는 데 도움이 됩니다."),
+ F("정보의 신뢰성은 글꼴이나 디자인이 세련됐는지만으로 판단할 수 있다.","전문적으로 보이는 디자인도 거짓 정보에 사용될 수 있습니다."),
+ F("오탈자가 하나라도 있는 글은 반드시 가짜 정보다.","오탈자는 편집 실수일 수 있어 진위 여부를 단독으로 결정하지 못합니다."),
+ R("정책이나 법률에 관한 정보는 최신 공식 자료를 확인하는 것이 좋다.","법과 정책은 변경될 수 있으므로 최신 원문이 중요합니다."),
+ R("인터넷에서 찾은 통계의 단위가 다르면 직접 비교하기 어려울 수 있다.","단위와 정의가 다르면 수치 비교가 잘못될 수 있습니다."),
+ F("숫자가 크면 언제나 중요한 영향이 크다고 할 수 있다.","비교 기준과 비율, 맥락을 함께 살펴야 의미를 해석할 수 있습니다."),
+ R("기준 연도나 비교 대상을 바꾸면 같은 자료도 다르게 보일 수 있다.","비교 기준은 그래프와 통계 해석에 영향을 줍니다."),
+ F("사실과 의견은 언제나 완전히 같은 개념이다.","사실은 증거로 확인할 수 있는 내용이고 의견은 평가나 선호를 포함할 수 있습니다."),
+ R("출처를 확인할 수 없는 캡처 화면만으로 사건의 전말을 확정하기는 어렵다.","캡처는 맥락이 빠졌거나 편집되었을 수 있습니다."),
+ F("정보를 확인할 때 원문을 찾지 않고 요약문만 보는 것이 항상 더 정확하다.","요약문은 중요한 조건이나 예외를 생략할 수 있습니다."),
+ F("모든 온라인 리뷰는 실제 구매자가 작성한다.","리뷰는 광고, 조작, 또는 구매하지 않은 사람의 글일 수도 있습니다."),
+ F("별점 평균만으로 상품의 품질을 완벽하게 판단할 수 있다.","리뷰 수, 내용, 작성 시점, 사용 조건 등을 함께 봐야 합니다."),
+ R("협찬이나 광고 여부를 확인하면 리뷰의 맥락을 이해하는 데 도움이 된다.","경제적 이해관계는 리뷰의 해석에 영향을 줄 수 있습니다."),
+ F("'무료'라는 광고 문구가 있으면 숨겨진 비용이 절대 없다.","조건이나 추가 요금이 있을 수 있으므로 약관을 확인해야 합니다."),
+ R("당첨됐다는 메시지를 받으면 링크를 누르기 전에 발신자를 확인해야 한다.","가짜 경품 메시지는 개인정보나 결제를 유도할 수 있습니다."),
+ F("검색 광고에 나온 고객센터 번호는 항상 공식 번호다.","사칭 광고가 있을 수 있으므로 공식 홈페이지의 연락처를 확인하는 것이 안전합니다."),
+ F("파일 이름만 보고 안전한 파일인지 확정할 수 있다.","파일 이름은 바꿀 수 있으므로 출처와 보안 검사를 확인해야 합니다."),
+ R("소프트웨어 업데이트는 보안 취약점을 수정하는 데 도움이 될 수 있다.","업데이트에는 보안 패치가 포함될 수 있습니다."),
+ F("공식 앱 스토어에 있는 앱은 권한을 확인하지 않아도 된다.","공식 스토어 앱도 요청 권한과 개인정보 처리 방식을 살펴보는 것이 좋습니다."),
+ R("앱이 기능과 관계없는 과도한 권한을 요구하면 주의할 필요가 있다.","권한 요구가 목적에 적절한지 확인하는 것은 개인정보 보호에 도움이 됩니다."),
+ F("온라인에 공개된 개인정보는 언제나 완전히 삭제할 수 있다.","복사본이나 저장된 기록이 남을 수 있어 완전한 삭제를 보장하기 어렵습니다."),
+ R("사진을 공유하기 전에 주소나 학교 이름이 드러나는지 확인하는 것이 좋다.","이미지에 포함된 단서는 위치나 신상 정보를 노출할 수 있습니다."),
+ F("비밀번호를 친구와 공유하면 계정 보안이 더 강해진다.","비밀번호 공유는 계정 통제와 보안 위험을 높입니다."),
+ F("모든 QR 코드는 안전한 웹사이트로 연결된다.","QR 코드가 악성 사이트나 사칭 사이트로 연결될 수도 있습니다."),
+ R("가짜 정보는 전문적으로 작성되거나 정교하게 편집되어 있을 수 있다.","오정보도 그럴듯한 형식을 갖출 수 있어 내용과 출처를 확인해야 합니다."),
+ R("사실과 거짓이 섞인 게시물은 일부 사실만으로 전체가 정확하다고 볼 수 없다.","각 주장과 맥락을 따로 검증해야 합니다."),
+ F("주장에 숫자나 과학 용어가 많이 들어가면 자동으로 사실이 된다.","전문 용어와 숫자는 근거의 정확성을 보장하지 않습니다."),
+ R("자료를 검증할 때는 주장에 맞는 증거뿐 아니라 반대 증거도 살펴보는 것이 좋다.","반대 증거를 검토하면 확증 편향을 줄일 수 있습니다."),
+ F("정보를 많이 반복해서 읽으면 그 정보가 사실이라는 증거가 생긴다.","반복 노출은 익숙함을 만들 수 있지만 진실성을 증명하지는 않습니다."),
+ R("정확한 정보라도 오래되면 현재 상황을 설명하기에 부적절할 수 있다.","정보의 최신성은 상황에 따라 중요합니다."),
+ F("한 출처가 틀렸다는 이유만으로 그 출처의 모든 말이 반드시 거짓이라고 결론 내릴 수 있다.","각 주장마다 근거를 따로 평가해야 합니다."),
+ R("신뢰할 만한 출처는 전문성, 근거, 최신성, 투명성을 함께 고려해 평가할 수 있다.","여러 기준을 종합하면 출처를 더 균형 있게 평가할 수 있습니다.")
 ];
-const TERRITORY_COLORS=["#0e9f9a","#e45486","#6577e8","#e3a52f","#8b5cf6"];
-const TERRITORY_NAMES=["나","AI 1","AI 2","AI 3","AI 4"];
-let territoryState=null,territoryTimer=null;
-function startTerritoryGame(){
- stop();if(territoryTimer){clearTimeout(territoryTimer);territoryTimer=null;}
- const count=Math.max(2,Math.min(5,Number(settings.territoryAIs||1)+1)),n=count>=4?7:5,edges=[],edgeQuestions=[];
- for(let r=0;r<=n;r++)for(let c=0;c<n;c++)edges.push({id:`h${r}_${c}`,r,c,dir:'h',owner:-1});
- for(let r=0;r<n;r++)for(let c=0;c<=n;c++)edges.push({id:`v${r}_${c}`,r,c,dir:'v',owner:-1});
- const facts=shuffle(TERRITORY_FACTS);edges.forEach((e,i)=>edgeQuestions.push({...facts[i]}));
- territoryState={count,size:n,edges,edgeQuestions,boxes:Array(n*n).fill(-1),scores:Array(count).fill(0),selected:-1,question:null,finished:false,currentPlayer:0,aiStatus:Array(count).fill('대기 중'),aiTargets:Array(count).fill(null),aiQuestions:Array(count).fill(null),lastFeedback:'정답이면 선이 연결됩니다. 오답이면 차례가 상대에게 넘어갑니다.'};
- show('territory');renderTerritory();
-}
-function boxEdges(r,c){const st=territoryState,n=st.size;return [st.edges.findIndex(e=>e.id===`h${r}_${c}`),st.edges.findIndex(e=>e.id===`h${r+1}_${c}`),st.edges.findIndex(e=>e.id===`v${r}_${c}`),st.edges.findIndex(e=>e.id===`v${r}_${c+1}`)];}
-function svgEl(tag,attrs={}){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el;}
-function renderTerritory(){
- const st=territoryState;if(!st)return;
- const stats=$('territoryStats');stats.replaceChildren();
- for(let p=0;p<st.count;p++){const el=document.createElement('div');el.className='territory-player'+(st.currentPlayer===p&&!st.finished?' active-player':'');el.style.setProperty('--player-color',TERRITORY_COLORS[p]);el.innerHTML=`<span class="player-dot"></span><b>${TERRITORY_NAMES[p]}</b><strong>${st.scores[p]}점</strong>`;stats.append(el);}
- const ai=$('territoryAIQuestions');ai.replaceChildren();
- for(let p=1;p<st.count;p++){const card=document.createElement('div');card.className='territory-ai-card';const q=st.aiQuestions[p];card.innerHTML=`<b><span>🤖 ${TERRITORY_NAMES[p]}</span><span>${st.currentPlayer===p&&!st.finished?'● 현재 차례':st.aiStatus[p]}</span></b><span>${q?q.text:(st.aiStatus[p]==='대기 중'?'내 차례가 끝나면 문제를 풉니다.':'아직 공개된 문제가 없습니다.')}</span>`;ai.append(card);}
- const board=$('territoryBoard');board.replaceChildren();
- const layout=board.closest('.territory-layout');layout.classList.toggle('four-player',st.count===4);
- const n=st.size,step=500/n,pad=step*0.08,tile=step-pad*2,svg=svgEl('svg',{viewBox:'0 0 500 500',role:'img','aria-label':'도트 앤 박스 게임판'});
- // Soft box tiles first.
- for(let r=0;r<n;r++)for(let c=0;c<n;c++){const owner=st.boxes[r*n+c];const rect=svgEl('rect',{x:c*step+pad,y:r*step+pad,width:tile,height:tile,rx:Math.max(3,step*.09),fill:owner>=0?TERRITORY_COLORS[owner]+'24':'#f7f9fc',stroke:owner>=0?TERRITORY_COLORS[owner]+'70':'#e6ebf3','stroke-width':1});svg.append(rect);if(owner>=0){const t=svgEl('text',{x:c*step+step/2,y:r*step+step*.57,'text-anchor':'middle','font-size':String(Math.max(9,step*.17)),'font-weight':'800',fill:TERRITORY_COLORS[owner]});t.textContent=TERRITORY_NAMES[owner];svg.append(t);}}
- // Draw clickable edge targets and visible lines.
- st.edges.forEach((e,i)=>{const x1=e.dir==='h'?e.c*step:e.c*step,x2=e.dir==='h'?(e.c+1)*step:e.c*step,y1=e.dir==='h'?e.r*step:e.r*step,y2=e.dir==='h'?e.r*step:(e.r+1)*step;const color=e.owner>=0?TERRITORY_COLORS[e.owner]:'#d7e0eb';
-  const line=svgEl('line',{x1,y1,x2,y2,stroke:color,'stroke-width':e.owner>=0?Math.max(4,step*.08):Math.max(2.5,step*.04),'stroke-linecap':'round'});svg.append(line);
-  if(e.owner<0&&!st.finished&&st.currentPlayer===0&&!st.question){const hit=svgEl('line',{x1,y1,x2,y2,stroke:'transparent','stroke-width':22,'stroke-linecap':'round',tabindex:0,role:'button','aria-label':'선 선택'});hit.style.cursor='pointer';hit.addEventListener('click',()=>selectTerritory(i));hit.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();selectTerritory(i);}});svg.append(hit);}
- });
- for(let r=0;r<=n;r++)for(let c=0;c<=n;c++)svg.append(svgEl('circle',{cx:c*step,cy:r*step,r:Math.max(3.5,step*.06),fill:'#24364f',stroke:'#fff','stroke-width':2}));
- board.append(svg);
- $('territoryTurn').textContent=st.finished?'게임 종료!':st.currentPlayer===0?(st.question?'자료를 읽고 진짜인지 가짜인지 선택하세요.':'내 차례입니다. 선 하나를 선택하세요.'):`${TERRITORY_NAMES[st.currentPlayer]}의 차례입니다. AI가 문제를 푸는 중입니다.`;
- $('territoryPrompt').textContent=st.question?st.question.text:(st.finished?'게임이 끝났습니다.':st.currentPlayer===0?'게임판의 빈 선을 선택하면 판별할 자료가 여기에 표시됩니다.':`${TERRITORY_NAMES[st.currentPlayer]}가 자료를 확인하고 있습니다…`);
- $('territoryFeedback').className='case-feedback';$('territoryFeedback').textContent=st.lastFeedback;
- $('realAnswer').disabled=st.finished||st.currentPlayer!==0||!st.question;$('fakeAnswer').disabled=st.finished||st.currentPlayer!==0||!st.question;
- $('territoryHint').textContent=st.finished?'게임 종료! 점수가 가장 높은 플레이어가 승리합니다.':'턴제 게임 · 정답이면 선이 연결되고 칸을 완성하면 한 번 더 진행합니다. 오답이면 -1점, 차례는 유지됩니다.';
-}
-function selectTerritory(i){const st=territoryState;if(!st||st.finished||st.currentPlayer!==0||st.question||st.edges[i].owner>=0)return;st.selected=i;st.question=st.edgeQuestions[i];st.lastFeedback='이 자료는 진짜일까요, 가짜일까요?';renderTerritory();}
-function completeBoxes(player){const st=territoryState,n=st.size;let gained=0;for(let r=0;r<n;r++)for(let c=0;c<n;c++){const bi=r*n+c;if(st.boxes[bi]<0&&boxEdges(r,c).every(ei=>st.edges[ei].owner>=0)){st.boxes[bi]=player;st.scores[player]++;gained++;}}return gained;}
-function answerTerritory(answer){
- const st=territoryState;if(!st||!st.question||st.selected<0||st.finished||st.currentPlayer!==0)return;
- const q=st.question,idx=st.selected;let gained=0;
- if(answer===q.answer){st.edges[idx].owner=0;gained=completeBoxes(0);playSfx('correct');st.lastFeedback='정답! 선이 연결됐습니다. '+(gained?`칸 ${gained}개를 차지했어요. 한 번 더! `:'')+q.why;}
- else{st.scores[0]--;playSfx('wrong');st.lastFeedback='오답! -1점입니다. 차례는 넘어가지 않아요. 다른 선을 선택해 다시 도전하세요. '+q.why;}
- st.question=null;st.selected=-1;
- if(st.edges.every(e=>e.owner>=0)){finishTerritory();return;}
- if(answer!=='real'&&answer!=='fake')return;
- if(answer!==q.answer){renderTerritory();return;}
- if(gained>0){renderTerritory();return;}
- st.currentPlayer=(st.currentPlayer+1)%st.count;renderTerritory();if(st.currentPlayer!==0)runAITurn();
-}
-function runAITurn(){
- const st=territoryState;if(!st||st.finished||st.currentPlayer===0)return;
- const p=st.currentPlayer,options=st.edges.map((e,i)=>e.owner<0?i:-1).filter(i=>i>=0);
- if(!options.length){finishTerritory();return;}
- const pick=chooseAIEdge(options,p);st.aiTargets[p]=pick;st.aiQuestions[p]=st.edgeQuestions[pick];st.aiStatus[p]='문제 풀이 중';st.lastFeedback=`${TERRITORY_NAMES[p]}가 자료를 판별하고 있습니다…`;renderTerritory();
- territoryTimer=setTimeout(()=>{
-  const live=territoryState;if(!live||live.finished||live.currentPlayer!==p)return;
-  const correct=Math.random()<(p===1?.92:.86),q=live.edgeQuestions[pick];let gained=0;
-  if(correct&&live.edges[pick].owner<0){live.edges[pick].owner=p;gained=completeBoxes(p);live.aiStatus[p]=gained?`칸 ${gained}개 획득!`:'정답';live.lastFeedback=`${TERRITORY_NAMES[p]} 정답 · 선 연결${gained?` · 칸 ${gained}개 획득`:''}. ${q.why}`;}
-  else{live.scores[p]--;live.aiStatus[p]='오답 · -1점';live.lastFeedback=`${TERRITORY_NAMES[p]} 오답 · -1점, 차례 유지. ${q.why}`;}
-  live.aiTargets[p]=null;live.aiQuestions[p]=null;
-  if(live.edges.every(e=>e.owner>=0)){finishTerritory();return;}
-  if(!correct){renderTerritory();territoryTimer=setTimeout(runAITurn,700);return;}
-  if(gained>0){renderTerritory();territoryTimer=setTimeout(runAITurn,700);return;}
-  live.currentPlayer=(p+1)%live.count;renderTerritory();if(live.currentPlayer!==0)territoryTimer=setTimeout(runAITurn,700);
- },1200);
-}
-function chooseAIEdge(options,p){ // 완성 직전 칸이 있으면 우선 선택
- const st=territoryState;
- for(const i of options){st.edges[i].owner=p;const can=st.edges.reduce((a,e)=>a+(e.owner>=0?1:0),0);st.edges[i].owner=-1;for(let r=0;r<st.size;r++)for(let c=0;c<st.size;c++){if(st.boxes[r*st.size+c]<0&&boxEdges(r,c).filter(ei=>st.edges[ei].owner>=0).length===3&&boxEdges(r,c).includes(i))return i;}}
- return options[Math.floor(Math.random()*options.length)];
-}
-function checkTerritoryEnd(){const st=territoryState;if(!st||st.finished)return;if(st.edges.every(e=>e.owner>=0))finishTerritory();}
-function finishTerritory(){const st=territoryState;if(!st||st.finished)return;st.finished=true;if(territoryTimer){clearTimeout(territoryTimer);territoryTimer=null;}const max=Math.max(...st.scores),w=st.scores.map((v,i)=>v===max?TERRITORY_NAMES[i]:null).filter(Boolean);st.lastFeedback=`승리: ${w.join(', ')} · 최종 점수 ${max}점입니다.`;renderTerritory();}
-$('realAnswer').addEventListener('click',()=>answerTerritory('real'));$('fakeAnswer').addEventListener('click',()=>answerTerritory('fake'));
-$('territoryHome').addEventListener('click',()=>{if(territoryTimer){clearTimeout(territoryTimer);territoryTimer=null;}territoryState=null;show('home');});
-document.addEventListener('keydown',e=>{if(!$('territory').classList.contains('active')||e.repeat)return;if(e.key==='1')answerTerritory('real');if(e.key==='2')answerTerritory('fake');});
 
-buttons.forEach((b,i)=>b.addEventListener("click",()=>choose(i)));
-document.addEventListener("keydown",e=>{if(!$("game").classList.contains("active")||e.repeat)return;if(e.key==="1")choose(0);if(e.key==="2")choose(1);});
-let pendingGameStart=false;
-function rulesMarkup(topic){
- const fake=topic==="가짜 판별";
- if(fake) return `<div id="posterTitle" class="poster-title">FAKE CHECK · 도트 앤 박스</div>
- <div class="poster-section">게임 목표</div><p class="poster-rule">자료를 읽고 진짜인지 가짜인지 판별해 선을 이어 보세요.</p>
- <div class="poster-section">진행 방법</div><p class="poster-rule">1. 내 차례에 게임판의 빈 선 하나를 선택합니다.</p><p class="poster-note">2. 자료를 읽고 <b>1️⃣ 진짜</b> 또는 <b>2️⃣ 가짜</b>를 선택합니다.</p><p class="poster-note">3. 정답이면 선이 연결되고, 오답이면 -1점이 됩니다. 차례는 유지됩니다.</p><p class="poster-note">4. 네 변을 모두 연결해 칸을 완성하면 그 칸을 차지하고 한 번 더 진행합니다.</p><p class="poster-note">5. 게임이 끝났을 때 가장 많은 칸을 차지한 플레이어가 승리합니다.</p>
- <div class="poster-section">조작 방법</div><p class="poster-note">마우스로 선과 답을 선택하거나 키보드 1(진짜), 2(가짜)를 누르세요.</p>
- <div class="poster-actions"><button id="closeRules" class="primary" type="button">확인하고 ${pendingGameStart?'게임 시작':'닫기'}</button></div>`;
- return `<div id="posterTitle" class="poster-title">ACID RAIN · ${topic} 게임 방법</div>
- <div class="poster-section">게임 목표</div><p class="poster-rule">위에서 내려오는 두 선택지 중 정답을 골라 살아남으세요.</p>
- <div class="poster-section">진행 방법</div><p class="poster-rule">1. 선택지가 바닥에 닿기 전에 정답을 선택합니다.</p><p class="poster-note">2. 싱글 모드는 생명 3개로 시작하며, 오답이나 시간 초과 시 생명이 줄어듭니다.</p><p class="poster-note">3. AI 대전은 먼저 100점 이상을 달성하면 승리합니다. 정답은 +10점, 오답이나 시간 초과는 -10점입니다.</p><p class="poster-note">4. 진행할수록 판단 시간이 짧아집니다.</p>
- <div class="poster-section">조작 방법</div><p class="poster-note">마우스로 선택지를 누르거나 키보드 1/A(왼쪽), 2/L(오른쪽)를 누르세요.</p>
- <div class="poster-actions"><button id="closeRules" class="primary" type="button">확인하고 ${pendingGameStart?'게임 시작':'닫기'}</button></div>`;
-}
-function openRules(){pendingGameStart=false;$("rulesOverlay").querySelector('.rules-poster').innerHTML=rulesMarkup(settings.topic);$("rulesOverlay").hidden=false;$("closeRules").addEventListener('click',closeRules,{once:true});}
-function startGame(){pendingGameStart=true;$("rulesOverlay").querySelector('.rules-poster').innerHTML=rulesMarkup(settings.topic);$("rulesOverlay").hidden=false;$("closeRules").addEventListener('click',closeRules,{once:true});}
-function closeRules(){const launch=pendingGameStart;pendingGameStart=false;$("rulesOverlay").hidden=true;if(launch)launchGame();}
-$("openRules").addEventListener("click",openRules);
-$("rulesOverlay").addEventListener("click",e=>{if(e.target===$("rulesOverlay"))closeRules();});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("rulesOverlay").hidden)closeRules();});
-$("retry").addEventListener("click",()=>{show("home");});$("quit").addEventListener("click",()=>endGame("GAME ENDED","게임을 종료했습니다."));$("homeBtn").addEventListener("click",()=>{if(game)game.running=false;stop();show("home");});
-console.table(Object.entries(BANK).map(([topic,items])=>({topic,count:items.length})));
 </script>
-
 <script>
+"use strict";
+/* 리터러버 – 화면 전환, 산성비 퀴즈, 가짜 판별(도트 앤 박스) */
+const $ = id => document.getElementById(id);
+const buttons = [$("opt0"), $("opt1")];
+function shuffle(arr) { arr = [...arr]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+function playSfx(name) { if (window.AcidAudio) window.AcidAudio.play(name); }
+function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.remove("active")); $(id).classList.add("active"); }
 
-// 게임 내 글씨 크기 조절 (동적으로 생성되는 오답 노트 등에도 적용)
-(function(){
-  const minScale = 0.8, maxScale = 1.5, step = 0.1;
-  let scale = 1;
-  const baseSizes = new WeakMap();
+const AI_LEVEL = { easy: { aiDelay: 4300, aiChance: .45 }, medium: { aiDelay: 2600, aiChance: .70 }, hard: { aiDelay: 1200, aiChance: .90 } };
+const settings = { topic: "문해력", mode: "single", level: "easy", territoryAIs: 1 };
+let game = null, pool = [], q = null, raf = 0, timer = null, locked = false, aiAnswered = false, lastFrame = 0;
+function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; if (timer !== null) clearTimeout(timer); timer = null; }
 
-  function scaleElement(el){
-    if (!(el instanceof HTMLElement) || el.closest('#fontSizeControl')) return;
-    if (!baseSizes.has(el)) {
-      const computed = window.getComputedStyle(el).fontSize;
-      const base = parseFloat(computed);
-      if (Number.isFinite(base) && base > 0) baseSizes.set(el, base);
+/* ---------- 메뉴 · 글씨 크기 · 사운드 ---------- */
+const menuToggle = $("menuToggle"), menuDropdown = $("menuDropdown");
+function setMenu(open) { menuDropdown.hidden = !open; menuToggle.setAttribute("aria-expanded", String(open)); }
+menuToggle.addEventListener("click", () => setMenu(menuDropdown.hidden));
+document.addEventListener("click", e => { if (!e.target.closest(".menu-wrap")) setMenu(false); });
+$("soundToggle").addEventListener("click", () => {
+  const on = !window.AcidAudio.isEnabled();
+  window.AcidAudio.setEnabled(on);
+  $("soundToggle").textContent = on ? "🔊 사운드 ON" : "🔇 사운드 OFF";
+  $("soundToggle").setAttribute("aria-pressed", String(on));
+  if (on) playSfx("click");
+  setMenu(false);
+});
+let fontScale = 1;
+function setFontScale(v) {
+  fontScale = Math.min(1.5, Math.max(.8, Math.round(v * 10) / 10));
+  document.documentElement.style.setProperty("--fs", fontScale);
+  $("fontSizeValue").textContent = Math.round(fontScale * 100) + "%";
+  fitQuestionLayout();
+}
+$("fontSmaller").addEventListener("click", () => setFontScale(fontScale - .1));
+$("fontLarger").addEventListener("click", () => setFontScale(fontScale + .1));
+$("fontReset").addEventListener("click", () => setFontScale(1));
+
+/* ---------- 규칙 안내 ---------- */
+let pendingGameStart = false;
+/* 그림으로 보는 규칙 안내 */
+function ruleStep(num, title, fig, text) {
+  return `<div class="rule-step"><div class="rule-num">${num}</div><div class="rule-fig">${fig}</div><b>${title}</b><span class="t">${text}</span></div>`;
+}
+/* 도트 앤 박스 미니 보드 (한 칸을 확대해서 보여 줌) */
+function dotBoard({ lines = [], fresh = [], cand = null, fill = false, other = [], texts = [] }) {
+  const E = { T: [20, 20, 60, 20], L: [20, 20, 20, 60], B: [20, 60, 60, 60], R: [60, 20, 60, 60] };
+  const ln = (a, color, w, extra = "") => `<line x1="${a[0]}" y1="${a[1]}" x2="${a[2]}" y2="${a[3]}" stroke="${color}" stroke-width="${w}" stroke-linecap="round" ${extra}/>`;
+  let s = `<svg viewBox="0 0 120 120" aria-hidden="true">`;
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) {
+    s += ln([20 + 40 * j, 20 + 40 * i, 60 + 40 * j, 20 + 40 * i], "#dbe4f0", 3);
+    s += ln([20 + 40 * i, 20 + 40 * j, 20 + 40 * i, 60 + 40 * j], "#dbe4f0", 3);
+  }
+  if (fill) s += `<rect x="24" y="24" width="32" height="32" rx="4" fill="#0e9f9a" fill-opacity=".22"/>`;
+  other.forEach(a => s += ln(a, "#e45486", 5));
+  lines.forEach(k => s += ln(E[k], "#0e9f9a", 5));
+  fresh.forEach(k => s += ln(E[k], "#0e9f9a", 8));
+  if (cand) s += ln(E[cand], "#e08a00", 5, 'stroke-dasharray="5 4"');
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) s += `<circle cx="${20 + 40 * c}" cy="${20 + 40 * r}" r="4" fill="#24364f"/>`;
+  texts.forEach(t => s += `<text x="${t.x}" y="${t.y}" font-size="${t.size || 10}" font-weight="800" fill="${t.color || "#24364f"}" text-anchor="${t.anchor || "middle"}">${t.t}</text>`);
+  return s + "</svg>";
+}
+/* 산성비 미니 화면 */
+function rainFig(mode) {
+  const top = { fall: "2.7rem", pick: "4.7rem", late: "6.2rem" }[mode];
+  const mark = { fall: "↓", pick: "👆", late: "💥" }[mode];
+  const a = mode === "pick" ? "✓ 정답" : "정답";
+  const cls = mode === "late" ? " late" : "";
+  return `<div class="mini-arena${cls}"><div class="mini-q">문제 : 알맞은 말은?</div>
+    <div class="mini-card a${mode === "pick" ? " ok" : ""}" style="top:${top}">${a}</div>
+    <div class="mini-card b" style="top:${top}">오답</div>
+    <div class="mini-mark" style="top:calc(${top} - .1rem)">${mark}</div><div class="mini-floor"></div></div>`;
+}
+const MINI_Q = `<div class="mini-quiz"><div class="mini-quiz-text">“달은 스스로 빛을 만들어 낸다.”</div><div class="mini-btns"><i>1️⃣ 진짜</i><i class="f">2️⃣ 가짜 👆</i></div></div>`;
+const KEYS = `<div class="key-row"><span class="key-cap">1</span><span class="key-cap">A</span><em>← 왼쪽 선택지</em></div><div class="key-row"><span class="key-cap">2</span><span class="key-cap">L</span><em>오른쪽 선택지 →</em></div>`;
+const KEYS_FAKE = `<div class="key-row"><span class="key-cap">1</span><em>진짜</em></div><div class="key-row"><span class="key-cap">2</span><em>가짜</em></div>`;
+
+function rulesMarkup(topic) {
+  const btn = `<div class="poster-actions"><button id="closeRules" class="primary" type="button">확인하고 ${pendingGameStart ? "게임 시작" : "닫기"}</button></div>`;
+  if (topic === "가짜 판별") return `<div id="posterTitle" class="poster-title">FAKE CHECK · 도트 앤 박스</div>
+ <div class="poster-section">게임 목표</div><p class="poster-rule">자료가 진짜인지 가짜인지 맞혀서 선을 잇고, 칸을 많이 차지하세요.</p>
+ <div class="poster-section">그림으로 보는 진행 방법</div>
+ <div class="rule-steps">
+  ${ruleStep(1, "빈 선 고르기", dotBoard({ lines: ["T", "L", "B"], cand: "R", other: [[60, 20, 100, 20]], texts: [{ x: 64, y: 82, t: "👆", size: 18, anchor: "start" }, { x: 64, y: 114, t: "빈 선 클릭", size: 9, anchor: "start", color: "#e08a00" }] }), "내 차례에 이어지지 않은 선을 눌러요.")}
+  ${ruleStep(2, "진짜? 가짜?", MINI_Q, "나온 자료를 읽고 진짜인지 가짜인지 골라요.")}
+  ${ruleStep(3, "정답이면 선 연결", dotBoard({ lines: ["T", "L"], fresh: ["R"], texts: [{ x: 40, y: 114, t: "✓ 선 연결", size: 10, color: "#0e9f9a" }] }), "내 색 선이 이어져요. 칸을 못 만들면 차례가 넘어가요.")}
+  ${ruleStep(4, "칸 완성! 한 번 더", dotBoard({ lines: ["T", "L", "R"], fresh: ["B"], fill: true, texts: [{ x: 40, y: 43, t: "나", size: 13, color: "#0e9f9a" }, { x: 40, y: 55, t: "+1점", size: 8, color: "#0e9f9a" }, { x: 40, y: 114, t: "한 번 더!", size: 10, color: "#0e9f9a" }] }), "네 변이 모두 이어지면 그 칸은 내 땅! 바로 한 번 더 해요.")}
+  ${ruleStep(5, "오답이면 -1점", dotBoard({ lines: ["T", "L", "B"], cand: "R", texts: [{ x: 64, y: 90, t: "-1점", size: 15, anchor: "start", color: "#d6336c" }, { x: 64, y: 114, t: "차례 유지", size: 9, anchor: "start", color: "#d6336c" }] }), "선은 이어지지 않지만 차례는 그대로예요. 다른 선을 다시 골라요.")}
+  ${ruleStep(6, "점수가 높으면 승리", `<div class="trophy">🏆<div class="mini-score"><b style="color:#0e9f9a">나 7</b><b style="color:#e45486">AI 5</b></div></div>`, "모든 선이 이어지면 점수가 가장 높은 사람이 이겨요.")}
+ </div>
+ <div class="poster-section">조작 방법</div><div class="rule-fig keys">${KEYS_FAKE}</div><p class="poster-note">마우스로 선과 답을 누르거나, 키보드 1(진짜) · 2(가짜)를 누르세요.</p>${btn}`;
+  return `<div id="posterTitle" class="poster-title">리터러버 · ${topic} 게임 방법</div>
+ <div class="poster-section">게임 목표</div><p class="poster-rule">위에서 떨어지는 두 선택지 중 정답을 골라 살아남으세요.</p>
+ <div class="poster-section">그림으로 보는 진행 방법</div>
+ <div class="rule-steps">
+  ${ruleStep(1, "선택지가 떨어져요", rainFig("fall"), "문제가 나오고 두 선택지가 위에서 내려와요.")}
+  ${ruleStep(2, "바닥 전에 정답 클릭", rainFig("pick"), "바닥에 닿기 전에 정답을 눌러요. 정답이면 +10점!")}
+  ${ruleStep(3, "놓치면 감점", rainFig("late"), "오답이거나 바닥에 닿으면 싱글은 생명 -1, AI 대전은 -10점이에요.")}
+  ${ruleStep(4, "싱글: 생명 3개", `<div class="hearts-fig"><div>♥ ♥ ♥</div><small>시작</small><div class="arr">↓ 오답</div><div>♥ ♥ <span class="lost">♡</span></div><small>생명 모두 잃으면 끝</small></div>`, "싱글 모드는 생명 3개로 시작해요.")}
+  ${ruleStep(5, "AI 대전: 먼저 100점", `<div class="bars"><div class="bar-row"><span>나</span><div class="bar"><i style="width:70%;background:#0e9f9a"></i></div><em>70</em></div><div class="bar-row"><span>AI</span><div class="bar"><i style="width:50%;background:#e45486"></i></div><em>50</em></div><div class="goal">🏁 100점 먼저 도착하면 승리</div></div>`, "정답 +10점, 오답·시간 초과 -10점. AI도 점수를 얻어요.")}
+  ${ruleStep(6, "점점 빨라져요", `<div class="speed">🐢 <span>→</span> 🐇</div>`, "문제를 풀수록 선택지가 떨어지는 속도가 빨라져요.")}
+ </div>
+ <div class="poster-section">조작 방법</div><div class="rule-fig keys">${KEYS}</div><p class="poster-note">마우스로 선택지를 누르거나, 키보드로 고르세요.</p>${btn}`;
+}
+function showRules(startAfter) {
+  pendingGameStart = startAfter;
+  $("rulesPoster").innerHTML = rulesMarkup(settings.topic);
+  $("closeRules").onclick = closeRules;
+  $("rulesOverlay").hidden = false;
+}
+function closeRules() {
+  const launch = pendingGameStart;
+  pendingGameStart = false;
+  $("rulesOverlay").hidden = true;
+  if (launch) launchGame();
+}
+$("openRules").addEventListener("click", () => { setMenu(false); showRules(false); });
+$("rulesOverlay").addEventListener("click", e => { if (e.target === $("rulesOverlay")) closeRules(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("rulesOverlay").hidden) closeRules(); });
+
+/* ---------- 설정 화면 ---------- */
+function updateSetupLabels() {
+  const fake = settings.topic === "가짜 판별", modes = $("modes");
+  $("modeChoiceLabel").textContent = fake ? "02 / AI 수 선택" : "02 / 모드 선택";
+  if (fake) {
+    modes.className = "choices four";
+    modes.innerHTML = [1, 2, 3, 4].map(n => `<button class="choice ${settings.territoryAIs === n ? "selected" : ""}" data-ai-count="${n}">AI ${n}명</button>`).join("");
+  } else {
+    modes.className = "choices two";
+    modes.innerHTML = `<button class="choice ${settings.mode === "single" ? "selected" : ""}" data-v="single">싱글</button><button class="choice ${settings.mode === "ai" ? "selected" : ""}" data-v="ai">AI 대전</button>`;
+  }
+  const label = fake ? `AI ${settings.territoryAIs}명` : (settings.mode === "ai" ? "AI 대전" : "싱글");
+  $("modeSelectionStatus").textContent = "현재 선택: " + (fake ? `도트 앤 박스 · 나 + ${label}` : label);
+  $("chosenTopic").textContent = settings.topic;
+  $("chosenSetup").textContent = settings.topic + " · " + label;
+}
+$("topics").addEventListener("click", e => {
+  const b = e.target.closest("[data-v]"); if (!b) return;
+  settings.topic = b.dataset.v; updateSetupLabels(); show("modeScreen");
+});
+$("modes").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.aiCount) settings.territoryAIs = Number(b.dataset.aiCount);
+  else if (b.dataset.v) settings.mode = b.dataset.v;
+  updateSetupLabels();
+});
+$("levels").addEventListener("click", e => {
+  const b = e.target.closest("[data-v]"); if (!b) return;
+  settings.level = b.dataset.v;
+  $("levels").querySelectorAll(".choice").forEach(x => x.classList.toggle("selected", x === b));
+});
+$("backToTopics").addEventListener("click", () => show("home"));
+$("toNextSetup").addEventListener("click", () => {
+  if (settings.mode === "ai" && settings.topic !== "가짜 판별") show("levelScreen"); else showRules(true);
+});
+$("backToModes").addEventListener("click", () => show("modeScreen"));
+$("beginGame").addEventListener("click", () => showRules(true));
+updateSetupLabels();
+
+/* ---------- 산성비 퀴즈 ---------- */
+function fitQuestionLayout() {
+  const area = document.querySelector(".question-area"), lanes = document.querySelector(".lanes"), arena = $("arena");
+  if (!area || !lanes || !arena || !$("game").classList.contains("active")) return;
+  const mobile = window.matchMedia("(max-width:600px)").matches;
+  const baseH = mobile ? Math.max(340, Math.min(window.innerHeight * .58, 500)) : 475;
+  const top = Math.max(mobile ? 195 : 205, Math.ceil(area.offsetTop + area.offsetHeight + 12));
+  lanes.style.top = top + "px";
+  arena.style.height = Math.max(baseH, top + 250) + "px";
+}
+window.addEventListener("resize", fitQuestionLayout);
+
+function launchGame() {
+  playSfx("start");
+  if (settings.topic === "가짜 판별") { startTerritoryGame(); return; }
+  stop();
+  pool = shuffle(BANK[settings.topic]);
+  game = { stage: 0, hp: 3, score: 0, aiScore: 0, attempts: 0, correct: 0, wrong: [], used: 0, running: true };
+  $("battle").classList.toggle("show", settings.mode === "ai");
+  $("healthLabel").textContent = settings.mode === "ai" ? "BATTLE" : "HEALTH";
+  $("topicName").textContent = settings.topic;
+  show("game");
+  nextQuestion();
+}
+function nextQuestion() {
+  if (!game?.running) return;
+  if (settings.mode === "single" && game.hp <= 0) { endGame("GAME OVER", "생명을 모두 잃었습니다."); return; }
+  if (game.used >= pool.length) { endGame("QUIZ COMPLETE", "이 주제의 문제를 모두 풀었습니다!"); return; }
+  const item = pool[game.used++], order = Math.random() < .5 ? [0, 1] : [1, 0];
+  q = { ...item, options: order.map(i => item.a[i]), correctPosition: order.indexOf(item.c), elapsed: 0, duration: Math.max(2800, 9500 - Math.floor(game.stage / 5) * 700) };
+  game.stage++; locked = false; aiAnswered = false; lastFrame = 0;
+  $("question").textContent = q.q;
+  $("subquestion").textContent = settings.mode === "ai" ? "먼저 100점에 도달하면 승리!" : "정답을 선택하세요!";
+  fitQuestionLayout();
+  setFeedback("산성비가 내려옵니다...", "var(--yellow)");
+  $("progressFill").style.width = "0%";
+  buttons.forEach((b, i) => { b.disabled = false; b.style.top = "30px"; b.querySelector(".txt").textContent = q.options[i]; });
+  updateStats();
+  raf = requestAnimationFrame(tick);
+}
+function setFeedback(text, color) { $("feedback").textContent = text; $("feedback").style.color = color; }
+function tick(now) {
+  if (!game?.running || locked) return;
+  if (!lastFrame) lastFrame = now;
+  const dt = Math.min((now - lastFrame) / 1000, .05); lastFrame = now;
+  q.elapsed += dt * 1000;
+  const lane = buttons[0].parentElement.parentElement, maxY = Math.max(35, lane.clientHeight - 110);
+  const progress = Math.min(1, q.elapsed / q.duration), y = 30 + progress * maxY;
+  buttons.forEach(b => b.style.top = y + "px");
+  $("progressFill").style.width = (progress * 100) + "%";
+  if (settings.mode === "ai" && !aiAnswered && q.elapsed >= AI_LEVEL[settings.level].aiDelay) {
+    aiAnswered = true;
+    if (Math.random() < AI_LEVEL[settings.level].aiChance) {
+      game.aiScore += 10; updateStats();
+      if (game.aiScore >= 100) { endGame("AI WIN", "AI가 먼저 100점에 도달했습니다!"); return; }
+      finishRound("AI");
+    } else finishRound("AI_WRONG");
+    return;
+  }
+  if (progress >= 1) { timeoutRound(); return; }
+  raf = requestAnimationFrame(tick);
+}
+function choose(i) {
+  if (!game?.running || locked || buttons[i].disabled) return;
+  playSfx("click"); game.attempts++;
+  if (i === q.correctPosition) {
+    playSfx("correct"); game.correct++; game.score += 10; updateStats();
+    if (settings.mode === "ai" && game.score >= 100) { endGame("YOU WIN", "축하합니다! 먼저 100점에 도달했습니다."); return; }
+    finishRound("PLAYER"); return;
+  }
+  playSfx("wrong");
+  game.wrong.push({ q: q.q, chosen: q.options[i], correct: q.options[q.correctPosition], explain: q.e });
+  if (settings.mode === "ai") { game.score -= 10; updateStats(); finishRound("PLAYER_WRONG"); }
+  else {
+    game.hp = Math.max(0, game.hp - 1); updateStats();
+    locked = true; stop(); buttons.forEach(b => b.disabled = true);
+    setFeedback("✕ 오답! ♥ -1 · 다음 문제로 이동!", "var(--pink)");
+    $("subquestion").textContent = "정답: " + q.options[q.correctPosition];
+    timer = setTimeout(() => { if (!game?.running) return; if (game.hp <= 0) endGame("GAME OVER", "생명을 모두 잃었습니다."); else nextQuestion(); }, 700);
+  }
+}
+function finishRound(winner) {
+  if (locked || !game?.running) return;
+  locked = true; stop(); buttons.forEach(b => b.disabled = true);
+  const msgs = {
+    PLAYER: ["✓ 정답! +10점", "var(--cyan)"], AI: ["🤖 AI 정답! +10점", "var(--pink)"],
+    AI_WRONG: ["🤖 AI 오답! 점수 변화 없음.", "var(--yellow)"], PLAYER_WRONG: ["✕ 오답! -10점 · 다음 문제로 이동!", "var(--pink)"]
+  };
+  setFeedback(...msgs[winner]);
+  if (winner === "PLAYER_WRONG" || winner === "AI" || winner === "AI_WRONG") $("subquestion").textContent = "정답: " + q.options[q.correctPosition];
+  timer = setTimeout(() => { if (game?.running) nextQuestion(); }, 700);
+}
+function timeoutRound() {
+  if (locked || !game?.running) return;
+  playSfx("timeout"); locked = true; stop();
+  game.attempts++;
+  game.wrong.push({ q: q.q, chosen: "시간 초과", correct: q.options[q.correctPosition], explain: q.e });
+  if (settings.mode === "ai") { game.score -= 10; setFeedback("💥 시간 초과! -10점", "var(--pink)"); }
+  else { game.hp = Math.max(0, game.hp - 1); setFeedback("💥 바닥에 닿았습니다! ♥ -1", "var(--pink)"); }
+  buttons.forEach(b => b.disabled = true);
+  $("subquestion").textContent = "정답: " + q.options[q.correctPosition];
+  $("floor").animate([{ opacity: 1 }, { opacity: .2 }, { opacity: 1 }], 300);
+  updateStats();
+  timer = setTimeout(() => {
+    if (!game?.running) return;
+    if (settings.mode === "single" && game.hp <= 0) endGame("GAME OVER", "생명을 모두 잃었습니다."); else nextQuestion();
+  }, 700);
+}
+function updateStats() {
+  $("stage").textContent = String(game.stage).padStart(2, "0");
+  $("hearts").textContent = settings.mode === "ai" ? "—" : (game.hp ? "♥ ".repeat(game.hp).trim() : "♡ ♡ ♡");
+  $("score").textContent = game.score; $("youScore").textContent = game.score; $("cpuScore").textContent = game.aiScore;
+}
+function readBest() { try { return JSON.parse(localStorage.getItem("literlover-best") || "{}"); } catch { return {}; } }
+function saveBest(key, score) {
+  try { const b = readBest(); if (score > (b[key] ?? -Infinity)) { b[key] = score; localStorage.setItem("literlover-best", JSON.stringify(b)); return true; } } catch { /* 저장소 사용 불가 */ }
+  return false;
+}
+function endGame(title, message) {
+  if (!game || !game.running) return;
+  playSfx(title === "YOU WIN" || title === "QUIZ COMPLETE" ? "win" : (title === "AI WIN" || title === "GAME OVER") ? "lose" : "click");
+  game.running = false; locked = true; stop(); buttons.forEach(b => b.disabled = true);
+  $("resultTitle").textContent = title; $("resultMessage").textContent = message;
+  $("finalScore").textContent = game.score; $("finalStage").textContent = game.stage;
+  $("accuracy").textContent = game.attempts ? Math.round(game.correct / game.attempts * 100) + "%" : "0%";
+  $("battleResult").textContent = settings.mode === "ai" ? `내 점수 ${game.score}점 · AI ${game.aiScore}점` : "";
+  const key = settings.topic + (settings.mode === "ai" ? "-ai" : "-single");
+  const best = readBest()[key], isNew = saveBest(key, game.score);
+  $("bestScore").textContent = isNew && game.score > 0 ? "🏆 새로운 최고 기록!" : (best !== undefined ? `이 모드 최고 기록: ${best}점` : "");
+  const list = $("reviews"); list.replaceChildren();
+  if (!game.wrong.length) { const el = document.createElement("div"); el.className = "empty"; el.textContent = "오답이 없습니다! 훌륭합니다."; list.append(el); }
+  else game.wrong.forEach((w, i) => {
+    const card = document.createElement("article"); card.className = "review";
+    const h = document.createElement("h3"); h.textContent = (i + 1) + ". " + w.q;
+    const mk = (cls, text) => { const p = document.createElement("p"); p.className = cls; p.textContent = text; return p; };
+    card.append(h, mk("wrong", "내 선택: " + w.chosen), mk("correct", "정답: " + w.correct), mk("explain", "해설: " + w.explain));
+    list.append(card);
+  });
+  show("result");
+}
+buttons.forEach((b, i) => b.addEventListener("click", () => choose(i)));
+$("retry").addEventListener("click", () => show("home"));
+$("quit").addEventListener("click", () => endGame("GAME ENDED", "게임을 종료했습니다."));
+$("homeBtn").addEventListener("click", () => { if (game) game.running = false; stop(); show("home"); });
+
+/* ---------- 가짜 판별: 도트 앤 박스 ---------- */
+const TERRITORY_COLORS = ["#0e9f9a", "#e45486", "#6577e8", "#e3a52f", "#8b5cf6"];
+const TERRITORY_NAMES = ["나", "AI 1", "AI 2", "AI 3", "AI 4"];
+const AI_ACCURACY = [0, .92, .88, .86, .84];
+let territoryState = null, territoryTimer = null;
+function clearTerritoryTimer() { if (territoryTimer) { clearTimeout(territoryTimer); territoryTimer = null; } }
+function startTerritoryGame() {
+  stop(); clearTerritoryTimer();
+  const count = Math.max(2, Math.min(5, settings.territoryAIs + 1)), n = count >= 4 ? 7 : 5, edges = [];
+  for (let r = 0; r <= n; r++) for (let c = 0; c < n; c++) edges.push({ id: `h${r}_${c}`, r, c, dir: "h", owner: -1 });
+  for (let r = 0; r < n; r++) for (let c = 0; c <= n; c++) edges.push({ id: `v${r}_${c}`, r, c, dir: "v", owner: -1 });
+  const idx = {}; edges.forEach((e, i) => idx[e.id] = i);
+  const facts = shuffle(TERRITORY_FACTS);
+  territoryState = {
+    count, size: n, edges, idx,
+    edgeQuestions: edges.map((_, i) => facts[i]), spare: facts.slice(edges.length),
+    boxes: Array(n * n).fill(-1), scores: Array(count).fill(0),
+    selected: -1, question: null, finished: false, currentPlayer: 0,
+    aiStatus: Array(count).fill("대기 중"), aiQuestions: Array(count).fill(null),
+    lastFeedback: "정답이면 선이 연결됩니다. 오답이면 -1점이 되지만 차례는 유지됩니다."
+  };
+  show("territory"); renderTerritory();
+}
+function boxEdges(r, c) { const st = territoryState, i = st.idx; return [i[`h${r}_${c}`], i[`h${r + 1}_${c}`], i[`v${r}_${c}`], i[`v${r}_${c + 1}`]]; }
+function edgeBoxes(e, n) {
+  const res = [];
+  if (e.dir === "h") { if (e.r > 0) res.push([e.r - 1, e.c]); if (e.r < n) res.push([e.r, e.c]); }
+  else { if (e.c > 0) res.push([e.r, e.c - 1]); if (e.c < n) res.push([e.r, e.c]); }
+  return res;
+}
+function svgEl(tag, attrs = {}) { const el = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; }
+function renderTerritory() {
+  const st = territoryState; if (!st) return;
+  const stats = $("territoryStats"); stats.replaceChildren();
+  for (let p = 0; p < st.count; p++) {
+    const el = document.createElement("div");
+    el.className = "territory-player" + (st.currentPlayer === p && !st.finished ? " active-player" : "");
+    el.style.setProperty("--player-color", TERRITORY_COLORS[p]);
+    const dot = document.createElement("span"); dot.className = "player-dot";
+    const nm = document.createElement("b"); nm.textContent = TERRITORY_NAMES[p];
+    const sc = document.createElement("strong"); sc.textContent = st.scores[p] + "점";
+    el.append(dot, nm, sc); stats.append(el);
+  }
+  const ai = $("territoryAIQuestions"); ai.replaceChildren();
+  for (let p = 1; p < st.count; p++) {
+    const card = document.createElement("div"); card.className = "territory-ai-card";
+    const head = document.createElement("b");
+    const a = document.createElement("span"); a.textContent = "🤖 " + TERRITORY_NAMES[p];
+    const b = document.createElement("span"); b.textContent = st.currentPlayer === p && !st.finished ? "● 현재 차례" : st.aiStatus[p];
+    head.append(a, b);
+    const body = document.createElement("span"); body.className = "q";
+    const aq = st.aiQuestions[p];
+    body.textContent = aq ? aq.text : (st.aiStatus[p] === "대기 중" ? "차례가 오면 문제를 풉니다." : "");
+    card.append(head, body); ai.append(card);
+  }
+  $("territoryLegend").innerHTML = TERRITORY_NAMES.slice(0, st.count).map((nm, i) => `<span><i style="background:${TERRITORY_COLORS[i]}"></i>${nm}</span>`).join("");
+  $("territoryLayout").classList.toggle("wide", st.count >= 4);
+
+  const board = $("territoryBoard"); board.replaceChildren();
+  const n = st.size, step = 500 / n, pad = step * .08, tile = step - pad * 2;
+  const svg = svgEl("svg", { viewBox: "0 0 500 500", role: "img", "aria-label": "도트 앤 박스 게임판" });
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    const owner = st.boxes[r * n + c];
+    svg.append(svgEl("rect", { x: c * step + pad, y: r * step + pad, width: tile, height: tile, rx: Math.max(3, step * .09), fill: owner >= 0 ? TERRITORY_COLORS[owner] + "24" : "#f7f9fc", stroke: owner >= 0 ? TERRITORY_COLORS[owner] + "70" : "#e6ebf3", "stroke-width": 1 }));
+    if (owner >= 0) {
+      const t = svgEl("text", { x: c * step + step / 2, y: r * step + step * .57, "text-anchor": "middle", "font-size": String(Math.max(9, step * .17)), "font-weight": "800", fill: TERRITORY_COLORS[owner] });
+      t.textContent = TERRITORY_NAMES[owner]; svg.append(t);
     }
-    const base = baseSizes.get(el);
-    if (base) el.style.setProperty('font-size', (base * scale) + 'px', 'important');
+  }
+  const myTurn = !st.finished && st.currentPlayer === 0 && !st.question;
+  st.edges.forEach((e, i) => {
+    const x1 = e.c * step, y1 = e.r * step, x2 = e.dir === "h" ? (e.c + 1) * step : e.c * step, y2 = e.dir === "h" ? e.r * step : (e.r + 1) * step;
+    const sel = st.selected === i;
+    svg.append(svgEl("line", { x1, y1, x2, y2, stroke: e.owner >= 0 ? TERRITORY_COLORS[e.owner] : (sel ? "#087f8c" : "#d7e0eb"), "stroke-width": e.owner >= 0 ? Math.max(4, step * .08) : Math.max(2.5, step * .04), "stroke-linecap": "round" }));
+    if (e.owner < 0 && myTurn) {
+      const hit = svgEl("line", { x1, y1, x2, y2, stroke: "transparent", "stroke-width": 22, "stroke-linecap": "round", tabindex: 0, role: "button", "aria-label": "선 선택" });
+      hit.style.cursor = "pointer";
+      hit.addEventListener("click", () => selectTerritory(i));
+      hit.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); selectTerritory(i); } });
+      svg.append(hit);
+    }
+  });
+  for (let r = 0; r <= n; r++) for (let c = 0; c <= n; c++) svg.append(svgEl("circle", { cx: c * step, cy: r * step, r: Math.max(3.5, step * .06), fill: "#24364f", stroke: "#fff", "stroke-width": 2 }));
+  board.append(svg);
+
+  $("territoryTurn").textContent = st.finished ? "게임 종료!" : st.currentPlayer === 0 ? (st.question ? "자료를 읽고 진짜인지 가짜인지 선택하세요." : "내 차례입니다. 선 하나를 선택하세요.") : `${TERRITORY_NAMES[st.currentPlayer]}의 차례입니다. AI가 문제를 푸는 중입니다.`;
+  $("territoryPrompt").textContent = st.question ? st.question.text : (st.finished ? "게임이 끝났습니다." : st.currentPlayer === 0 ? "게임판의 빈 선을 선택하면 판별할 자료가 여기에 표시됩니다." : `${TERRITORY_NAMES[st.currentPlayer]}가 자료를 확인하고 있습니다…`);
+  $("territoryFeedback").textContent = st.lastFeedback;
+  const canAnswer = !st.finished && st.currentPlayer === 0 && !!st.question;
+  $("realAnswer").disabled = !canAnswer; $("fakeAnswer").disabled = !canAnswer;
+  $("territoryHint").textContent = st.finished ? "점수가 가장 높은 플레이어가 승리합니다." : "정답이면 선이 연결되고, 칸을 완성하면 한 번 더 진행합니다. 오답이면 -1점이지만 차례는 유지됩니다.";
+}
+function selectTerritory(i) {
+  const st = territoryState;
+  if (!st || st.finished || st.currentPlayer !== 0 || st.question || st.edges[i].owner >= 0) return;
+  st.selected = i; st.question = st.edgeQuestions[i]; st.lastFeedback = "이 자료는 진짜일까요, 가짜일까요?";
+  renderTerritory();
+}
+function completeBoxes(player) {
+  const st = territoryState, n = st.size; let gained = 0;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    const bi = r * n + c;
+    if (st.boxes[bi] < 0 && boxEdges(r, c).every(ei => st.edges[ei].owner >= 0)) { st.boxes[bi] = player; st.scores[player]++; gained++; }
+  }
+  return gained;
+}
+/* 오답이 난 선은 새 문제로 바꿔서, 정답을 외워 재도전하지 못하게 합니다. */
+function swapQuestion(edgeIndex) {
+  const st = territoryState;
+  if (st.spare.length) { st.spare.push(st.edgeQuestions[edgeIndex]); st.edgeQuestions[edgeIndex] = st.spare.shift(); }
+}
+function advanceTurn() {
+  const st = territoryState;
+  st.currentPlayer = (st.currentPlayer + 1) % st.count;
+  renderTerritory();
+  if (st.currentPlayer !== 0) territoryTimer = setTimeout(runAITurn, 700);
+}
+function answerTerritory(answer) {
+  const st = territoryState;
+  if (!st || !st.question || st.selected < 0 || st.finished || st.currentPlayer !== 0) return;
+  const q = st.question, idx = st.selected; let gained = 0;
+  st.question = null; st.selected = -1;
+  if (answer === q.answer) {
+    st.edges[idx].owner = 0; gained = completeBoxes(0); playSfx("correct");
+    st.lastFeedback = "정답! 선이 연결됐습니다. " + (gained ? `칸 ${gained}개를 차지했어요. 한 번 더! ` : "") + q.why;
+  } else {
+    st.scores[0]--; swapQuestion(idx); playSfx("wrong");
+    st.lastFeedback = "오답! -1점이에요. 차례는 유지되니 다른 선을 골라 다시 도전하세요. " + q.why;
+  }
+  if (st.edges.every(e => e.owner >= 0)) { finishTerritory(); return; }
+  // 오답이거나 칸을 완성했으면 내 차례가 계속됩니다. 정답이고 칸을 못 만들었을 때만 차례가 넘어갑니다.
+  if (answer !== q.answer || gained > 0) { renderTerritory(); return; }
+  advanceTurn();
+}
+function chooseAIEdge(options) {
+  const st = territoryState, n = st.size;
+  const filled = (r, c) => boxEdges(r, c).filter(ei => st.edges[ei].owner >= 0).length;
+  const adj = i => edgeBoxes(st.edges[i], n);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const completing = options.filter(i => adj(i).some(([r, c]) => filled(r, c) === 3));
+  if (completing.length) return pick(completing);
+  const safe = options.filter(i => adj(i).every(([r, c]) => filled(r, c) < 2)); // 상대에게 칸을 내주지 않는 선
+  return pick(safe.length ? safe : options);
+}
+function runAITurn() {
+  const st = territoryState; if (!st || st.finished || st.currentPlayer === 0) return;
+  const p = st.currentPlayer, options = st.edges.map((e, i) => e.owner < 0 ? i : -1).filter(i => i >= 0);
+  if (!options.length) { finishTerritory(); return; }
+  const pickIdx = chooseAIEdge(options), q = st.edgeQuestions[pickIdx];
+  st.aiQuestions[p] = q; st.aiStatus[p] = "문제 풀이 중"; st.lastFeedback = `${TERRITORY_NAMES[p]}가 자료를 판별하고 있습니다…`;
+  renderTerritory();
+  territoryTimer = setTimeout(() => {
+    const live = territoryState; if (!live || live.finished || live.currentPlayer !== p) return;
+    const correct = Math.random() < AI_ACCURACY[p]; let gained = 0;
+    if (correct) {
+      live.edges[pickIdx].owner = p; gained = completeBoxes(p);
+      live.aiStatus[p] = gained ? `칸 ${gained}개 획득!` : "정답";
+      live.lastFeedback = `${TERRITORY_NAMES[p]} 정답 · 선 연결${gained ? ` · 칸 ${gained}개 획득` : ""}. ${q.why}`;
+    } else {
+      live.scores[p]--; swapQuestion(pickIdx); live.aiStatus[p] = "오답 · -1점";
+      live.lastFeedback = `${TERRITORY_NAMES[p]} 오답 · -1점, 차례 유지. ${q.why}`;
+    }
+    live.aiQuestions[p] = null;
+    if (live.edges.every(e => e.owner >= 0)) { finishTerritory(); return; }
+    if (!correct || gained > 0) { renderTerritory(); territoryTimer = setTimeout(runAITurn, 700); return; }
+    advanceTurn();
+  }, 1200);
+}
+function finishTerritory() {
+  const st = territoryState; if (!st || st.finished) return;
+  st.finished = true; clearTerritoryTimer();
+  const max = Math.max(...st.scores), winners = st.scores.map((v, i) => v === max ? TERRITORY_NAMES[i] : null).filter(Boolean);
+  st.lastFeedback = `승리: ${winners.join(", ")} · 최종 점수 ${max}점입니다.`;
+  playSfx(winners.includes("나") ? "win" : "lose");
+  renderTerritory();
+}
+$("realAnswer").addEventListener("click", () => answerTerritory("real"));
+$("fakeAnswer").addEventListener("click", () => answerTerritory("fake"));
+$("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); territoryState = null; show("home"); });
+
+/* ---------- 키보드 ---------- */
+document.addEventListener("keydown", e => {
+  if (e.repeat || !$("rulesOverlay").hidden || !$("onlineOverlay").hidden) return;
+  const k = e.key.toLowerCase();
+  if ($("game").classList.contains("active")) {
+    if (k === "1" || k === "a") choose(0);
+    else if (k === "2" || k === "l") choose(1);
+  } else if ($("territory").classList.contains("active")) {
+    if (k === "1") answerTerritory("real");
+    else if (k === "2") answerTerritory("fake");
+  }
+});
+
+</script>
+<script>
+"use strict";
+/* 온라인 1대1 대전 – socket.io 서버가 있을 때만 필요한 모듈 */
+(() => {
+  const $o = id => document.getElementById(id);
+  const overlay = $o("onlineOverlay");
+  let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlinePool = [], onlineIndex = 0;
+  let answered = false, myScore = 0, opponentScore = 0, myName = "플레이어";
+
+  /* socket.io 클라이언트는 온라인 버튼을 눌렀을 때만 불러옵니다. 서버가 없는 환경에서도 나머지 게임은 정상 동작합니다. */
+  function loadSocketLib() {
+    return new Promise((resolve, reject) => {
+      if (typeof io !== "undefined") return resolve();
+      const s = document.createElement("script");
+      s.src = "/socket.io/socket.io.js";
+      s.onload = () => (typeof io !== "undefined" ? resolve() : reject(new Error("socket.io 로드 실패")));
+      s.onerror = () => reject(new Error("socket.io를 찾을 수 없습니다"));
+      document.head.append(s);
+    });
+  }
+  async function connect() {
+    if (sock && sock.connected) return true;
+    try { await loadSocketLib(); } catch { alert("온라인 서버에 연결할 수 없습니다. 대전 서버(Node + socket.io)가 실행 중인지 확인하세요."); return false; }
+    sock = io();
+    bindSocket();
+    return true;
+  }
+  /* 같은 닉네임이어도 점수가 섞이지 않도록 닉네임 뒤에 임의의 태그를 붙입니다. */
+  function uniqueName(raw, fallback) { return (raw.trim() || fallback) + "#" + String(Math.floor(Math.random() * 900) + 100); }
+
+  function getOnlinePool(topic) {
+    if (topic === "가짜 판별") {
+      return shuffle(TERRITORY_FACTS.map(f => ({ q: f.text, a: ["진짜", "가짜"], c: f.answer === "real" ? 0 : 1, e: f.why })));
+    }
+    return shuffle((BANK[topic] || BANK["문해력"]).slice());
+  }
+  function status(t) { $o("onlineRoomStatus").textContent = t; }
+  function showPanel(name) {
+    $o("onlineLobby").hidden = name !== "lobby";
+    $o("onlineWaiting").hidden = name !== "waiting";
+    $o("onlinePlay").hidden = name !== "play";
+  }
+  function renderPlayers(players) { $o("onlinePlayers").textContent = players.map((p, i) => `${i + 1}. ${p.name} · ${p.score}점`).join("   |   "); }
+  function renderOnlineScores() { $o("onlineMyScore").textContent = myName.replace(/#\d+$/, "") + ": " + myScore + "점"; $o("onlineOppScore").textContent = "상대: " + opponentScore + "점"; }
+  function resetOnline() {
+    roomCode = ""; isHost = false; showPanel("lobby"); $o("onlineJoinArea").hidden = true;
+    if (sock) { sock.disconnect(); sock = null; }
+  }
+  function sendQuestion() {
+    if (!onlinePool.length || onlineIndex >= onlinePool.length) { onlinePool = getOnlinePool(onlineTopic); onlineIndex = 0; }
+    const item = onlinePool[onlineIndex++], order = Math.random() < .5 ? [0, 1] : [1, 0];
+    sock.emit("game:question", { id: Date.now() + "-" + onlineIndex, text: item.q, options: order.map(i => item.a[i]), correct: order.indexOf(item.c), explain: item.e || "" });
   }
 
-  function applyScale(){
-    document.querySelectorAll('body *').forEach(scaleElement);
-    const value = document.getElementById('fontSizeValue');
-    if (value) value.textContent = Math.round(scale * 100) + '%';
-    document.documentElement.style.setProperty('--game-font-scale', scale);
+  function bindSocket() {
+    sock.on("connect_error", () => alert("온라인 서버에 연결할 수 없습니다."));
+    sock.on("room:created", r => {
+      roomCode = r.code; showPanel("waiting");
+      status("방 코드: " + roomCode + "\n친구에게 코드를 알려 주세요.\n친구가 참가하면 시작할 수 있습니다.");
+      $o("onlineStart").disabled = true; $o("onlineStart").textContent = "친구 참가 대기 중";
+      renderPlayers(r.players);
+    });
+    sock.on("room:update", r => renderPlayers(r.players));
+    sock.on("room:ready", ({ room }) => {
+      renderPlayers(room.players);
+      status("방 코드: " + roomCode + "\n두 명이 모였습니다. 방장이 시작 버튼을 누르세요.");
+      if (isHost) { $o("onlineStart").disabled = false; $o("onlineStart").textContent = "▶ 대전 시작"; }
+    });
+    sock.on("room:error", m => alert(m));
+    sock.on("room:closed", m => { alert(m); resetOnline(); });
+    sock.on("game:started", () => {
+      showPanel("play"); myScore = 0; opponentScore = 0; renderOnlineScores();
+      if (isHost) { onlinePool = getOnlinePool(onlineTopic); onlineIndex = 0; sendQuestion(); }
+      else $o("onlinePlayStatus").textContent = "방장이 문제를 준비하고 있습니다…";
+    });
+    sock.on("game:question", qn => {
+      answered = false;
+      $o("onlineQuestion").textContent = qn.text;
+      const box = $o("onlineOptions"); box.replaceChildren();
+      qn.options.forEach((opt, i) => {
+        const b = document.createElement("button");
+        b.className = "online-option"; b.textContent = (i === 0 ? "1. " : "2. ") + opt;
+        b.onclick = () => {
+          if (answered) return; answered = true;
+          Array.from(box.children).forEach(x => x.disabled = true);
+          $o("onlinePlayStatus").textContent = "답변 제출 완료. 상대의 답을 기다리는 중…";
+          sock.emit("game:answer", { id: qn.id, index: i });
+        };
+        box.append(b);
+      });
+      $o("onlineExplain").textContent = ""; $o("onlineNext").hidden = true;
+      $o("onlinePlayStatus").textContent = "정답을 선택하세요!";
+    });
+    sock.on("game:answer-result", r => {
+      myScore = r.score; renderOnlineScores();
+      $o("onlinePlayStatus").textContent = r.correct ? "정답! +10점" : "오답! -10점";
+      $o("onlineExplain").textContent = r.explain || "";
+    });
+    sock.on("game:scores", scores => {
+      const me = scores.find(p => p.name === myName), other = scores.find(p => p.name !== myName);
+      if (me) myScore = me.score; if (other) opponentScore = other.score;
+      renderOnlineScores();
+    });
+    sock.on("game:round-complete", r => {
+      const mine = r.answers.find(a => a.name === myName), other = r.answers.find(a => a.name !== myName);
+      let text = `정답은 ${r.correctIndex === 0 ? "첫 번째" : "두 번째"} 선택지입니다.\n나: ${mine?.correct ? "정답" : "오답"} · 상대: ${other?.correct ? "정답" : "오답"}`;
+      if (r.winner) text += "\n🏆 " + r.winner.replace(/#\d+$/, "") + " 승리!\n100점에 도달해 대전이 끝났습니다.";
+      $o("onlinePlayStatus").textContent = text;
+      $o("onlineExplain").textContent = r.explain || "";
+      $o("onlineNext").hidden = !isHost; // 방장만 진행 (승리 후에는 한 판 더 하기)
+      $o("onlineNext").textContent = r.winner ? "한 판 더 하기" : "다음 문제";
+    });
+    sock.on("game:next-request", () => { if (isHost) sendQuestion(); });
   }
 
-  document.getElementById('fontSmaller').addEventListener('click', function(){
-    scale = Math.max(minScale, Math.round((scale - step) * 10) / 10);
-    applyScale();
+  $o("onlineEntry").addEventListener("click", () => { overlay.hidden = false; });
+  $o("onlineClose").addEventListener("click", () => { overlay.hidden = true; if (sock) { sock.emit("room:leave"); resetOnline(); } });
+  $o("onlineJoinShow").addEventListener("click", () => { $o("onlineJoinArea").hidden = !$o("onlineJoinArea").hidden; });
+  $o("onlineCreate").addEventListener("click", async () => {
+    if (!(await connect())) return;
+    isHost = true; myName = uniqueName($o("onlineName").value, "플레이어 1"); onlineTopic = $o("onlineTopic").value;
+    sock.emit("room:create", { name: myName, topic: onlineTopic });
   });
-  document.getElementById('fontLarger').addEventListener('click', function(){
-    scale = Math.min(maxScale, Math.round((scale + step) * 10) / 10);
-    applyScale();
+  $o("onlineJoin").addEventListener("click", async () => {
+    const code = $o("onlineCode").value.trim();
+    if (!/^\d{6}$/.test(code)) { alert("6자리 방 코드를 입력하세요."); return; }
+    if (!(await connect())) return;
+    isHost = false; roomCode = code; myName = uniqueName($o("onlineName").value, "플레이어 2"); onlineTopic = $o("onlineTopic").value;
+    showPanel("waiting"); status("방에 참가하는 중…");
+    sock.emit("room:join", { code, name: myName });
   });
-  document.getElementById('fontReset').addEventListener('click', function(){
-    scale = 1;
-    applyScale();
+  $o("onlineStart").addEventListener("click", () => { if (isHost && sock) sock.emit("game:start"); });
+  $o("onlineNext").addEventListener("click", () => {
+    if (!isHost || !sock) return;
+    if (myScore >= 100 || opponentScore >= 100) { myScore = 0; opponentScore = 0; renderOnlineScores(); }
+    sock.emit("game:next");
   });
-
-  const observer = new MutationObserver(function(records){
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        if (node.nodeType === 1) {
-          scaleElement(node);
-          node.querySelectorAll?.('*').forEach(scaleElement);
-        }
-      }
-    }
-  });
-  observer.observe(document.body, {childList:true, subtree:true});
-  applyScale();
 })();
 
 </script>
-
-<style>
-#onlineEntry{margin-top:12px;width:100%;padding:14px;border:1px solid #27d9f2;border-radius:12px;background:linear-gradient(135deg,#102a45,#16213a);color:#eafaff;font-weight:800;cursor:pointer}
-#onlineOverlay[hidden]{display:none!important}#onlineOverlay{position:fixed;inset:0;z-index:99999;background:rgba(2,8,20,.88);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto}
-.online-card{width:min(520px,100%);max-height:92dvh;overflow:auto;background:#0c1728;color:#edf7ff;border:1px solid #29d9ef;border-radius:18px;padding:20px;box-shadow:0 0 35px #00d9ff22}
-.online-card h2{margin:0 0 12px;color:#45e6ff}.online-card input,.online-card select{width:100%;box-sizing:border-box;padding:12px;margin:6px 0 10px;border-radius:9px;border:1px solid #3c526c;background:#101f34;color:white;font-size:16px}
-.online-card button{padding:12px;border-radius:9px;border:0;font-weight:800;cursor:pointer;margin:4px 0}.online-primary{background:#35d9ee;color:#06111d}.online-secondary{background:#24364c;color:#f1f7ff}.online-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.online-score{display:flex;justify-content:space-between;gap:10px;padding:12px;background:#14243a;border-radius:10px;margin:10px 0}.online-option{display:block;width:100%;text-align:left;background:#172b45;color:#fff;border:1px solid #41617e!important;margin:8px 0!important;min-height:54px}.online-status{padding:10px;border-radius:8px;background:#10233a;color:#bdeeff;white-space:pre-wrap}.online-small{font-size:13px;color:#a9bfd4}
-@media (max-width: 600px) {
-  #onlineOverlay {
-    padding: 8px;
-    align-items: flex-start;
-  }
-  .online-card {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    max-height: calc(100dvh - 16px);
-    padding: 14px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overflow-wrap: anywhere;
-    word-break: normal;
-  }
-  .online-card h2 { font-size: clamp(18px, 5vw, 21px); line-height: 1.3; overflow-wrap: anywhere; }
-  .online-card label,
-  .online-card p,
-  .online-card span,
-  .online-card h3,
-  .online-status,
-  .online-small { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
-  .online-card button {
-    min-height: 44px;
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    line-height: 1.35;
-  }
-  .online-card input,
-  .online-card select { width: 100%; max-width: 100%; min-width: 0; font-size: 16px; }
-  .online-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
-  .online-score { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px 12px; min-width: 0; overflow-wrap: anywhere; }
-  .online-option { white-space: normal; text-align: left; }
-  #onlineQuestion { line-height: 1.4; overflow-wrap: anywhere; }
-}
-
-/* 모바일 첫 화면: 스크롤 없이 주제 선택까지 한눈에 보이도록 압축 */
-@media (max-width: 600px) {
-  #home { padding-bottom: 8px; }
-  #home > p[style] { margin: 4px 0 6px !important; font-size: 9px !important; letter-spacing: 2px !important; }
-  #home h1 { font-size: clamp(22px, 6vw, 29px) !important; line-height: 1.18 !important; margin: 6px 0 8px !important; }
-  #home > .muted { font-size: 11px !important; line-height: 1.4 !important; margin: 5px 0 8px !important; }
-  #home .panel { margin: 8px 0 !important; padding: 0 !important; }
-  #home .label { font-size: 15px !important; margin: 0 0 8px !important; }
-  #topics { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 7px !important; }
-  #topics .choice { min-width: 0; min-height: 104px !important; height: 104px; padding: 9px 5px !important; border-radius: 13px !important; gap: 4px !important; font-size: 14px !important; text-align: center !important; align-items: center !important; justify-content: center !important; overflow-wrap: anywhere; }
-  #topics .choice::before { font-size: 29px !important; line-height: 1 !important; margin: 0 !important; }
-  #topics .choice::after { font-size: 10px !important; line-height: 1.25 !important; white-space: pre-line; margin: 0 !important; }
-  #home > section[aria-labelledby="rulesTitle"] { margin-top: 8px !important; }
-  #home #rulesTitle { font-size: 14px !important; margin: 5px 0 !important; }
-  #home .rules { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 5px !important; }
-  #home .rule { padding: 6px !important; border-radius: 7px !important; }
-  #home .rule b { font-size: 10px !important; margin-bottom: 2px !important; }
-  #home .rule span { font-size: 9px !important; line-height: 1.25 !important; }
-  .app { padding: 7px !important; }
-  header { padding: 5px 0 8px !important; }
-  .logo { font-size: 26px !important; }
-  .menu-toggle { width: 38px !important; height: 38px !important; flex-basis: 38px !important; }
-}
-/* 모바일에서 텍스트와 컨트롤이 가로로 튀어나오지 않도록 보정 */
-@media (max-width: 600px) {
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body { max-width: 100%; overflow-x: hidden; }
-  button, input, select, textarea { max-width: 100%; }
-  h1, h2, h3, p, label, span { overflow-wrap: anywhere; }
-}
-
-/* 화면 높이가 특히 작은 휴대폰에서는 규칙 상세를 메뉴에서 확인하도록 숨김 */
-@media (max-width: 600px) and (max-height: 740px) {
-  #home > section[aria-labelledby="rulesTitle"] { display: none !important; }
-}
-</style>
-<div id="onlineOverlay" hidden><div class="online-card">
-<h2>🌐 온라인 1대1 대전</h2>
-<div id="onlineLobby">
-<label>내 닉네임</label><input id="onlineName" maxlength="18" placeholder="예: 산성비고수" value="플레이어">
-<label>대전 주제</label><select id="onlineTopic"><option>문해력</option><option>가짜 판별</option><option>AI 윤리</option></select>
-<div class="online-actions"><button id="onlineCreate" class="online-primary">방 만들기</button><button id="onlineJoinShow" class="online-secondary">방 코드 입력</button></div>
-<div id="onlineJoinArea" hidden><label>6자리 방 코드</label><input id="onlineCode" inputmode="numeric" maxlength="6" placeholder="123456"><button id="onlineJoin" class="online-primary" style="width:100%">참가하기</button></div>
-</div>
-<div id="onlineWaiting" hidden><div class="online-status" id="onlineRoomStatus">방을 준비하는 중…</div><div class="online-score" id="onlinePlayers"></div><button id="onlineStart" class="online-primary" style="width:100%" disabled>두 명이 모이면 시작</button></div>
-<div id="onlinePlay" hidden><div class="online-score"><span id="onlineMyScore">나: 0점</span><span id="onlineOppScore">상대: 0점</span></div><div class="online-status" id="onlinePlayStatus">문제를 기다리는 중…</div><h3 id="onlineQuestion"></h3><div id="onlineOptions"></div><div id="onlineExplain" class="online-small"></div><button id="onlineNext" class="online-primary" style="width:100%" hidden>다음 문제</button></div>
-<p class="online-small">온라인 대전은 두 사람이 같은 사이트에 접속해야 합니다. 방을 닫으면 대전이 종료됩니다.</p><button id="onlineClose" class="online-secondary" style="width:100%">닫기</button>
-</div></div>
-<script src="/socket.io/socket.io.js"></script>
-<script>
-(()=>{
- const $o=id=>document.getElementById(id); let sock=null, isHost=false, roomCode='', onlineTopic='문해력', onlinePool=[], onlineIndex=0, currentOnlineQ=null, answered=false, myScore=0, opponentScore=0, myName='플레이어';
- const overlay=$o('onlineOverlay');
- function status(t){$o('onlineRoomStatus').textContent=t;}
- function showLobby(){ $o('onlineLobby').hidden=true;$o('onlineWaiting').hidden=false;$o('onlinePlay').hidden=true; }
- function showPlay(){ $o('onlineLobby').hidden=true;$o('onlineWaiting').hidden=true;$o('onlinePlay').hidden=false; }
- function connect(){if(sock&&sock.connected)return; sock=io();
-  sock.on('connect_error',()=>alert('온라인 서버에 연결할 수 없습니다. Render에 서버 버전을 배포했는지 확인하세요.'));
-  sock.on('room:created',r=>{roomCode=r.code;showLobby();status('방 코드: '+roomCode+'\n친구에게 코드를 알려 주세요.\n친구가 참가하면 시작할 수 있습니다.');$o('onlineStart').disabled=true;$o('onlineStart').textContent='친구 참가 대기 중';renderPlayers(r.players);});
-  sock.on('room:update',r=>{renderPlayers(r.players);});
-  sock.on('room:ready',({room})=>{renderPlayers(room.players);status('방 코드: '+roomCode+'\n두 명이 모였습니다. 방장이 시작 버튼을 누르세요.');if(isHost){$o('onlineStart').disabled=false;$o('onlineStart').textContent='▶ 대전 시작';}});
-  sock.on('room:error',m=>alert(m));
-  sock.on('room:closed',m=>{alert(m);resetOnline();});
-  sock.on('game:started',()=>{showPlay();myScore=0;opponentScore=0;onlinePool=shuffle((BANK[onlineTopic]||BANK['문해력']).slice());onlineIndex=0;renderOnlineScores();if(isHost)sendQuestion();else $o('onlinePlayStatus').textContent='방장이 문제를 준비하고 있습니다…';});
-  sock.on('game:question',q=>{currentOnlineQ=q;answered=false;$o('onlineQuestion').textContent=q.text;$o('onlineOptions').replaceChildren();q.options.forEach((opt,i)=>{const b=document.createElement('button');b.className='online-option';b.textContent=(i===0?'1. ':'2. ')+opt;b.onclick=()=>{if(answered)return;answered=true;Array.from($o('onlineOptions').children).forEach(x=>x.disabled=true);$o('onlinePlayStatus').textContent='답변 제출 완료. 상대의 답을 기다리는 중…';sock.emit('game:answer',{id:q.id,index:i});};$o('onlineOptions').append(b);});$o('onlineExplain').textContent='';$o('onlineNext').hidden=true;$o('onlinePlayStatus').textContent='정답을 선택하세요!';});
-  sock.on('game:answer-result',r=>{myScore=r.score;renderOnlineScores();$o('onlinePlayStatus').textContent=r.correct?'정답! +10점':'오답! -10점';$o('onlineExplain').textContent=r.explain||'';});
-  sock.on('game:scores',scores=>{const me=scores.find(p=>p.name===myName);const other=scores.find(p=>p.name!==myName);if(me)myScore=me.score;if(other)opponentScore=other.score;renderOnlineScores();});
-  sock.on('game:round-complete',r=>{const mine=r.answers.find(a=>a.name===myName);const other=r.answers.find(a=>a.name!==myName);$o('onlinePlayStatus').textContent=`정답은 ${r.correctIndex===0?'첫 번째':'두 번째'} 선택지입니다.\n나: ${mine?.correct?'정답':'오답'} · 상대: ${other?.correct?'정답':'오답'}`+(r.winner?'\n🏆 '+r.winner+' 승리!':'');$o('onlineExplain').textContent=r.explain||'';$o('onlineNext').hidden=!isHost||!!r.winner;$o('onlineNext').textContent=r.winner?'한 판 더 하기':'다음 문제';if(r.winner)$o('onlinePlayStatus').textContent+='\n100점에 도달해 대전이 끝났습니다.';});
-  sock.on('game:next-request',()=>{if(isHost)sendQuestion();});
- }
- function renderPlayers(players){$o('onlinePlayers').textContent=players.map((p,i)=>`${i+1}. ${p.name} · ${p.score}점`).join('   |   ');}
- function renderOnlineScores(){$o('onlineMyScore').textContent=myName+': '+myScore+'점';$o('onlineOppScore').textContent='상대: '+opponentScore+'점';}
- function resetOnline(){roomCode='';isHost=false;$o('onlineLobby').hidden=false;$o('onlineWaiting').hidden=true;$o('onlinePlay').hidden=true;$o('onlineJoinArea').hidden=true;if(sock){sock.disconnect();sock=null;}}
- function sendQuestion(){if(!onlinePool.length||onlineIndex>=onlinePool.length){onlinePool=shuffle((BANK[onlineTopic]||BANK['문해력']).slice());onlineIndex=0;}const item=onlinePool[onlineIndex++];const order=Math.random()<.5?[0,1]:[1,0];const options=order.map(i=>item.a[i]);const correct=order.indexOf(item.c);sock.emit('game:question',{id:String(Date.now())+'-'+onlineIndex,text:item.q,options,correct,explain:item.e||''});}
- $o('onlineEntry').addEventListener('click',()=>{overlay.hidden=false;});$o('onlineClose').addEventListener('click',()=>{overlay.hidden=true;if(sock){sock.emit('room:leave');resetOnline();}});
- $o('onlineJoinShow').addEventListener('click',()=>{$o('onlineJoinArea').hidden=!$o('onlineJoinArea').hidden;});
- $o('onlineCreate').addEventListener('click',()=>{connect();isHost=true;myName=$o('onlineName').value.trim()||'플레이어 1';onlineTopic=$o('onlineTopic').value;setTimeout(()=>sock&&sock.emit('room:create',{name:myName,topic:onlineTopic}),100);});
- $o('onlineJoin').addEventListener('click',()=>{connect();isHost=false;myName=$o('onlineName').value.trim()||'플레이어 2';roomCode=$o('onlineCode').value.trim();if(!/^\d{6}$/.test(roomCode)){alert('6자리 방 코드를 입력하세요.');return;}onlineTopic=$o('onlineTopic').value;showLobby();status('방에 참가하는 중…');setTimeout(()=>sock&&sock.emit('room:join',{code:roomCode,name:myName}),100);});
- $o('onlineStart').addEventListener('click',()=>{if(isHost&&sock)sock.emit('game:start');});
- $o('onlineNext').addEventListener('click',()=>{if(!isHost||!sock)return;if(myScore>=100||opponentScore>=100){myScore=0;opponentScore=0;renderOnlineScores();}sock.emit('game:next');});
-})();
-</script>
-
 </body>
 </html>
