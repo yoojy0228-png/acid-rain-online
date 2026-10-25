@@ -399,6 +399,28 @@ body:not(.authenticated) .app{display:none}
 .account-widget button{font:inherit;font-size:.85rem;border:1px solid #c9d8ee;border-radius:8px;background:#fff;padding:8px;cursor:pointer}
 #accountStats{font-size:.8rem;color:#647994;max-width:230px}
 @media(max-width:520px){.account-widget{gap:4px}.account-name{font-size:.78rem;padding:6px}.account-widget button{font-size:.78rem;padding:6px}#accountStats{width:100%;text-align:right}}
+
+/* 전적 전용 창 */
+#recordsModal[hidden]{display:none!important}
+#recordsModal{position:fixed;inset:0;z-index:10020;background:rgba(12,20,32,.68);display:flex;align-items:center;justify-content:center;padding:16px;color:#20324b;font-family:Arial,"Malgun Gothic",sans-serif}
+.records-card{width:min(900px,100%);max-height:min(88vh,850px);overflow:auto;background:#fff;border:1px solid #c9d8ee;border-radius:18px;box-shadow:0 24px 80px #0004;padding:clamp(16px,3vw,28px)}
+.records-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.records-head h2{margin:0;font-size:1.55rem;color:#20324b}
+#closeRecords{border:1px solid #c9d8ee;border-radius:9px;background:#fff;padding:8px 12px;font:inherit;font-weight:700;cursor:pointer;color:#20324b}
+.records-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0 20px}
+.records-metric{background:#f0f8ff;border:1px solid #dce8f7;border-radius:11px;padding:12px 8px;text-align:center}
+.records-metric span{display:block;color:#647994;font-size:.8rem;margin-bottom:5px}
+.records-metric strong{font-size:1.2rem;color:#00a99a}
+.records-table-wrap{overflow-x:auto;border:1px solid #e0e8f2;border-radius:10px}
+.records-table{width:100%;border-collapse:collapse;min-width:600px;font-size:.92rem}
+.records-table th,.records-table td{padding:11px 10px;border-bottom:1px solid #e8eef5;text-align:left;white-space:nowrap}
+.records-table th{background:#f5f8fc;color:#50627a;font-weight:800;position:sticky;top:0}
+.records-table tr:last-child td{border-bottom:0}
+.record-result-win{color:#07856e;font-weight:800}.record-result-loss{color:#d74768;font-weight:800}.record-result-draw{color:#b87900;font-weight:800}
+#recordsEmpty{padding:30px 12px;text-align:center;color:#647994;display:none}
+#recordsError{color:#d74768;white-space:pre-wrap;margin:8px 0}
+@media(max-width:560px){#recordsModal{padding:8px}.records-card{max-height:94vh;border-radius:13px;padding:14px}.records-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.records-head h2{font-size:1.3rem}.records-metric{padding:9px 5px}}
+
 </style>
 <link rel="stylesheet" href="assets/enhancements.css">
 </head>
@@ -1577,6 +1599,25 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
 
 </script>
 
+
+<div id="recordsModal" hidden role="dialog" aria-modal="true" aria-labelledby="recordsTitle">
+  <section class="records-card">
+    <div class="records-head">
+      <div><h2 id="recordsTitle">내 게임 전적</h2><div style="color:#647994;font-size:.9rem;margin-top:5px">로그인한 계정의 최근 게임 기록</div></div>
+      <button id="closeRecords" type="button" aria-label="전적 창 닫기">닫기 ✕</button>
+    </div>
+    <div class="records-summary" id="recordsSummary"></div>
+    <p id="recordsError" role="alert"></p>
+    <div class="records-table-wrap">
+      <table class="records-table">
+        <thead><tr><th>날짜</th><th>게임</th><th>주제</th><th>결과</th><th>점수</th><th>정답 수</th><th>상대</th></tr></thead>
+        <tbody id="recordsRows"></tbody>
+      </table>
+      <div id="recordsEmpty">아직 저장된 전적이 없어요. 게임을 플레이해 보세요!</div>
+    </div>
+  </section>
+</div>
+
 <script>
 /* 리터러버 계정: 로그인/회원가입 화면 분리 */
 (() => {
@@ -1619,7 +1660,26 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
   $('showRegister').addEventListener('click',()=>showPanel('register'));
   $('showLogin').addEventListener('click',()=>showPanel('login'));
   $('accountLogout').addEventListener('click',async()=>{try{await api('/api/logout','POST',{});}catch(_){}localStorage.removeItem('literlover-token');location.reload();});
-  $('accountRefresh').addEventListener('click',async()=>{try{const d=await api('/api/records');renderStats(d.stats||{});const rows=(d.records||[]).slice(0,8).map(r=>`${r.date} · ${r.modeLabel||r.mode} · ${r.topic||''} · ${r.resultLabel||r.result} · ${r.score}점`).join('\n');alert('최근 전적\n'+(rows||'아직 저장된 전적이 없습니다.'));}catch(e){alert(e.message);}});
+  function metric(label,value){const box=document.createElement('div');box.className='records-metric';const l=document.createElement('span');l.textContent=label;const v=document.createElement('strong');v.textContent=String(value);box.append(l,v);return box;}
+  function showRecords(data){
+    const stats=data.stats||{}; const summary=$('recordsSummary'); summary.replaceChildren();
+    summary.append(metric('총 게임',stats.games||0),metric('승리',stats.wins||0),metric('패배',stats.losses||0),metric('무승부',stats.draws||0),metric('최고 점수',stats.bestScore||0));
+    const tbody=$('recordsRows');tbody.replaceChildren();$('recordsError').textContent='';
+    const records=Array.isArray(data.records)?data.records:[];
+    $('recordsEmpty').style.display=records.length?'none':'block';
+    for(const r of records){
+      const tr=document.createElement('tr');
+      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',`${Number(r.score)||0}점`,r.attempts?`${Number(r.correct)||0}/${Number(r.attempts)}`:(r.correct==null?'-':String(r.correct)),r.opponent||'-'];
+      values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=String(value);if(i===3){td.className=r.result==='win'?'record-result-win':r.result==='loss'?'record-result-loss':r.result==='draw'?'record-result-draw':'';}tr.append(td);});tbody.append(tr);
+    }
+    $('recordsModal').hidden=false; $('closeRecords').focus();
+  }
+  async function openRecords(){ $('recordsModal').hidden=false; $('recordsError').textContent='전적을 불러오는 중…'; $('recordsRows').replaceChildren();$('recordsEmpty').style.display='none';try{const d=await api('/api/records');renderStats(d.stats||{});showRecords(d);}catch(e){$('recordsError').textContent=e.message;}}
+  function closeRecords(){$('recordsModal').hidden=true;}
+  $('accountRefresh').addEventListener('click',openRecords);
+  $('closeRecords').addEventListener('click',closeRecords);
+  $('recordsModal').addEventListener('click',e=>{if(e.target===$('recordsModal'))closeRecords();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('recordsModal').hidden)closeRecords();});
   if(token()) refresh();
 })();
 </script>
