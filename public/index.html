@@ -1700,7 +1700,11 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
             ? savedScores.map((v, i) => `${formatScoreName(savedNames[i], i)}:${Number(v)||0}`).join(' ')
             : `플레이어:${Number(r.score)||0} AI1:${Number(r.aiScore ?? r.opponentScore)||0}`)
         : `${Number(r.score)||0}점`;
-      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',scoreText];
+      const rawGameLabel = String(r.modeLabel || r.mode || '-');
+      const gameLabel = isDots
+        ? '도트 앤 박스'
+        : (rawGameLabel === 'single' || rawGameLabel === '싱글' ? '산성비 게임' : rawGameLabel);
+      const values=[r.date||'-',gameLabel,r.topic||'-',r.resultLabel||r.result||'-',scoreText];
       values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=String(value);if(i===3){td.className=r.result==='win'?'record-result-win':r.result==='loss'?'record-result-loss':r.result==='draw'?'record-result-draw':'';}tr.append(td);});tbody.append(tr);
     }
     $('recordsModal').hidden=false; $('closeRecords').focus();
