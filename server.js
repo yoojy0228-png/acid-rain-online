@@ -84,8 +84,10 @@ async function addRecord(user, record){
 }
 app.post('/api/record',requireAuth,async (req,res)=>{
   const b=req.body||{};const score=Number(b.score);if(!Number.isFinite(score))return res.status(400).json({message:'점수 형식이 올바르지 않습니다.'});
-  const result=String(b.result||'');const outcome=result==='YOU WIN'||result==='QUIZ COMPLETE'?'win':(result==='AI WIN'||result==='GAME OVER')?'loss':'played';
-  await addRecord(req.user,{mode:['single','ai'].includes(b.mode)?b.mode:'single',modeLabel:b.mode==='ai'?'AI 대전':'싱글',topic:String(b.topic||'').slice(0,40),score,aiScore:Number(b.aiScore)||0,correct:Number(b.correct)||0,attempts:Number(b.attempts)||0,result:outcome,resultLabel:result});
+  const result=String(b.result||'');const outcome=result==='YOU WIN'||result==='QUIZ COMPLETE'?'win':result==='DRAW'?'draw':(result==='AI WIN'||result==='GAME OVER')?'loss':'played';
+  const topic=String(b.topic||'').slice(0,40);
+  const modeLabel=topic==='가짜 판별'?'가짜 판별 (AI 대전)':(b.mode==='ai'?'AI 대전':'싱글');
+  await addRecord(req.user,{mode:['single','ai'].includes(b.mode)?b.mode:'single',modeLabel,topic,score,aiScore:Number(b.aiScore)||0,correct:Number(b.correct)||0,attempts:Number(b.attempts)||0,result:outcome,resultLabel:result==='DRAW'?'무승부':result==='YOU WIN'?'승리':result==='AI WIN'?'패배':result});
   res.json({ok:true,stats:req.user.stats});
 });
 
