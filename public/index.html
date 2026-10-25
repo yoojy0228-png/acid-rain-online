@@ -1627,7 +1627,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     <p id="recordsError" role="alert"></p>
     <div class="records-table-wrap">
       <table class="records-table">
-        <thead><tr><th>날짜</th><th>게임</th><th>주제</th><th>결과</th><th>점수</th><th>상대</th></tr></thead>
+        <thead><tr><th>날짜</th><th>게임</th><th>주제</th><th>결과</th><th>점수</th></tr></thead>
         <tbody id="recordsRows"></tbody>
       </table>
       <div id="recordsEmpty">아직 저장된 전적이 없어요. 게임을 플레이해 보세요!</div>
@@ -1688,8 +1688,19 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
       const tr=document.createElement('tr');
       const isDots = (r.topic||'') === '가짜 판별' || String(r.modeLabel||r.mode||'').includes('도트 앤 박스');
       const savedScores = Array.isArray(r.scores) && r.scores.length > 1 ? r.scores : null;
-      const scoreText = isDots ? (savedScores ? savedScores.map(v => Number(v)||0).join(' : ') : `${Number(r.score)||0} : ${Number(r.aiScore ?? r.opponentScore)||0}`) : `${Number(r.score)||0}점`;
-      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',scoreText,r.opponent||'-'];
+      const savedNames = Array.isArray(r.scoreNames) ? r.scoreNames : [];
+      const formatScoreName = (name, index) => {
+        if (index === 0 || name === '나' || name === '플레이어') return '플레이어';
+        if (/^AI\s*\d*$/i.test(String(name || ''))) return `AI${(String(name).match(/\d+/) || [index])[0]}`;
+        if (String(r.modeLabel || r.mode || '').includes('온라인')) return String(name || `플레이어${index + 1}`);
+        return `AI${index}`;
+      };
+      const scoreText = isDots
+        ? (savedScores
+            ? savedScores.map((v, i) => `${formatScoreName(savedNames[i], i)}:${Number(v)||0}`).join(' ')
+            : `플레이어:${Number(r.score)||0} AI1:${Number(r.aiScore ?? r.opponentScore)||0}`)
+        : `${Number(r.score)||0}점`;
+      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',scoreText];
       values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=String(value);if(i===3){td.className=r.result==='win'?'record-result-win':r.result==='loss'?'record-result-loss':r.result==='draw'?'record-result-draw':'';}tr.append(td);});tbody.append(tr);
     }
     $('recordsModal').hidden=false; $('closeRecords').focus();
