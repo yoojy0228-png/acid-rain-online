@@ -387,9 +387,11 @@ body:not(.authenticated) .app{display:none}
 .auth-card h1{font-size:1.6rem;margin:.3rem 0 .5rem}.auth-card p{color:#647994;line-height:1.6}
 .auth-card label{display:block;font-weight:700;margin:14px 0 6px}
 .auth-card input{width:100%;padding:12px;border:1px solid #c9d8ee;border-radius:9px;font:inherit;background:#f8fbff;color:#20324b}
-.auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+.auth-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:18px}
 .auth-actions button{padding:12px 8px;border:0;border-radius:9px;font:inherit;font-weight:800;cursor:pointer}
-#authLogin{background:#00a99a;color:#fff}#authRegister{background:#e7effb;color:#20324b}
+.auth-primary{background:#00a99a;color:#fff;width:100%}
+.auth-switch{display:block;width:100%;margin-top:12px;padding:10px;border:1px solid #c9d8ee;border-radius:9px;background:#fff;color:#20324b;font:inherit;cursor:pointer}
+.auth-panel[hidden]{display:none}
 #authMessage{min-height:1.5em;font-size:.95rem;margin-bottom:0;white-space:pre-wrap}
 .account-widget{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .account-widget[hidden]{display:none}
@@ -402,18 +404,35 @@ body:not(.authenticated) .app{display:none}
 </head>
 <body>
 <div id="authGate" role="main">
-  <form class="auth-card" id="authForm">
+  <section class="auth-card" aria-label="리터러버 계정">
     <p class="auth-logo">리터러버</p>
-    <h1>로그인 / 회원가입</h1>
-    <p>이메일이나 전화번호 인증 없이 아이디와 비밀번호만으로 가입할 수 있어요.</p>
-    <label for="authUsername">아이디</label>
-    <input id="authUsername" name="username" autocomplete="username" minlength="3" maxlength="18" required placeholder="3~18자, 한글·영문·숫자·_ -">
-    <label for="authPassword">비밀번호</label>
-    <input id="authPassword" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="128" required placeholder="6자 이상">
-    <div class="auth-actions"><button id="authLogin" type="button">로그인</button><button id="authRegister" type="button">회원가입</button></div>
+    <div id="loginPanel" class="auth-panel">
+      <h1>로그인</h1>
+      <p>계정에 로그인해서 게임과 전적을 이어서 이용하세요.</p>
+      <form id="authLoginForm">
+        <label for="loginUsername">아이디</label>
+        <input id="loginUsername" name="username" autocomplete="username" minlength="3" maxlength="18" required placeholder="아이디를 입력하세요">
+        <label for="loginPassword">비밀번호</label>
+        <input id="loginPassword" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="128" required placeholder="비밀번호를 입력하세요">
+        <div class="auth-actions"><button class="auth-primary" type="submit">로그인</button></div>
+      </form>
+      <button id="showRegister" class="auth-switch" type="button">계정이 없나요? 회원가입</button>
+    </div>
+    <div id="registerPanel" class="auth-panel" hidden>
+      <h1>회원가입</h1>
+      <p>새 계정을 만들고 게임 전적을 저장하세요.</p>
+      <form id="authRegisterForm">
+        <label for="registerUsername">아이디</label>
+        <input id="registerUsername" name="username" autocomplete="username" minlength="3" maxlength="18" required placeholder="3~18자, 한글·영문·숫자·_ -">
+        <label for="registerPassword">비밀번호</label>
+        <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required placeholder="6자 이상">
+        <div class="auth-actions"><button class="auth-primary" type="submit">회원가입</button></div>
+      </form>
+      <button id="showLogin" class="auth-switch" type="button">이미 계정이 있나요? 로그인</button>
+      <p style="font-size:.82rem">이메일 인증이 없으므로 아이디나 비밀번호를 잊으면 계정 복구가 어려울 수 있어요.</p>
+    </div>
     <p id="authMessage" aria-live="polite"></p>
-    <p style="font-size:.82rem">주의: 이메일 인증이 없으므로 아이디를 잊거나 비밀번호를 잊으면 본인 확인을 통한 복구가 어려워요.</p>
-  </form>
+  </section>
 </div>
 
 <div id="rulesOverlay" class="rules-overlay" role="dialog" aria-modal="true" aria-labelledby="posterTitle" hidden>
@@ -1559,10 +1578,10 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
 </script>
 
 <script>
-/* 리터러버 계정: 이메일/전화번호 인증 없이 아이디+비밀번호 */
+/* 리터러버 계정: 로그인/회원가입 화면 분리 */
 (() => {
   const $ = id => document.getElementById(id);
-  const gate=$('authGate'), form=$('authForm'), msg=$('authMessage');
+  const gate=$('authGate'), msg=$('authMessage');
   let currentUser=null;
   const token=()=>localStorage.getItem('literlover-token')||'';
   async function api(path, method='GET', data=null){
@@ -1571,6 +1590,11 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     const out=await res.json().catch(()=>({message:'서버 응답을 읽을 수 없습니다.'}));
     if(!res.ok)throw new Error(out.message||'요청에 실패했습니다.'); return out;
   }
+  function showPanel(which){
+    $('loginPanel').hidden=which!=='login';
+    $('registerPanel').hidden=which!=='register';
+    msg.textContent='';
+  }
   function setLoggedIn(user){
     currentUser=user; document.body.classList.add('authenticated'); gate.hidden=true;
     $('accountWidget').hidden=false; $('accountName').textContent=user.username;
@@ -1578,22 +1602,24 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     renderStats(user.stats||{});
   }
   function renderStats(s){$('accountStats').textContent=`전적 ${s.games||0}전 · ${s.wins||0}승 · ${s.losses||0}패 · ${s.draws||0}무`;}
-  async function refresh(){try{const d=await api('/api/me');setLoggedIn(d.user);const h=await api('/api/records');renderStats(h.stats||d.user.stats||{});}catch(e){msg.textContent=e.message;}}
-  async function submit(kind){
+  async function refresh(){try{const d=await api('/api/me');setLoggedIn(d.user);const h=await api('/api/records');renderStats(h.stats||d.user.stats||{});}catch(e){msg.textContent=e.message;localStorage.removeItem('literlover-token');showPanel('login');}}
+  async function submit(kind,form){
     if(!form.reportValidity())return;
-    const username=$('authUsername').value.trim(),password=$('authPassword').value;
+    const username=$(kind==='register'?'registerUsername':'loginUsername').value.trim();
+    const password=$(kind==='register'?'registerPassword':'loginPassword').value;
     msg.textContent=kind==='register'?'회원가입 중…':'로그인 중…';
     try{
       const d=await api(kind==='register'?'/api/register':'/api/login','POST',{username,password});
-      localStorage.setItem('literlover-token',d.token); $('authPassword').value=''; setLoggedIn(d.user); msg.textContent='';
+      localStorage.setItem('literlover-token',d.token);
+      $('loginPassword').value=''; $('registerPassword').value=''; setLoggedIn(d.user); msg.textContent='';
     }catch(e){msg.textContent=e.message;}
   }
-  $('authLogin').addEventListener('click',()=>submit('login'));
-  $('authRegister').addEventListener('click',()=>submit('register'));
-  form.addEventListener('submit',e=>{e.preventDefault();submit('login');});
+  $('authLoginForm').addEventListener('submit',e=>{e.preventDefault();submit('login',e.currentTarget);});
+  $('authRegisterForm').addEventListener('submit',e=>{e.preventDefault();submit('register',e.currentTarget);});
+  $('showRegister').addEventListener('click',()=>showPanel('register'));
+  $('showLogin').addEventListener('click',()=>showPanel('login'));
   $('accountLogout').addEventListener('click',async()=>{try{await api('/api/logout','POST',{});}catch(_){}localStorage.removeItem('literlover-token');location.reload();});
   $('accountRefresh').addEventListener('click',async()=>{try{const d=await api('/api/records');renderStats(d.stats||{});const rows=(d.records||[]).slice(0,8).map(r=>`${r.date} · ${r.modeLabel||r.mode} · ${r.topic||''} · ${r.resultLabel||r.result} · ${r.score}점`).join('\n');alert('최근 전적\n'+(rows||'아직 저장된 전적이 없습니다.'));}catch(e){alert(e.message);}});
-  // 서버가 있는 온라인 배포 환경에서만 API 인증 확인. 인증 실패 시 로그인 화면 표시.
   if(token()) refresh();
 })();
 </script>
