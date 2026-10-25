@@ -1750,6 +1750,13 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     if (progress !== sequence.length) return;
     progress = 0;
 
+    // 온라인 도트 앤 박스에서도 비밀 코드 130218을 서버에 전달해 게임 상태를 동기화한다.
+    if (typeof onlineMode !== 'undefined' && onlineMode === 'dots' && typeof sock !== 'undefined' && sock && sock.connected) {
+      sock.emit('dots:cheat');
+      const onlineStatus = document.getElementById('onlinePlayStatus');
+      if (onlineStatus) onlineStatus.textContent = '비밀 코드 입력됨! 서버 응답을 기다리는 중…';
+      return;
+    }
     const st = typeof territoryState !== 'undefined' ? territoryState : null;
     if (!st || st.finished || typeof renderTerritory !== 'function') return;
     clearTerritoryTimer();
