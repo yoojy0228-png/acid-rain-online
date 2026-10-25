@@ -1261,6 +1261,7 @@ function startTerritoryGame() {
     count, size: n, edges, idx,
     edgeQuestions: edges.map((_, i) => facts[i]), spare: facts.slice(edges.length),
     boxes: Array(n * n).fill(-1), scores: Array(count).fill(0),
+    correctAnswers: 0, attempts: 0, recordSaved: false,
     selected: -1, question: null, finished: false, currentPlayer: 0,
     aiStatus: Array(count).fill("대기 중"), aiQuestions: Array(count).fill(null),
     lastFeedback: "정답이면 선이 연결됩니다. 오답이면 -1점이 되지만 차례는 유지됩니다."
@@ -1364,8 +1365,10 @@ function answerTerritory(answer) {
   const st = territoryState;
   if (!st || !st.question || st.selected < 0 || st.finished || st.currentPlayer !== 0) return;
   const q = st.question, idx = st.selected; let gained = 0;
+  st.attempts++;
   st.question = null; st.selected = -1;
   if (answer === q.answer) {
+    st.correctAnswers++;
     st.edges[idx].owner = 0; gained = completeBoxes(0); playSfx("correct");
     st.lastFeedback = "정답! 선이 연결됐습니다. " + (gained ? `칸 ${gained}개를 차지했어요. 한 번 더! ` : "") + q.why;
   } else {
@@ -1417,6 +1420,20 @@ function finishTerritory() {
   const max = Math.max(...st.scores), winners = st.scores.map((v, i) => v === max ? TERRITORY_NAMES[i] : null).filter(Boolean);
   st.lastFeedback = `승리: ${winners.join(", ")} · 최종 점수 ${max}점입니다.`;
   playSfx(winners.includes("나") ? "win" : "lose");
+  // 가짜 판별(AI 도트 앤 박스) 종료 시 로그인 계정의 PostgreSQL 전적에 저장
+  try {
+    const token = localStorage.getItem("literlover-token");
+    if (token && !st.recordSaved) {
+      st.recordSaved = true;
+      const outcome = winners.includes("나") ? (winners.length > 1 ? "DRAW" : "YOU WIN") : "AI WIN";
+      const bestAI = Math.max(0, ...st.scores.slice(1));
+      fetch("/api/record", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ mode: "ai", topic: "가짜 판별", score: st.scores[0], aiScore: bestAI, correct: st.correctAnswers || 0, attempts: st.attempts || 0, result: outcome })
+      }).then(r => { if (!r.ok) console.error("가짜 판별 전적 저장 실패:", r.status); }).catch(e => console.error("가짜 판별 전적 저장 실패:", e));
+    }
+  } catch (e) { console.error("가짜 판별 전적 저장 실패:", e); }
   renderTerritory();
 }
 $("realAnswer").addEventListener("click", () => answerTerritory("real"));
