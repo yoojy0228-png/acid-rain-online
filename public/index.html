@@ -1642,7 +1642,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     const name=$('onlineName'); if(name){name.value=user.username; name.readOnly=true;}
     renderStats(user.stats||{});
   }
-  function renderStats(s){$('accountStats').textContent=`전적 ${s.games||0}전 · ${s.wins||0}승 · ${s.losses||0}패 · ${s.draws||0}무`;}
+  function renderStats(s){$('accountStats').textContent=`총 게임 ${s.games||0}`;}
   async function refresh(){try{const d=await api('/api/me');setLoggedIn(d.user);const h=await api('/api/records');renderStats(h.stats||d.user.stats||{});}catch(e){msg.textContent=e.message;localStorage.removeItem('literlover-token');showPanel('login');}}
   async function submit(kind,form){
     if(!form.reportValidity())return;
@@ -1663,7 +1663,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
   function metric(label,value){const box=document.createElement('div');box.className='records-metric';const l=document.createElement('span');l.textContent=label;const v=document.createElement('strong');v.textContent=String(value);box.append(l,v);return box;}
   function showRecords(data){
     const stats=data.stats||{}; const summary=$('recordsSummary'); summary.replaceChildren();
-    summary.append(metric('총 게임',stats.games||0),metric('승리',stats.wins||0),metric('패배',stats.losses||0),metric('무승부',stats.draws||0),metric('최고 점수',stats.bestScore||0));
+    summary.append(metric('총 게임',stats.games||0));
     const tbody=$('recordsRows');tbody.replaceChildren();$('recordsError').textContent='';
     const records=Array.isArray(data.records)?data.records:[];
     $('recordsEmpty').style.display=records.length?'none':'block';
