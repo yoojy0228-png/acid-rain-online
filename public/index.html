@@ -1430,7 +1430,7 @@ function finishTerritory() {
       fetch("/api/record", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-        body: JSON.stringify({ mode: "ai", topic: "가짜 판별", score: st.scores[0], aiScore: bestAI, correct: st.correctAnswers || 0, attempts: st.attempts || 0, result: outcome })
+        body: JSON.stringify({ mode: "ai", topic: "가짜 판별", score: st.scores[0], aiScore: bestAI, scores: st.scores.slice(0, st.count), scoreNames: TERRITORY_NAMES.slice(0, st.count), correct: st.correctAnswers || 0, attempts: st.attempts || 0, result: outcome })
       }).then(r => { if (!r.ok) console.error("가짜 판별 전적 저장 실패:", r.status); }).catch(e => console.error("가짜 판별 전적 저장 실패:", e));
     }
   } catch (e) { console.error("가짜 판별 전적 저장 실패:", e); }
@@ -1686,7 +1686,10 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     $('recordsEmpty').style.display=records.length?'none':'block';
     for(const r of records){
       const tr=document.createElement('tr');
-      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',`${Number(r.score)||0}점`,r.opponent||'-'];
+      const isDots = (r.topic||'') === '가짜 판별' || String(r.modeLabel||r.mode||'').includes('도트 앤 박스');
+      const savedScores = Array.isArray(r.scores) && r.scores.length > 1 ? r.scores : null;
+      const scoreText = isDots ? (savedScores ? savedScores.map(v => Number(v)||0).join(' : ') : `${Number(r.score)||0} : ${Number(r.aiScore ?? r.opponentScore)||0}`) : `${Number(r.score)||0}점`;
+      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',scoreText,r.opponent||'-'];
       values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=String(value);if(i===3){td.className=r.result==='win'?'record-result-win':r.result==='loss'?'record-result-loss':r.result==='draw'?'record-result-draw':'';}tr.append(td);});tbody.append(tr);
     }
     $('recordsModal').hidden=false; $('closeRecords').focus();
