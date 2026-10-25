@@ -1627,7 +1627,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     <p id="recordsError" role="alert"></p>
     <div class="records-table-wrap">
       <table class="records-table">
-        <thead><tr><th>날짜</th><th>게임</th><th>주제</th><th>결과</th><th>점수</th><th>정답 수</th><th>상대</th></tr></thead>
+        <thead><tr><th>날짜</th><th>게임</th><th>주제</th><th>결과</th><th>점수</th><th>상대</th></tr></thead>
         <tbody id="recordsRows"></tbody>
       </table>
       <div id="recordsEmpty">아직 저장된 전적이 없어요. 게임을 플레이해 보세요!</div>
@@ -1686,7 +1686,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     $('recordsEmpty').style.display=records.length?'none':'block';
     for(const r of records){
       const tr=document.createElement('tr');
-      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',`${Number(r.score)||0}점`,r.attempts?`${Number(r.correct)||0}/${Number(r.attempts)}`:(r.correct==null?'-':String(r.correct)),r.opponent||'-'];
+      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',`${Number(r.score)||0}점`,r.opponent||'-'];
       values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=String(value);if(i===3){td.className=r.result==='win'?'record-result-win':r.result==='loss'?'record-result-loss':r.result==='draw'?'record-result-draw':'';}tr.append(td);});tbody.append(tr);
     }
     $('recordsModal').hidden=false; $('closeRecords').focus();
