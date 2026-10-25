@@ -421,23 +421,6 @@ body:not(.authenticated) .app{display:none}
 #recordsError{color:#d74768;white-space:pre-wrap;margin:8px 0}
 @media(max-width:560px){#recordsModal{padding:8px}.records-card{max-height:94vh;border-radius:13px;padding:14px}.records-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.records-head h2{font-size:1.3rem}.records-metric{padding:9px 5px}}
 
-
-
-/* 16:10 화면 맞춤: 기존 게임 기능과 비밀 코드 유지 */
-html, body { width:100%; min-height:100%; margin:0; }
-body { min-height:100dvh; }
-body.authenticated .app {
-  width:min(100vw, 160dvh); max-width:none; height:min(100dvh, 62.5vw);
-  min-height:0; margin:0 auto; padding:clamp(8px, 1.25vw, 20px);
-  overflow:auto; overscroll-behavior:contain;
-}
-#authGate { width:min(100vw, 160dvh); min-height:min(100dvh, 62.5vw); margin:0 auto; padding:clamp(10px, 1.5vw, 24px); }
-@media (min-aspect-ratio: 8/5) and (min-width: 900px) {
-  body.authenticated .app { padding:clamp(8px, 0.8vw, 14px); }
-  header { padding-top:.35rem; padding-bottom:.6rem; }
-}
-@media (max-width: 700px) { body.authenticated .app { width:100vw; height:100dvh; padding:10px; } #authGate { width:100vw; min-height:100dvh; } }
-
 </style>
 <link rel="stylesheet" href="assets/enhancements.css">
 </head>
@@ -1278,7 +1261,6 @@ function startTerritoryGame() {
     count, size: n, edges, idx,
     edgeQuestions: edges.map((_, i) => facts[i]), spare: facts.slice(edges.length),
     boxes: Array(n * n).fill(-1), scores: Array(count).fill(0),
-    correctAnswers: 0, attempts: 0, recordSaved: false,
     selected: -1, question: null, finished: false, currentPlayer: 0,
     aiStatus: Array(count).fill("대기 중"), aiQuestions: Array(count).fill(null),
     lastFeedback: "정답이면 선이 연결됩니다. 오답이면 -1점이 되지만 차례는 유지됩니다."
@@ -1382,10 +1364,8 @@ function answerTerritory(answer) {
   const st = territoryState;
   if (!st || !st.question || st.selected < 0 || st.finished || st.currentPlayer !== 0) return;
   const q = st.question, idx = st.selected; let gained = 0;
-  st.attempts++;
   st.question = null; st.selected = -1;
   if (answer === q.answer) {
-    st.correctAnswers++;
     st.edges[idx].owner = 0; gained = completeBoxes(0); playSfx("correct");
     st.lastFeedback = "정답! 선이 연결됐습니다. " + (gained ? `칸 ${gained}개를 차지했어요. 한 번 더! ` : "") + q.why;
   } else {
@@ -1437,20 +1417,6 @@ function finishTerritory() {
   const max = Math.max(...st.scores), winners = st.scores.map((v, i) => v === max ? TERRITORY_NAMES[i] : null).filter(Boolean);
   st.lastFeedback = `승리: ${winners.join(", ")} · 최종 점수 ${max}점입니다.`;
   playSfx(winners.includes("나") ? "win" : "lose");
-  // 가짜 판별(AI 도트 앤 박스) 종료 시 로그인 계정의 PostgreSQL 전적에 저장
-  try {
-    const token = localStorage.getItem("literlover-token");
-    if (token && !st.recordSaved) {
-      st.recordSaved = true;
-      const outcome = winners.includes("나") ? (winners.length > 1 ? "DRAW" : "YOU WIN") : "AI WIN";
-      const bestAI = Math.max(0, ...st.scores.slice(1));
-      fetch("/api/record", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-        body: JSON.stringify({ mode: "ai", topic: "가짜 판별", score: st.scores[0], aiScore: bestAI, scores: st.scores.slice(0, st.count), scoreNames: TERRITORY_NAMES.slice(0, st.count), correct: st.correctAnswers || 0, attempts: st.attempts || 0, result: outcome })
-      }).then(r => { if (!r.ok) console.error("가짜 판별 전적 저장 실패:", r.status); }).catch(e => console.error("가짜 판별 전적 저장 실패:", e));
-    }
-  } catch (e) { console.error("가짜 판별 전적 저장 실패:", e); }
   renderTerritory();
 }
 $("realAnswer").addEventListener("click", () => answerTerritory("real"));
@@ -1644,7 +1610,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     <p id="recordsError" role="alert"></p>
     <div class="records-table-wrap">
       <table class="records-table">
-        <thead><tr><th>날짜</th><th>게임</th><th>주제</th><th>결과</th><th>점수</th></tr></thead>
+        <thead><tr><th>날짜</th><th>게임</th><th>주제</th><th>결과</th><th>점수</th><th>정답 수</th><th>상대</th></tr></thead>
         <tbody id="recordsRows"></tbody>
       </table>
       <div id="recordsEmpty">아직 저장된 전적이 없어요. 게임을 플레이해 보세요!</div>
@@ -1703,21 +1669,7 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
     $('recordsEmpty').style.display=records.length?'none':'block';
     for(const r of records){
       const tr=document.createElement('tr');
-      const isDots = (r.topic||'') === '가짜 판별' || String(r.modeLabel||r.mode||'').includes('도트 앤 박스');
-      const savedScores = Array.isArray(r.scores) && r.scores.length > 1 ? r.scores : null;
-      const savedNames = Array.isArray(r.scoreNames) ? r.scoreNames : [];
-      const formatScoreName = (name, index) => {
-        if (index === 0 || name === '나' || name === '플레이어') return '플레이어';
-        if (/^AI\s*\d*$/i.test(String(name || ''))) return `AI${(String(name).match(/\d+/) || [index])[0]}`;
-        if (String(r.modeLabel || r.mode || '').includes('온라인')) return String(name || `플레이어${index + 1}`);
-        return `AI${index}`;
-      };
-      const scoreText = isDots
-        ? (savedScores
-            ? savedScores.map((v, i) => `${formatScoreName(savedNames[i], i)}:${Number(v)||0}`).join(' ')
-            : `플레이어:${Number(r.score)||0} AI1:${Number(r.aiScore ?? r.opponentScore)||0}`)
-        : `${Number(r.score)||0}점`;
-      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',scoreText];
+      const values=[r.date||'-',r.modeLabel||r.mode||'-',r.topic||'-',r.resultLabel||r.result||'-',`${Number(r.score)||0}점`,r.attempts?`${Number(r.correct)||0}/${Number(r.attempts)}`:(r.correct==null?'-':String(r.correct)),r.opponent||'-'];
       values.forEach((value,i)=>{const td=document.createElement('td');td.textContent=String(value);if(i===3){td.className=r.result==='win'?'record-result-win':r.result==='loss'?'record-result-loss':r.result==='draw'?'record-result-draw':'';}tr.append(td);});tbody.append(tr);
     }
     $('recordsModal').hidden=false; $('closeRecords').focus();
@@ -1729,56 +1681,6 @@ $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); terr
   $('recordsModal').addEventListener('click',e=>{if(e.target===$('recordsModal'))closeRecords();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('recordsModal').hidden)closeRecords();});
   if(token()) refresh();
-})();
-</script>
-
-<!-- 도트 앤 박스 비밀 코드: 130218 입력 시 한 칸만 남기고 내 칸으로 채움 -->
-<script>
-(() => {
-  const sequence = ['1','3','0','2','1','8'];
-  let progress = 0;
-  let lastPress = 0;
-  document.addEventListener('keydown', (event) => {
-    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
-    const key = event.key;
-    if (!/^[0-9]$/.test(key)) return;
-    const now = Date.now();
-    if (now - lastPress > 3500) progress = 0;
-    lastPress = now;
-    if (key === sequence[progress]) progress++;
-    else progress = key === sequence[0] ? 1 : 0;
-    if (progress !== sequence.length) return;
-    progress = 0;
-
-    // 온라인 도트 앤 박스에서도 비밀 코드 130218을 서버에 전달해 게임 상태를 동기화한다.
-    if (typeof onlineMode !== 'undefined' && onlineMode === 'dots' && typeof sock !== 'undefined' && sock && sock.connected) {
-      sock.emit('dots:cheat');
-      const onlineStatus = document.getElementById('onlinePlayStatus');
-      if (onlineStatus) onlineStatus.textContent = '비밀 코드 입력됨! 서버 응답을 기다리는 중…';
-      return;
-    }
-    const st = typeof territoryState !== 'undefined' ? territoryState : null;
-    if (!st || st.finished || typeof renderTerritory !== 'function') return;
-    clearTerritoryTimer();
-    st.question = null;
-    st.selected = -1;
-    st.currentPlayer = 0;
-    const n = st.size;
-    const emptyBox = n * n - 1; // 오른쪽 아래 칸 하나만 비워 둠
-    st.boxes = Array(n * n).fill(0);
-    st.boxes[emptyBox] = -1;
-    st.scores = Array(st.count).fill(0);
-    st.scores[0] = n * n - 1;
-    st.edges.forEach(e => { e.owner = 0; });
-    // 마지막 칸의 위쪽 선 하나를 비워, 게임판도 한 칸 남은 상태로 보이게 함
-    const finalEdge = st.idx[`h${n-1}_${n-1}`];
-    if (finalEdge !== undefined) st.edges[finalEdge].owner = -1;
-    st.lastFeedback = `비밀 코드 성공! 한 칸만 남았습니다. 내 점수 +${n*n-1}점!`;
-    st.aiStatus = st.aiStatus.map((_, i) => i === 0 ? '비밀 코드 발동' : '대기 중');
-    st.aiQuestions = st.aiQuestions.map(() => null);
-    playSfx('correct');
-    renderTerritory();
-  });
 })();
 </script>
 
