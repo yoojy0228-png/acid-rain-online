@@ -1,0 +1,6 @@
+node_modules/
+.env
+users.json
+users.json.tmp
+.literlover-auth-secret
+server.log
