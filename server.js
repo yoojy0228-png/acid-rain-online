@@ -1,3 +1,5 @@
+// .env 파일(ANTHROPIC_API_KEY 등)을 환경 변수로 불러옵니다. 파일이 없으면 건너뜁니다.
+try { process.loadEnvFile(require('path').join(__dirname, '.env')); } catch (e) { if (e.code !== 'ENOENT') console.error('.env 읽기 실패:', e.message); }
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -10,6 +12,7 @@ const io = new Server(server);
 app.use(express.json({limit:'32kb'}));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/health', (_req, res) => res.json({ ok: true }));
+app.use('/api/ai', require('./ai-games'));
 
 // 계정/전적은 서버의 users.json에 영구 저장됩니다. 비밀번호 원문은 저장하지 않습니다.
 const DB_FILE = path.join(__dirname, 'users.json');
@@ -167,4 +170,4 @@ io.on('connection', socket => {
   socket.on('disconnect',()=>leave(socket));
   function leave(s){const c=s.data.room;if(!c)return;const r=rooms.get(c);s.data.room=null;if(!r)return;rooms.delete(c);io.to(c).emit('room:closed','상대방 연결이 종료되어 방이 닫혔습니다.');}
 });
-const port=process.env.PORT||3000; server.listen(port,'0.0.0.0',()=>console.log(`ACID RAIN listening on ${port}`));
+const port=process.env.PORT||3000; server.listen(port,'0.0.0.0',()=>{console.log(`ACID RAIN listening on ${port}`);const c=require('./claude');console.log(c.isConfigured()?`Claude 연결 준비 완료 (${c.config().model})`:'Claude API 키 없음: .env의 ANTHROPIC_API_KEY를 채우면 AI 대전이 켜집니다.');});
