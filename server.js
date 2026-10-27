@@ -100,7 +100,8 @@ io.on('connection', socket => {
     io.to(c).emit('room:update',publicRoom(r)); io.to(c).emit('room:ready', {room:publicRoom(r)});
   });
   socket.on('game:start', () => {
-    const r=rooms.get(socket.data.room); if(!r||r.host!==socket.id||r.players.length!==2||r.started)return;
+    const r=rooms.get(socket.data.room); if(!r||r.host!==socket.id||r.players.length!==2)return;
+    if(r.started&&!(r.mode==='dots'&&r.dots&&r.dots.finished))return; // 도트 앤 박스는 끝난 뒤 한 판 더 가능
     r.started=true; r.recorded=false; r.players.forEach(p=>p.score=0); r.question=null; r.answered={};
     if(r.mode==='dots')r.dots=newDots();
     io.to(r.code).emit('game:started',publicRoom(r));
@@ -131,7 +132,7 @@ io.on('connection', socket => {
   socket.on('dots:line', ({line}={}) => {
     const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='dots'||!r.dots||r.dots.finished)return;
     const playerIndex=r.players.findIndex(p=>p.id===socket.id);if(playerIndex<0||playerIndex!==r.dots.turn)return;
-    if(typeof line!=='string'||r.dots.lines[line])return;
+    if(typeof line!=='string'||r.dots.lines[line]!==undefined)return;
     const m=line.match(/^([hv])-(\d+)-(\d+)$/);if(!m)return;
     const [,dir,rs,cs]=m,row=Number(rs),col=Number(cs),n=r.dots.size;
     if((dir==='h'&&(row<0||row>n||col<0||col>=n))||(dir==='v'&&(row<0||row>=n||col<0||col>n)))return;

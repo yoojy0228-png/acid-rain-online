@@ -1870,6 +1870,9 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(); sh
   const overlay = $o("onlineOverlay");
   let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlineMode = "quiz", onlinePool = [], onlineIndex = 0, dotsState = null, pendingDotLine = null, dotsQuestionActive = false;
   let answered = false, myScore = 0, opponentScore = 0, myName = "플레이어";
+  /* 다른 스크립트(비밀 코드)가 현재 온라인 상태를 읽을 수 있도록 노출 */
+  window.__onlineResetDots = () => { dotsQuestionActive = false; pendingDotLine = null; $o("onlineOptions").replaceChildren(); };
+  Object.defineProperty(window, "__online", { get: () => ({ mode: onlineMode, sock, playing: !$o("onlinePlay").hidden }) });
 
   /* socket.io 클라이언트는 온라인 버튼을 눌렀을 때만 불러옵니다. 서버가 없는 환경에서도 나머지 게임은 정상 동작합니다. */
   function loadSocketLib() {
@@ -1929,7 +1932,14 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(); sh
     const segmentDistance=(px,py,x1,y1,x2,y2)=>{const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy;const t=len?Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len)):0;return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));};
     for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const k=`h-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=segmentDistance(x,y,pad+c*step,pad+r*step,pad+(c+1)*step,pad+r*step);if(d<dist){dist=d;best=k;}}
     for(let r=0;r<n;r++)for(let c=0;c<=n;c++){const k=`v-${r}-${c}`;if(dotsState.lines[k]!==undefined)continue;const d=segmentDistance(x,y,pad+c*step,pad+r*step,pad+c*step,pad+(r+1)*step);if(d<dist){dist=d;best=k;}}
-    if(dist>Math.max(18,step*.16)||!best)return;
+    if(dist>Math.max(18,step*.16)||!best){
+      // 선 근처가 아니어도, 한 변만 남은 칸 안쪽을 누르면 그 마지막 선을 선택
+      const bc=Math.floor((x-pad)/step),br=Math.floor((y-pad)/step);
+      if(br<0||bc<0||br>=n||bc>=n)return;
+      const open=[`h-${br}-${bc}`,`h-${br+1}-${bc}`,`v-${br}-${bc}`,`v-${br}-${bc+1}`].filter(k=>dotsState.lines[k]===undefined);
+      if(open.length!==1)return;
+      best=open[0];
+    }
     pendingDotLine=best;dotsQuestionActive=true;
     if(!onlinePool.length||onlineIndex>=onlinePool.length){onlinePool=getOnlinePool("가짜 판별");onlineIndex=0;}
     const q=onlinePool[onlineIndex++],order=Math.random()<.5?[0,1]:[1,0],opts=order.map(i=>q.a[i]),correct=order.indexOf(q.c);
@@ -1966,13 +1976,19 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(); sh
     sock.on("room:closed", m => { alert(m); resetOnline(); });
     sock.on("game:started", r => {
       overlay.dataset.mode = onlineMode; showPanel("play"); myScore = 0; opponentScore = 0; renderOnlineScores();
-      if(onlineMode==="dots"){$o("onlineQuizArea").hidden=false;$o("onlineDotsArea").hidden=false;onlineTopic="가짜 판별";onlinePool=getOnlinePool("가짜 판별");onlineIndex=0;$o("onlineQuestion").textContent="게임판에서 빈 선을 선택하면 자료 판별 문제가 나옵니다.";$o("onlineOptions").replaceChildren();$o("onlineExplain").textContent="";$o("onlinePlayStatus").textContent="선을 누르고 문제를 풀어 정답이면 선을 연결하세요.";return;}
+      if(onlineMode==="dots"){dotsQuestionActive=false;pendingDotLine=null;$o("onlineNext").hidden=true;$o("onlineQuizArea").hidden=false;$o("onlineDotsArea").hidden=false;onlineTopic="가짜 판별";onlinePool=getOnlinePool("가짜 판별");onlineIndex=0;$o("onlineQuestion").textContent="게임판에서 빈 선을 선택하면 자료 판별 문제가 나옵니다.";$o("onlineOptions").replaceChildren();$o("onlineExplain").textContent="";$o("onlinePlayStatus").textContent="선을 누르고 문제를 풀어 정답이면 선을 연결하세요.";return;}
       $o("onlineQuizArea").hidden=false;$o("onlineDotsArea").hidden=true;
       if (isHost) { onlinePool = getOnlinePool(onlineTopic); onlineIndex = 0; sendQuestion(); }
       else $o("onlinePlayStatus").textContent = "방장이 문제를 준비하고 있습니다…";
     });
     sock.on("dots:state", state => { if(onlineMode==="dots") { drawOnlineDots(state); if(state.turn!==state.you)dotsQuestionActive=false; } });
-    sock.on("dots:ended", state => { if(onlineMode==="dots"){drawOnlineDots(state);$o("onlineDotsStatus").textContent=`게임 종료! 나 ${state.scores[state.you]}칸 · 상대 ${state.scores[1-state.you]}칸`;}});
+    sock.on("dots:ended", state => { if(onlineMode==="dots"){
+      drawOnlineDots(state); dotsQuestionActive=false; pendingDotLine=null;
+      $o("onlineDotsStatus").textContent=`게임 종료! 나 ${state.scores[state.you]}칸 · 상대 ${state.scores[1-state.you]}칸`;
+      $o("onlineQuestion").textContent="게임이 끝났습니다."; $o("onlineOptions").replaceChildren(); $o("onlineExplain").textContent="";
+      $o("onlinePlayStatus").textContent=isHost?"방장이 '한 판 더 하기'를 누르면 다시 시작합니다.":"방장이 다시 시작하기를 기다리는 중…";
+      $o("onlineNext").hidden=!isHost; $o("onlineNext").textContent="한 판 더 하기";
+    }});
     sock.on("game:question", qn => {
       answered = false;
       $o("onlineQuestion").textContent = qn.text;
@@ -2034,6 +2050,7 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(); sh
   $o("onlineDotsCanvas").addEventListener("click",chooseOnlineDotLine);
   $o("onlineNext").addEventListener("click", () => {
     if (!isHost || !sock) return;
+    if (onlineMode === "dots") { sock.emit("game:start"); return; }
     if (myScore >= 100 || opponentScore >= 100) { myScore = 0; opponentScore = 0; renderOnlineScores(); }
     sock.emit("game:next");
   });
@@ -2093,8 +2110,10 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(); sh
     progress = 0;
 
     // 온라인 도트 앤 박스에서도 비밀 코드 130218을 서버에 전달해 게임 상태를 동기화한다.
-    if (typeof onlineMode !== 'undefined' && onlineMode === 'dots' && typeof sock !== 'undefined' && sock && sock.connected) {
-      sock.emit('dots:cheat');
+    const online = window.__online;
+    if (online && online.mode === 'dots' && online.playing && online.sock && online.sock.connected) {
+      if (window.__onlineResetDots) window.__onlineResetDots();
+      online.sock.emit('dots:cheat');
       const onlineStatus = document.getElementById('onlinePlayStatus');
       if (onlineStatus) onlineStatus.textContent = '비밀 코드 입력됨! 서버 응답을 기다리는 중…';
       return;
