@@ -818,8 +818,11 @@ b,strong,h1,h2,h3{font-weight:300!important}
       if (!AC) return null;
       ctx = new AC();
       master = ctx.createGain();
-      master.gain.value = 0.22;
-      master.connect(ctx.destination);
+      master.gain.value = 2.2;
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -12; limiter.knee.value = 10; limiter.ratio.value = 12;
+      limiter.attack.value = 0.003; limiter.release.value = 0.15;
+      master.connect(limiter); limiter.connect(ctx.destination);
     }
     if (ctx.state === "suspended") ctx.resume();
     return ctx;
