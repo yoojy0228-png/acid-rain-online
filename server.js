@@ -84,17 +84,24 @@ function publicRoom(r){ return {code:r.code, players:r.players.map(p=>({name:p.n
 function newDots(){return {size:4, lines:{}, boxes:Array.from({length:4},()=>Array(4).fill(-1)), turn:0, scores:[0,0], finished:false};}
 function dotsFor(r, playerId){const you=r.players.findIndex(p=>p.id===playerId);return {...r.dots,you};}
 function emitDots(r){r.players.forEach(p=>io.to(p.id).emit(r.dots.finished?'dots:ended':'dots:state',dotsFor(r,p.id)));}
-function newTwenty(answerer){return {answerer, word:null, log:[], pending:null, finished:false, winner:-1};}
-function normWord(s){return String(s||'').toLocaleLowerCase('ko-KR').replace(/\s+/g,'');}
+// 온라인 스무고개: Claude가 비밀 키워드를 정하고 진행하며, 두 플레이어가 번갈아 최대 10번씩 질문·정답 도전을 한다.
+const AIG=require('./ai-games').twenty, TW_TURNS=10;
+function newTwenty(first){return {kw:null, starter:first, turn:first, left:[TW_TURNS,TW_TURNS], log:[], busy:false, finished:false, winner:-1};}
 function twentyFor(r, playerId){
-  const t=r.twenty, you=r.players.findIndex(p=>p.id===playerId), isAnswerer=you===t.answerer;
-  return {you, role:isAnswerer?'answerer':'guesser', max:20, log:t.log, pending:t.pending, wordSet:!!t.word, word:(isAnswerer||t.finished)?t.word:null, finished:t.finished, winner:t.winner};
+  const t=r.twenty, you=r.players.findIndex(p=>p.id===playerId);
+  return {you, names:r.players.map(p=>p.name), max:TW_TURNS, ready:!!t.kw, field:t.kw?t.kw.field:'', pattern:t.kw?AIG.pattern(t.kw.word):'', turn:t.turn, left:t.left, log:t.log, busy:t.busy, finished:t.finished, winner:t.winner, reveal:t.finished&&t.kw?{word:t.kw.word,desc:t.kw.desc}:null};
 }
 function emitTwenty(r){r.players.forEach(p=>io.to(p.id).emit('twenty:state',twentyFor(r,p.id)));}
 function finishTwenty(r, winner){
-  const t=r.twenty; t.finished=true; t.winner=winner; r.players[winner].score++;
+  const t=r.twenty; t.finished=true; t.winner=winner; if(winner>=0)r.players[winner].score++;
   recordOnlineResult(r,r.players.map((_,i)=>i===winner?1:0),'twenty');
   io.to(r.code).emit('game:scores',r.players.map(p=>({name:p.name,score:p.score})));
+}
+// 새 판 시작: Claude가 키워드를 고른다. 실패하면 준비된 키워드를 쓴다.
+async function startTwentyRound(r, t){
+  let kw; try{kw=await AIG.generateKeyword();}catch(e){console.error('온라인 스무고개 키워드 생성 실패, 준비된 목록 사용:',e.message);kw=AIG.KEYWORDS[crypto.randomInt(AIG.KEYWORDS.length)];}
+  AIG.recentWords.push(kw.word); if(AIG.recentWords.length>15)AIG.recentWords.shift();
+  if(r.twenty!==t)return; t.kw=kw; emitTwenty(r);
 }
 function boxEdges(row,col){return [`h-${row}-${col}`,`h-${row+1}-${col}`,`v-${row}-${col}`,`v-${row}-${col+1}`];}
 io.on('connection', socket => {
@@ -114,42 +121,33 @@ io.on('connection', socket => {
   socket.on('game:start', () => {
     const r=rooms.get(socket.data.room); if(!r||r.host!==socket.id||r.players.length!==2)return;
     if(r.started&&!(r.mode==='dots'&&r.dots&&r.dots.finished)&&!(r.mode==='twenty'&&r.twenty&&r.twenty.finished))return; // 도트 앤 박스·스무고개는 끝난 뒤 한 판 더 가능
-    const rematch=r.mode==='twenty'&&r.started; // 스무고개 재대결은 승수를 유지하고 역할만 바꾼다
+    if(r.mode==='twenty'&&!AIG.isConfigured()){socket.emit('room:error','온라인 스무고개는 Claude 진행자가 필요해요. 서버의 .env에 ANTHROPIC_API_KEY를 넣어 주세요.');return;}
+    const rematch=r.mode==='twenty'&&r.started; // 스무고개 재대결은 승수를 유지하고 먼저 묻는 사람만 바꾼다
     r.started=true; r.recorded=false; if(!rematch)r.players.forEach(p=>p.score=0); r.question=null; r.answered={};
     if(r.mode==='dots')r.dots=newDots();
-    if(r.mode==='twenty'){r.round=rematch?(r.round||0)+1:0;r.twenty=newTwenty(r.round%2);}
+    if(r.mode==='twenty'){r.round=rematch?(r.round||0)+1:0;r.twenty=newTwenty(r.round%2);startTwentyRound(r,r.twenty);}
     io.to(r.code).emit('game:started',publicRoom(r));
     if(r.mode==='dots')emitDots(r);
     if(r.mode==='twenty'){io.to(r.code).emit('game:scores',r.players.map(p=>({name:p.name,score:p.score})));emitTwenty(r);}
   });
-  // 스무고개: 출제자가 비밀 단어를 정하고, 추리자가 예/아니오 질문을 최대 20번 한다.
-  socket.on('twenty:word', ({word}={}) => {
-    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
-    const t=r.twenty; if(r.players.findIndex(p=>p.id===socket.id)!==t.answerer||t.word)return;
-    const w=String(word||'').trim().slice(0,30); if(!w)return;
-    t.word=w; emitTwenty(r);
-  });
-  socket.on('twenty:ask', ({text}={}) => {
-    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
-    const t=r.twenty; if(r.players.findIndex(p=>p.id===socket.id)!==1-t.answerer||!t.word||t.pending)return;
-    const q=String(text||'').trim().slice(0,100); if(!q||t.log.length>=20)return;
-    t.pending=q; emitTwenty(r);
-  });
-  socket.on('twenty:answer', ({answer}={}) => {
-    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
-    const t=r.twenty; if(r.players.findIndex(p=>p.id===socket.id)!==t.answerer||!t.pending)return;
-    if(!['yes','no','unknown'].includes(answer))return;
-    t.log.push({q:t.pending,a:answer}); t.pending=null;
-    if(t.log.length>=20)finishTwenty(r,t.answerer);
-    emitTwenty(r);
-  });
-  socket.on('twenty:guess', ({text}={}) => {
-    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
-    const t=r.twenty, me=r.players.findIndex(p=>p.id===socket.id); if(me!==1-t.answerer||!t.word||t.pending)return;
-    const g=String(text||'').trim().slice(0,30); if(!g||t.log.length>=20)return;
-    if(normWord(g)===normWord(t.word)){t.log.push({q:'정답 맞히기: '+g,a:'correct'});finishTwenty(r,me);}
-    else{t.log.push({q:'정답 맞히기: '+g,a:'wrong'});if(t.log.length>=20)finishTwenty(r,t.answerer);}
-    emitTwenty(r);
+  // 스무고개: 현재 차례인 플레이어가 질문 또는 정답 도전을 하면 Claude 진행자가 답한다.
+  socket.on('twenty:turn', async ({kind,text}={}) => {
+    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty)return;
+    const t=r.twenty, me=r.players.findIndex(p=>p.id===socket.id);
+    if(t.finished||!t.kw||t.busy||me!==t.turn||t.left[me]<=0)return;
+    const guess=kind==='guess', q=String(text||'').trim().slice(0,guess?30:100); if(!q)return;
+    t.busy=true; emitTwenty(r);
+    try{
+      const entry={who:me,kind:guess?'guess':'question',text:q};
+      if(guess){entry.correct=await AIG.judgeGuess(t,q);entry.answer=entry.correct?'정답':'오답';}
+      else Object.assign(entry,await AIG.hostAnswer(t,q));
+      if(r.twenty!==t)return;
+      t.log.push(entry); t.left[me]--;
+      if(entry.correct)finishTwenty(r,me);
+      else if(t.left[0]<=0&&t.left[1]<=0)finishTwenty(r,-1);
+      else t.turn=t.left[1-me]>0?1-me:me;
+    }catch(e){console.error('온라인 스무고개 진행 실패:',e.message);socket.emit('room:error','Claude 진행자에게 문제가 생겼어요. 다시 시도해 주세요.');}
+    finally{t.busy=false; if(r.twenty===t)emitTwenty(r);}
   });
   // 온라인 도트 앤 박스 비밀 코드: 현재 플레이어가 15칸을 차지하고 마지막 한 칸만 남긴다.
   // 서버에서 상태를 변경하고 양쪽에 브로드캐스트해 화면 불일치를 방지한다.
