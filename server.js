@@ -77,17 +77,29 @@ const rooms = new Map();
 function recordOnlineResult(r, scores, mode){
   if(!r||r.recorded)return;r.recorded=true;
   const max=Math.max(...scores), winners=scores.map((v,i)=>v===max?i:-1).filter(i=>i>=0);
-  r.players.forEach((p,i)=>{const u=db.users[p.userKey];if(!u)return;const outcome=winners.length>1?'draw':(winners[0]===i?'win':'loss');addRecord(u,{mode,modeLabel:mode==='dots'?'온라인 도트 앤 박스':'온라인 퀴즈',topic:r.topic||'가짜 판별',score:scores[i],opponent:r.players[1-i]?.name||'',result:outcome,resultLabel:outcome==='win'?'승리':outcome==='loss'?'패배':'무승부'});});
+  r.players.forEach((p,i)=>{const u=db.users[p.userKey];if(!u)return;const outcome=winners.length>1?'draw':(winners[0]===i?'win':'loss');addRecord(u,{mode,modeLabel:mode==='dots'?'온라인 도트 앤 박스':mode==='twenty'?'온라인 스무고개':'온라인 퀴즈',topic:r.topic||'가짜 판별',score:scores[i],opponent:r.players[1-i]?.name||'',result:outcome,resultLabel:outcome==='win'?'승리':outcome==='loss'?'패배':'무승부'});});
 }
 function code(){ let s=''; do { s=String(Math.floor(100000+Math.random()*900000)); } while(rooms.has(s)); return s; }
 function publicRoom(r){ return {code:r.code, players:r.players.map(p=>({name:p.name, score:p.score})), started:r.started, topic:r.topic, mode:r.mode}; }
 function newDots(){return {size:4, lines:{}, boxes:Array.from({length:4},()=>Array(4).fill(-1)), turn:0, scores:[0,0], finished:false};}
 function dotsFor(r, playerId){const you=r.players.findIndex(p=>p.id===playerId);return {...r.dots,you};}
 function emitDots(r){r.players.forEach(p=>io.to(p.id).emit(r.dots.finished?'dots:ended':'dots:state',dotsFor(r,p.id)));}
+function newTwenty(answerer){return {answerer, word:null, log:[], pending:null, finished:false, winner:-1};}
+function normWord(s){return String(s||'').toLocaleLowerCase('ko-KR').replace(/\s+/g,'');}
+function twentyFor(r, playerId){
+  const t=r.twenty, you=r.players.findIndex(p=>p.id===playerId), isAnswerer=you===t.answerer;
+  return {you, role:isAnswerer?'answerer':'guesser', max:20, log:t.log, pending:t.pending, wordSet:!!t.word, word:(isAnswerer||t.finished)?t.word:null, finished:t.finished, winner:t.winner};
+}
+function emitTwenty(r){r.players.forEach(p=>io.to(p.id).emit('twenty:state',twentyFor(r,p.id)));}
+function finishTwenty(r, winner){
+  const t=r.twenty; t.finished=true; t.winner=winner; r.players[winner].score++;
+  recordOnlineResult(r,r.players.map((_,i)=>i===winner?1:0),'twenty');
+  io.to(r.code).emit('game:scores',r.players.map(p=>({name:p.name,score:p.score})));
+}
 function boxEdges(row,col){return [`h-${row}-${col}`,`h-${row+1}-${col}`,`v-${row}-${col}`,`v-${row}-${col+1}`];}
 io.on('connection', socket => {
   socket.on('room:create', ({name, topic, mode}={}) => {
-    const c=code(); const chosenMode=mode==='dots'?'dots':'quiz';
+    const c=code(); const chosenMode=mode==='dots'?'dots':mode==='twenty'?'twenty':'quiz'; if(chosenMode==='twenty')topic='스무고개';
     const r={code:c, host:socket.id, players:[{id:socket.id,userKey:socket.data.accountKey,name:socket.data.accountName,score:0}], started:false, topic:topic||'문해력', mode:chosenMode, question:null, answered:{}, dots:null, recorded:false};
     rooms.set(c,r); socket.join(c); socket.data.room=c; socket.emit('room:created',publicRoom(r));
   });
@@ -101,11 +113,43 @@ io.on('connection', socket => {
   });
   socket.on('game:start', () => {
     const r=rooms.get(socket.data.room); if(!r||r.host!==socket.id||r.players.length!==2)return;
-    if(r.started&&!(r.mode==='dots'&&r.dots&&r.dots.finished))return; // 도트 앤 박스는 끝난 뒤 한 판 더 가능
-    r.started=true; r.recorded=false; r.players.forEach(p=>p.score=0); r.question=null; r.answered={};
+    if(r.started&&!(r.mode==='dots'&&r.dots&&r.dots.finished)&&!(r.mode==='twenty'&&r.twenty&&r.twenty.finished))return; // 도트 앤 박스·스무고개는 끝난 뒤 한 판 더 가능
+    const rematch=r.mode==='twenty'&&r.started; // 스무고개 재대결은 승수를 유지하고 역할만 바꾼다
+    r.started=true; r.recorded=false; if(!rematch)r.players.forEach(p=>p.score=0); r.question=null; r.answered={};
     if(r.mode==='dots')r.dots=newDots();
+    if(r.mode==='twenty'){r.round=rematch?(r.round||0)+1:0;r.twenty=newTwenty(r.round%2);}
     io.to(r.code).emit('game:started',publicRoom(r));
     if(r.mode==='dots')emitDots(r);
+    if(r.mode==='twenty'){io.to(r.code).emit('game:scores',r.players.map(p=>({name:p.name,score:p.score})));emitTwenty(r);}
+  });
+  // 스무고개: 출제자가 비밀 단어를 정하고, 추리자가 예/아니오 질문을 최대 20번 한다.
+  socket.on('twenty:word', ({word}={}) => {
+    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
+    const t=r.twenty; if(r.players.findIndex(p=>p.id===socket.id)!==t.answerer||t.word)return;
+    const w=String(word||'').trim().slice(0,30); if(!w)return;
+    t.word=w; emitTwenty(r);
+  });
+  socket.on('twenty:ask', ({text}={}) => {
+    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
+    const t=r.twenty; if(r.players.findIndex(p=>p.id===socket.id)!==1-t.answerer||!t.word||t.pending)return;
+    const q=String(text||'').trim().slice(0,100); if(!q||t.log.length>=20)return;
+    t.pending=q; emitTwenty(r);
+  });
+  socket.on('twenty:answer', ({answer}={}) => {
+    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
+    const t=r.twenty; if(r.players.findIndex(p=>p.id===socket.id)!==t.answerer||!t.pending)return;
+    if(!['yes','no','unknown'].includes(answer))return;
+    t.log.push({q:t.pending,a:answer}); t.pending=null;
+    if(t.log.length>=20)finishTwenty(r,t.answerer);
+    emitTwenty(r);
+  });
+  socket.on('twenty:guess', ({text}={}) => {
+    const r=rooms.get(socket.data.room); if(!r||!r.started||r.mode!=='twenty'||!r.twenty||r.twenty.finished)return;
+    const t=r.twenty, me=r.players.findIndex(p=>p.id===socket.id); if(me!==1-t.answerer||!t.word||t.pending)return;
+    const g=String(text||'').trim().slice(0,30); if(!g||t.log.length>=20)return;
+    if(normWord(g)===normWord(t.word)){t.log.push({q:'정답 맞히기: '+g,a:'correct'});finishTwenty(r,me);}
+    else{t.log.push({q:'정답 맞히기: '+g,a:'wrong'});if(t.log.length>=20)finishTwenty(r,t.answerer);}
+    emitTwenty(r);
   });
   // 온라인 도트 앤 박스 비밀 코드: 현재 플레이어가 15칸을 차지하고 마지막 한 칸만 남긴다.
   // 서버에서 상태를 변경하고 양쪽에 브로드캐스트해 화면 불일치를 방지한다.
