@@ -614,7 +614,6 @@ b,strong,h1,h2,h3{font-weight:300!important}
     <button class="menu-toggle" id="menuToggle" type="button" aria-label="메뉴 열기" aria-expanded="false"><span></span><span></span><span></span></button>
     <div class="menu-dropdown" id="menuDropdown" hidden>
       <button id="openRules" type="button">📜 게임 규칙</button>
-      <button id="soundToggle" type="button" aria-pressed="true">🔊 사운드 ON</button>
       <div id="volumeControl" aria-label="소리 크기 조절">
         <span class="font-size-label">소리 크기 <b id="volumeValue">100%</b></span>
         <input id="volumeSlider" type="range" min="0" max="100" step="5" value="100" aria-label="소리 크기">
@@ -1192,14 +1191,6 @@ volumeSlider.value = Math.round(window.AcidAudio.getVolume() * 100);
 showVolume();
 volumeSlider.addEventListener("input", () => { window.AcidAudio.setVolume(volumeSlider.value / 100); showVolume(); });
 volumeSlider.addEventListener("change", () => playSfx("click"));
-$("soundToggle").addEventListener("click", () => {
-  const on = !window.AcidAudio.isEnabled();
-  window.AcidAudio.setEnabled(on);
-  $("soundToggle").textContent = on ? "🔊 사운드 ON" : "🔇 사운드 OFF";
-  $("soundToggle").setAttribute("aria-pressed", String(on));
-  if (on) playSfx("click");
-  setMenu(false);
-});
 let fontScale = 1;
 function setFontScale(v) {
   fontScale = Math.min(1.5, Math.max(.8, Math.round(v * 10) / 10));
