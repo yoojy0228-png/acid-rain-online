@@ -1220,7 +1220,7 @@ const KEYS_FAKE = `<div class="key-row"><span class="key-cap">👆</span><em>게
 
 function rulesMarkup(topic) {
   const btn = `<div class="poster-actions"><button id="closeRules" class="primary" type="button">확인하고 ${pendingGameStart ? "게임 시작" : "닫기"}</button></div>`;
-  if (topic === "AI 윤리") return `<div id="posterTitle" class="poster-title">AI 윤리 스무고개</div>
+  if (topic === "AI 윤리") return `<div class="poster-title">AI 윤리 스무고개</div>
  <div class="poster-section">게임 목표</div><p class="poster-rule">Claude가 숨긴 AI 윤리 키워드를 예/아니요 질문으로 좁혀 가며 맞혀요.</p>
  <div class="poster-section">그림으로 보는 진행 방법</div>
  <div class="rule-steps">
@@ -1232,7 +1232,7 @@ function rulesMarkup(topic) {
   ${ruleStep(6, "정답과 의미 배우기", `<div class="trophy">📖</div>`, "끝나면 키워드의 뜻과 왜 중요한지 알려 줘요.")}
  </div>
  <div class="poster-section">조작 방법</div><p class="poster-note">입력 칸에 질문을 쓰고 ‘질문하기’(Enter), 정답이라면 ‘정답 맞히기’를 누르세요.</p>${btn}`;
-  if (topic === "가짜 판별") return `<div id="posterTitle" class="poster-title">FAKE CHECK · 도트 앤 박스</div>
+  if (topic === "가짜 판별") return `<div class="poster-title">FAKE CHECK · 도트 앤 박스</div>
  <div class="poster-section">게임 목표</div><p class="poster-rule">Claude가 실시간으로 만든 자료가 진짜인지 가짜인지 맞혀서 선을 잇고, Claude AI보다 칸을 많이 차지하세요.</p>
  <div class="poster-section">그림으로 보는 진행 방법</div>
  <div class="rule-steps">
@@ -1244,7 +1244,7 @@ function rulesMarkup(topic) {
   ${ruleStep(6, "점수가 높으면 승리", `<div class="trophy">🏆<div class="mini-score"><b style="color:#3b86e0">나 7</b><b style="color:#e0556f">AI 5</b></div></div>`, "모든 선이 이어지면 점수가 가장 높은 사람이 이겨요.")}
  </div>
  <div class="poster-section">조작 방법</div><div class="rule-fig keys">${KEYS_FAKE}</div><p class="poster-note">게임판의 선을 클릭하거나 터치하고, 진짜·가짜 버튼을 누르세요.</p>${btn}`;
-  return `<div id="posterTitle" class="poster-title">리터러버 · ${topic} 게임 방법</div>
+  return `<div class="poster-title">문해력 · 산성비 퀴즈</div>
  <div class="poster-section">게임 목표</div><p class="poster-rule">위에서 떨어지는 두 선택지 중 정답을 골라 살아남으세요.</p>
  <div class="poster-section">그림으로 보는 진행 방법</div>
  <div class="rule-steps">
@@ -1256,21 +1256,20 @@ function rulesMarkup(topic) {
  </div>
  <div class="poster-section">조작 방법</div><div class="rule-fig keys">${KEYS}</div><p class="poster-note">선택지를 클릭하거나 화면에서 터치하세요.</p>${btn}`;
 }
-/* 게임 목표 · 진행 방법 · 조작 방법 세 구역을 탭으로 나눠 한 번에 하나씩 보여 줍니다. */
-function rulesToTabs(poster) {
-  const heads = [...poster.querySelectorAll(":scope > .poster-section")];
+/* 문해력 · 가짜 판별 · AI 윤리 세 주제의 방법(목표·진행·조작)을 탭으로 나눠 한 번에 하나씩 보여 줍니다. */
+const RULE_TOPICS = [["문해력", "📖 문해력"], ["가짜 판별", "🔎 가짜 판별"], ["AI 윤리", "🤖 AI 윤리"]];
+function rulesToTabs(poster, current) {
   const actions = poster.querySelector(":scope > .poster-actions");
-  if (heads.length < 2) return;
   const tabs = document.createElement("div");
   tabs.className = "rule-tabs"; tabs.setAttribute("role", "tablist");
-  const panels = heads.map((head, i) => {
+  const panels = RULE_TOPICS.map(([topic, label], i) => {
     const panel = document.createElement("div");
     panel.className = "rule-panel"; panel.setAttribute("role", "tabpanel");
-    for (let n = head.nextSibling; n && !(n.classList && (n.classList.contains("poster-section") || n.classList.contains("poster-actions"))); n = head.nextSibling) panel.append(n);
-    head.remove();
+    panel.innerHTML = rulesMarkup(topic);
+    panel.querySelector(".poster-actions")?.remove();
     const b = document.createElement("button");
     b.type = "button"; b.className = "rule-tab"; b.setAttribute("role", "tab");
-    b.textContent = ["🎯 ", "🖼️ ", "🕹️ "][i] + head.textContent.replace("그림으로 보는 ", "");
+    b.textContent = label;
     b.onclick = () => select(i);
     tabs.append(b);
     return panel;
@@ -1280,15 +1279,15 @@ function rulesToTabs(poster) {
     panels.forEach((p, j) => { p.hidden = j !== i; });
     poster.scrollTop = 0;
   }
-  poster.querySelector(".poster-title").after(tabs);
-  tabs.after(...panels);
+  poster.innerHTML = `<div id="posterTitle" class="poster-title">게임 방법</div>`;
+  poster.append(tabs, ...panels);
   if (actions) poster.append(actions);
-  select(0);
+  select(Math.max(0, RULE_TOPICS.findIndex(t => t[0] === current)));
 }
 function showRules(startAfter) {
   pendingGameStart = startAfter;
   $("rulesPoster").innerHTML = rulesMarkup(settings.topic);
-  rulesToTabs($("rulesPoster"));
+  rulesToTabs($("rulesPoster"), settings.topic);
   $("rulesPoster").scrollTop = 0;
   $("closeRules").onclick = closeRules;
   $("rulesOverlay").hidden = false;
