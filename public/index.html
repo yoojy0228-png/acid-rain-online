@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>리터러버 · AI 리터러시 + 리트리버</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ==========================================================
    리터러버 디자인 시스템
@@ -37,7 +37,7 @@
 /* ---------- 기본 ---------- */
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
-html{font-size:calc(16px*var(--fs));background:var(--paper);-webkit-text-size-adjust:100%}
+html{font-size:calc(16px*var(--fs));background:var(--paper);-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
 body{margin:0;min-height:100dvh;overflow-x:hidden;color:var(--ink);font-family:var(--font-body);font-weight:300;font-size:1.05rem;line-height:1.5;
   background:var(--paw) 0 0/140px 140px,radial-gradient(120% 80% at 50% 0%,#fffdf7 0%,var(--paper) 55%,var(--paper-2) 100%) fixed}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -590,6 +590,9 @@ footer{padding:.5rem 0 .7rem}
   .hero-desc{font-size:.92rem}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+/* 전체 글씨를 얇게 */
+body,body *{font-weight:200!important}
+b,strong,h1,h2,h3{font-weight:300!important}
 </style>
 </head>
 <body data-screen="home">
