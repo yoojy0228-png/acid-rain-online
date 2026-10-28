@@ -348,4 +348,6 @@ router.post('/twenty/giveup', (req, res) => {
   res.json({ state: publicState(s) });
 });
 
+// 온라인 1대1 스무고개가 같은 Claude 출제·진행·판정을 쓰도록 내보냅니다.
+router.twenty = { isConfigured, KEYWORDS, generateKeyword, hostAnswer, judgeGuess, pattern, recentWords };
 module.exports = router;
