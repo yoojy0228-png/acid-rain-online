@@ -136,6 +136,8 @@ body[data-screen="game"] footer,body[data-screen="territory"] footer,body[data-s
 .menu-dropdown>button{display:flex;align-items:center;gap:.5rem;width:100%;padding:.65rem .8rem;border:2px solid var(--line);border-radius:var(--r-sm);
   background:var(--card-2);color:var(--brown);font-family:var(--font-display);font-size:1.02rem;text-align:left}
 .menu-dropdown>button:hover,.font-size-buttons button:hover{background:var(--gold-l);border-color:var(--gold)}
+#volumeControl{display:grid;gap:.45rem;padding:.15rem .15rem .1rem}
+#volumeSlider{width:100%;accent-color:var(--gold);cursor:pointer}
 #fontSizeControl{display:grid;gap:.45rem;margin-top:.15rem;padding:.55rem .15rem .15rem;border-top:2px dashed var(--line)}
 .font-size-label{display:flex;justify-content:space-between;font-family:var(--font-display);color:var(--brown);font-size:.95rem}
 .font-size-label b{font-weight:400;color:var(--rose)}
@@ -613,6 +615,10 @@ b,strong,h1,h2,h3{font-weight:300!important}
     <div class="menu-dropdown" id="menuDropdown" hidden>
       <button id="openRules" type="button">📜 게임 규칙</button>
       <button id="soundToggle" type="button" aria-pressed="true">🔊 사운드 ON</button>
+      <div id="volumeControl" aria-label="소리 크기 조절">
+        <span class="font-size-label">소리 크기 <b id="volumeValue">100%</b></span>
+        <input id="volumeSlider" type="range" min="0" max="100" step="5" value="100" aria-label="소리 크기">
+      </div>
       <div id="fontSizeControl" aria-label="글씨 크기 조절">
         <span class="font-size-label">글씨 크기 <b id="fontSizeValue">100%</b></span>
         <div class="font-size-buttons">
@@ -809,7 +815,9 @@ b,strong,h1,h2,h3{font-weight:300!important}
 /* 합성 효과음과 배경 음악 */
 (function () {
   "use strict";
-  let ctx = null, enabled = true, musicTimer = null, step = 0, master = null;
+  let ctx = null, enabled = true, musicTimer = null, step = 0, master = null, vol = 1;
+  const MAX_GAIN = 2.2;
+  try { const v = parseFloat(localStorage.getItem("acidVolume")); if (v >= 0 && v <= 1) vol = v; } catch (e) {}
   const melody = [220, 261.63, 329.63, 293.66, 196, 246.94, 293.66, 261.63, 220, 329.63, 392, 329.63, 196, 246.94, 293.66, 220];
 
   function audio() {
@@ -818,7 +826,7 @@ b,strong,h1,h2,h3{font-weight:300!important}
       if (!AC) return null;
       ctx = new AC();
       master = ctx.createGain();
-      master.gain.value = 2.2;
+      master.gain.value = MAX_GAIN * vol;
       const limiter = ctx.createDynamicsCompressor();
       limiter.threshold.value = -12; limiter.knee.value = 10; limiter.ratio.value = 12;
       limiter.attack.value = 0.003; limiter.release.value = 0.15;
@@ -894,6 +902,12 @@ b,strong,h1,h2,h3{font-weight:300!important}
   window.AcidAudio = {
     play(name) { if (!enabled || !audio()) return; (patterns[name] || patterns.click)(); },
     isEnabled() { return enabled; },
+    getVolume() { return vol; },
+    setVolume(v) {
+      vol = Math.min(1, Math.max(0, v));
+      if (master) master.gain.value = MAX_GAIN * vol;
+      try { localStorage.setItem("acidVolume", String(vol)); } catch (e) {}
+    },
     setEnabled(on) { enabled = !!on; if (enabled) startMusic(); else stopMusic(); }
   };
   document.addEventListener("pointerdown", () => { if (enabled) startMusic(); }, { passive: true });
@@ -1172,6 +1186,12 @@ const menuToggle = $("menuToggle"), menuDropdown = $("menuDropdown");
 function setMenu(open) { menuDropdown.hidden = !open; menuToggle.setAttribute("aria-expanded", String(open)); }
 menuToggle.addEventListener("click", () => setMenu(menuDropdown.hidden));
 document.addEventListener("click", e => { if (!e.target.closest(".menu-wrap")) setMenu(false); });
+const volumeSlider = $("volumeSlider");
+function showVolume() { $("volumeValue").textContent = Math.round(window.AcidAudio.getVolume() * 100) + "%"; }
+volumeSlider.value = Math.round(window.AcidAudio.getVolume() * 100);
+showVolume();
+volumeSlider.addEventListener("input", () => { window.AcidAudio.setVolume(volumeSlider.value / 100); showVolume(); });
+volumeSlider.addEventListener("change", () => playSfx("click"));
 $("soundToggle").addEventListener("click", () => {
   const on = !window.AcidAudio.isEnabled();
   window.AcidAudio.setEnabled(on);
