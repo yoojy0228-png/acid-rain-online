@@ -209,6 +209,12 @@ body[data-screen="game"] footer,body[data-screen="territory"] footer,body[data-s
 .poster-section::before{content:"🐾";font-size:.85em}
 .poster-rule{margin:.3rem 0;font-size:clamp(1.05rem,2.4vw,1.25rem);font-weight:700;line-height:1.7}
 .poster-note{margin:.2rem 0 .8rem;color:var(--sub);font-size:1rem;line-height:1.7;text-align:center}
+.rule-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem}
+.rule-tab{min-height:3.2rem;padding:.4rem .6rem;font-family:var(--font-display);font-size:clamp(.95rem,2.6vw,1.2rem);color:var(--brown);cursor:pointer;
+  background:var(--paper);border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:0 3px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+.rule-tab:hover{background:var(--gold-l)}
+.rule-tab.on{background:var(--gold-l);color:var(--rose);transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.rule-panel[hidden]{display:none}
 .poster-actions{display:flex;justify-content:center;margin-top:1.6rem}
 .poster-actions .primary{min-width:min(100%,17rem);min-height:3.6rem;font-size:1.3rem}
 .rule-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(12.5rem,1fr));gap:1.2rem .9rem;margin:.9rem 0 1rem}
@@ -1250,9 +1256,39 @@ function rulesMarkup(topic) {
  </div>
  <div class="poster-section">조작 방법</div><div class="rule-fig keys">${KEYS}</div><p class="poster-note">선택지를 클릭하거나 화면에서 터치하세요.</p>${btn}`;
 }
+/* 게임 목표 · 진행 방법 · 조작 방법 세 구역을 탭으로 나눠 한 번에 하나씩 보여 줍니다. */
+function rulesToTabs(poster) {
+  const heads = [...poster.querySelectorAll(":scope > .poster-section")];
+  const actions = poster.querySelector(":scope > .poster-actions");
+  if (heads.length < 2) return;
+  const tabs = document.createElement("div");
+  tabs.className = "rule-tabs"; tabs.setAttribute("role", "tablist");
+  const panels = heads.map((head, i) => {
+    const panel = document.createElement("div");
+    panel.className = "rule-panel"; panel.setAttribute("role", "tabpanel");
+    for (let n = head.nextSibling; n && !(n.classList && (n.classList.contains("poster-section") || n.classList.contains("poster-actions"))); n = head.nextSibling) panel.append(n);
+    head.remove();
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "rule-tab"; b.setAttribute("role", "tab");
+    b.textContent = ["🎯 ", "🖼️ ", "🕹️ "][i] + head.textContent.replace("그림으로 보는 ", "");
+    b.onclick = () => select(i);
+    tabs.append(b);
+    return panel;
+  });
+  function select(i) {
+    tabs.querySelectorAll(".rule-tab").forEach((b, j) => { b.classList.toggle("on", j === i); b.setAttribute("aria-selected", j === i); });
+    panels.forEach((p, j) => { p.hidden = j !== i; });
+    poster.scrollTop = 0;
+  }
+  poster.querySelector(".poster-title").after(tabs);
+  tabs.after(...panels);
+  if (actions) poster.append(actions);
+  select(0);
+}
 function showRules(startAfter) {
   pendingGameStart = startAfter;
   $("rulesPoster").innerHTML = rulesMarkup(settings.topic);
+  rulesToTabs($("rulesPoster"));
   $("rulesPoster").scrollTop = 0;
   $("closeRules").onclick = closeRules;
   $("rulesOverlay").hidden = false;
