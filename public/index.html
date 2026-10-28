@@ -584,15 +584,6 @@ footer{padding:.5rem 0 .7rem}
   <div class="rules-poster" id="rulesPoster"></div>
 </div>
 
-<!-- Claude가 문제를 만드는 동안 보이는 화면 -->
-<div id="genOverlay" class="gen-overlay" role="status" aria-live="polite" hidden>
-  <div class="gen-card">
-    <div class="gen-paws" aria-hidden="true"><span>🐾</span><span>🐾</span><span>🐾</span></div>
-    <p class="gen-title">Claude가 문제를 만들고 있어요</p>
-    <p class="gen-msg" id="genMsg"></p>
-    <div class="gen-bar" aria-hidden="true"><i></i></div>
-  </div>
-</div>
 
 <div class="app">
 <header>
@@ -1524,16 +1515,31 @@ async function startTerritoryGame() {
     lastFeedback: "정답이면 선이 연결됩니다. 오답이면 -1점이 되지만 차례는 유지됩니다."
   };
   show("territory"); renderTerritory();
-  curtainReveal(() => {}, "yellow");
-  // 첫 문제 묶음을 만드는 동안 생성 중 화면을 보여 줍니다.
-  showGenerating("중학생 눈높이의 진짜·가짜 자료를 만들고 있어요. 잠시만 기다려 주세요!");
+  // 첫 문제 묶음을 만드는 동안 커튼을 닫아 둡니다.
+  showGenerating();
   await refillFacts(st);
   hideGenerating();
   if (territoryState === st) renderTerritory();
 }
 /* 문제 생성 중 화면 */
-function showGenerating(msg) { $("genMsg").textContent = msg; $("genOverlay").hidden = false; }
-function hideGenerating() { $("genOverlay").hidden = true; }
+/* 문제를 만드는 동안 커튼을 닫아 두고, 다 만들면 커튼을 엽니다. 홈으로 나갈 때는 instant로 바로 치웁니다. */
+let curtainTimers = [];
+function showGenerating() {
+  curtainTimers.forEach(clearTimeout); curtainTimers = [];
+  const el = $("curtain");
+  el.classList.add("yellow");
+  el.classList.remove("open");
+  el.hidden = false;
+  void el.offsetWidth;
+}
+function hideGenerating(instant) {
+  const el = $("curtain");
+  curtainTimers.forEach(clearTimeout); curtainTimers = [];
+  if (instant || el.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) { el.hidden = true; return; }
+  playSfx("bark");
+  el.classList.add("open");
+  curtainTimers.push(setTimeout(() => { el.hidden = true; }, 1500));
+}
 /* Claude에게 가짜 판별 문제를 몇 개씩 미리 받아 둡니다. 실패하면 준비된 문제로 이어 갑니다. */
 const FACT_BATCH = 8;
 function refillFacts(st) {
@@ -1767,7 +1773,7 @@ function finishTerritory() {
 }
 $("realAnswer").addEventListener("click", () => answerTerritory("real"));
 $("fakeAnswer").addEventListener("click", () => answerTerritory("fake"));
-$("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); territoryState = null; hideGenerating(); show("home"); });
+$("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); territoryState = null; hideGenerating(true); show("home"); });
 
 /* ---------- AI 윤리 스무고개 (Claude 출제 · 진행 · 대전) ---------- */
 const tw = { state: null, gen: 0, busy: false, gaveUp: false, count: { me: 0, ai: 0 } };
@@ -1835,8 +1841,7 @@ async function startTwenty() {
   tw.state = null; tw.gaveUp = false; tw.count = { me: 0, ai: 0 };
   $("twLog").replaceChildren(); $("twEnd").hidden = true; $("twAiRetry").hidden = true; $("twText").value = "";
   show("twenty"); twRenderInfo(); twSetBusy(true, "");
-  curtainReveal(() => {}, "yellow");
-  showGenerating("Claude가 중학생 눈높이의 AI 윤리 비밀 키워드를 고르고 있어요…");
+  showGenerating();
   try {
     const st = await twApi("start", { mode: settings.mode });
     if (gen !== tw.gen) return;
@@ -1919,7 +1924,7 @@ $("twGiveup").addEventListener("click", async () => {
 });
 $("twRetry").addEventListener("click", () => startTwenty());
 $("twEndHome").addEventListener("click", () => { tw.gen++; show("home"); });
-$("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(); show("home"); });
+$("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(true); show("home"); });
 
 </script>
 <script>
