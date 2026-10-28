@@ -840,8 +840,8 @@ b,strong,h1,h2,h3{font-weight:300!important}
   function musicStep() {
     if (!enabled || !ctx) return;
     const t = ctx.currentTime, f = melody[step % melody.length];
-    tone(f, 0.28, "triangle", 0.045, t);
-    if (step % 4 === 0) tone(f / 2, 0.42, "sine", 0.035, t);
+    tone(f, 0.28, "triangle", 0.2, t);
+    if (step % 4 === 0) tone(f / 2, 0.42, "sine", 0.15, t);
     step++;
   }
   function startMusic() {
