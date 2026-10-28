@@ -774,7 +774,7 @@ footer{padding:.5rem 0 .7rem}
     <div id="onlinePlay" hidden>
       <div class="online-score"><span id="onlineMyScore">나: 0점</span><span id="onlineOppScore">상대: 0점</span></div>
       <div class="online-status" id="onlinePlayStatus">문제를 기다리는 중…</div>
-      <div id="onlineQuizArea"><h3 id="onlineQuestion"></h3><div id="onlineOptions"></div><div id="onlineExplain" class="online-small"></div><button id="onlineNext" class="online-primary" style="width:100%" hidden>다음 문제</button></div><div id="onlineDotsArea" hidden><p id="onlineDotsStatus" class="online-status">선을 눌러 칸을 차지하세요.</p><canvas id="onlineDotsCanvas" width="640" height="640"></canvas><p class="online-small">선을 하나 그어 네 변을 완성하면 해당 칸을 차지하고 한 번 더 둡니다. 더 많은 칸을 차지한 사람이 승리합니다.</p></div><div id="onlineTwentyArea" hidden><p id="twentyRole" class="online-status"></p><div id="twentyLog" class="online-small" style="max-height:200px;overflow:auto;text-align:left;margin:.5rem 0"></div><div id="twentyControls"></div><button id="twentyAgain" class="online-primary" style="width:100%" hidden>한 판 더 하기 (역할 교체)</button></div>
+      <div id="onlineQuizArea"><h3 id="onlineQuestion"></h3><div id="onlineOptions"></div><div id="onlineExplain" class="online-small"></div><button id="onlineNext" class="online-primary" style="width:100%" hidden>다음 문제</button></div><div id="onlineDotsArea" hidden><p id="onlineDotsStatus" class="online-status">선을 눌러 칸을 차지하세요.</p><canvas id="onlineDotsCanvas" width="640" height="640"></canvas><p class="online-small">선을 하나 그어 네 변을 완성하면 해당 칸을 차지하고 한 번 더 둡니다. 더 많은 칸을 차지한 사람이 승리합니다.</p></div><div id="onlineTwentyArea" hidden><p id="twentyRole" class="online-status"></p><div id="twentyLog" class="online-small" style="max-height:200px;overflow:auto;text-align:left;margin:.5rem 0"></div><div id="twentyControls"></div><button id="twentyAgain" class="online-primary" style="width:100%" hidden>한 판 더 하기 (선공 교체)</button></div>
     </div>
     <p class="online-small">온라인 대전은 두 사람이 같은 사이트에 접속해야 하며, 대전 서버가 켜져 있어야 합니다. 방을 닫으면 대전이 종료됩니다.</p>
     <button id="onlineClose" class="online-secondary" style="width:100%">닫기</button>
@@ -2031,44 +2031,40 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(); sh
     sock.on("game:next-request", () => { if (isHost) sendQuestion(); });
   }
 
-  const TW_LABEL = { yes: "예", no: "아니오", unknown: "모르겠음", correct: "정답!", wrong: "오답" };
   function renderTwenty(s) {
-    const left = s.max - s.log.length, ctl = $o("twentyControls"), isA = s.role === "answerer";
-    $o("twentyRole").textContent = (isA ? "🎭 출제자" : "🔎 추리자") + " · 남은 질문 " + left + "개" + (isA && s.word ? "\n비밀 단어: " + s.word : "");
+    const ctl = $o("twentyControls"), mine = s.you, opp = 1 - s.you, myTurn = s.turn === mine;
+    $o("twentyRole").textContent = s.ready
+      ? `🔒 Claude가 숨긴 키워드 · 분야: ${s.field}\n글자 모양: ${s.pattern}\n🙋 나 남은 기회 ${s.left[mine]}번 · 상대 ${s.left[opp]}번`
+      : "🤖 Claude가 AI 윤리 비밀 키워드를 고르고 있어요…";
     const log = $o("twentyLog"); log.replaceChildren();
-    s.log.forEach((e, i) => { const d = document.createElement("div"); d.textContent = (i + 1) + ". " + e.q + " → " + (TW_LABEL[e.a] || e.a); log.append(d); });
-    if (s.pending) { const d = document.createElement("div"); d.textContent = "❓ " + s.pending; d.style.fontWeight = "700"; log.append(d); }
+    s.log.forEach((e, i) => {
+      const d = document.createElement("div"), who = e.who === mine ? "🙋 나" : "👤 상대";
+      d.textContent = `${i + 1}. [${who}] ${e.kind === "guess" ? "정답 도전" : "질문"}: ${e.text} → ${e.answer}${e.note ? " (" + e.note + ")" : ""}`;
+      if (e.correct) d.style.fontWeight = "700";
+      log.append(d);
+    });
+    if (s.busy) { const d = document.createElement("div"); d.textContent = "🎙️ Claude 진행자가 답하는 중…"; log.append(d); }
     log.scrollTop = log.scrollHeight;
     ctl.replaceChildren();
     $o("twentyAgain").hidden = !(s.finished && isHost);
     const mk = (tag, txt, cls, fn) => { const e = document.createElement(tag); if (txt) e.textContent = txt; if (cls) e.className = cls; if (fn) e.onclick = fn; return e; };
     if (s.finished) {
-      const won = s.winner === s.you;
-      ctl.append(mk("p", (won ? "🏆 승리! " : "😢 패배 ") + "정답은 [" + s.word + "] 였습니다.", "online-status"));
+      const title = s.winner === -1 ? "🤝 무승부!" : s.winner === mine ? "🏆 승리! 먼저 맞혔어요." : "😢 상대가 먼저 맞혔어요.";
+      ctl.append(mk("p", title + (s.reveal ? ` 정답은 [${s.reveal.word}] 였습니다.` : ""), "online-status"));
+      if (s.reveal && s.reveal.desc) ctl.append(mk("p", s.reveal.desc, "online-small"));
       if (!isHost) ctl.append(mk("p", "방장이 다시 시작하기를 기다리는 중…", "online-small"));
       return;
     }
-    if (isA) {
-      if (!s.wordSet) {
-        const inp = mk("input"); inp.maxLength = 30; inp.placeholder = "비밀 단어를 입력 (예: 사과)";
-        ctl.append(inp, mk("button", "단어 정하기", "online-primary", () => { if (inp.value.trim()) sock.emit("twenty:word", { word: inp.value }); }));
-      } else if (s.pending) {
-        ctl.append(mk("p", "❓ " + s.pending, "online-status"));
-        [["yes", "예"], ["no", "아니오"], ["unknown", "모르겠음"]].forEach(([k, l]) => ctl.append(mk("button", l, "online-primary", () => sock.emit("twenty:answer", { answer: k }))));
-      } else ctl.append(mk("p", "상대의 질문을 기다리는 중…", "online-small"));
-    } else {
-      if (!s.wordSet) ctl.append(mk("p", "출제자가 단어를 정하는 중…", "online-small"));
-      else if (s.pending) ctl.append(mk("p", "출제자가 답하는 중…", "online-small"));
-      else {
-        const inp = mk("input"); inp.maxLength = 100; inp.placeholder = "예/아니오로 답할 수 있는 질문 또는 정답";
-        const val = () => inp.value.trim();
-        ctl.append(inp,
-          mk("button", "질문하기", "online-primary", () => { if (val()) sock.emit("twenty:ask", { text: val() }); }),
-          mk("button", "정답 맞히기", "online-secondary", () => { if (val()) sock.emit("twenty:guess", { text: val() }); }));
-      }
-    }
-  }
-  $o("twentyAgain").addEventListener("click", () => { if (isHost && sock) sock.emit("game:start"); });
+    if (!s.ready) return;
+    if (!myTurn) { ctl.append(mk("p", "상대 차례예요. 질문과 답이 모두 공개되니 잘 살펴보세요!", "online-small")); return; }
+    if (s.busy) return;
+    const inp = mk("input"); inp.maxLength = 100; inp.placeholder = "예/아니요로 답할 수 있는 질문 또는 정답";
+    const val = () => inp.value.trim();
+    ctl.append(mk("p", "내 차례예요!", "online-status"), inp,
+      mk("button", "질문하기", "online-primary", () => { if (val()) sock.emit("twenty:turn", { kind: "question", text: val() }); }),
+      mk("button", "정답 맞히기", "online-secondary", () => { if (val()) sock.emit("twenty:turn", { kind: "guess", text: val() }); }));
+    inp.addEventListener("keydown", ev => { if (ev.key === "Enter" && val()) sock.emit("twenty:turn", { kind: "question", text: val() }); });
+  }  $o("twentyAgain").addEventListener("click", () => { if (isHost && sock) sock.emit("game:start"); });
   $o("onlineEntry").addEventListener("click", () => { overlay.hidden = false; });
   $o("onlineClose").addEventListener("click", () => { overlay.hidden = true; if (sock) { sock.emit("room:leave"); resetOnline(); } });
   $o("onlineJoinShow").addEventListener("click", () => { $o("onlineJoinArea").hidden = !$o("onlineJoinArea").hidden; });
