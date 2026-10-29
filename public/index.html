@@ -689,6 +689,15 @@ b,strong,h1,h2,h3{font-weight:300!important}
       <div class="territory-answer-row"><button id="realAnswer" class="primary" disabled>1️⃣ 진짜</button><button id="fakeAnswer" class="primary fake-answer" disabled>2️⃣ 가짜</button></div>
     </article>
   </div>
+  <div class="tw-end" id="territoryEnd" style="position:fixed" hidden>
+    <div class="tw-end-card">
+      <div class="tw-end-icon" id="territoryEndIcon">🎉</div>
+      <h2 id="territoryEndTitle"></h2>
+      <p class="tw-end-sub" id="territoryEndSub"></p>
+      <p class="closing-line">AI도 틀릴 수 있어요. 진짜인지 확인하는 건 바로 나!</p>
+      <div class="actions"><button class="secondary" id="territoryEndHome">메인 화면</button><button class="primary" id="territoryEndRetry">↻ 다시 하기</button></div>
+    </div>
+  </div>
 </section>
 
 <section id="twenty" class="screen">
@@ -729,6 +738,7 @@ b,strong,h1,h2,h3{font-weight:300!important}
           <p class="tw-end-sub" id="twEndSub"></p>
           <div class="tw-reveal" id="twReveal"><span>정답</span><b id="twEndWord"></b></div>
           <p class="tw-end-desc" id="twEndDesc"></p>
+          <p class="closing-line">오늘 AI를 쓸 때 지킬 약속 하나를 더 알게 됐어요.</p>
           <div class="actions"><button class="secondary" id="twEndHome">메인 화면</button><button class="primary" id="twRetry">↻ 새 문제로 다시 하기</button></div>
         </div>
       </div>
@@ -1265,7 +1275,7 @@ function rulesMarkup(topic) {
   ${ruleStep(5, "오답이면 -1점", dotBoard({ lines: ["T", "L", "B"], cand: "R", texts: [{ x: 64, y: 90, t: "-1점", size: 15, anchor: "start", color: "#c9435c" }, { x: 64, y: 114, t: "차례 유지", size: 9, anchor: "start", color: "#c9435c" }] }), "선은 이어지지 않지만 차례는 그대로예요. 다른 선을 다시 골라요.")}
   ${ruleStep(6, "점수가 높으면 승리", `<div class="trophy">🏆<div class="mini-score"><b style="color:#3b86e0">나 7</b><b style="color:#e0556f">AI 5</b></div></div>`, "모든 선이 이어지면 점수가 가장 높은 사람이 이겨요.")}
  </div>
- <div class="poster-section">조작 방법</div><div class="rule-fig keys">${KEYS_FAKE}</div><p class="poster-note">게임판의 선을 클릭하거나 터치하고, 진짜·가짜 버튼을 누르세요.</p>${btn}`;
+ <div class="poster-section">조작 방법</div><div class="rule-fig keys">${KEYS_FAKE}</div>${btn}`;
   return `<div class="poster-title">문해력 · 산성비 퀴즈</div>
  <div class="poster-section">게임 목표</div><p class="poster-rule">위에서 떨어지는 두 선택지 중 정답을 골라 살아남으세요.</p>
  <div class="poster-section">그림으로 보는 진행 방법</div>
@@ -1563,8 +1573,8 @@ const AI_ACCURACY = [0, .92, .88, .86, .84];
 let territoryState = null, territoryTimer = null;
 function clearTerritoryTimer() { if (territoryTimer) { clearTimeout(territoryTimer); territoryTimer = null; } }
 async function startTerritoryGame() {
-  stop(); clearTerritoryTimer();
-  const count = Math.max(2, Math.min(5, settings.territoryAIs + 1)), n = count >= 4 ? 7 : 5, edges = [];
+  stop(); clearTerritoryTimer(); $("territoryEnd").hidden = true;
+  const count =Math.max(2, Math.min(5, settings.territoryAIs + 1)), n = count >= 4 ? 7 : 5, edges = [];
   for (let r = 0; r <= n; r++) for (let c = 0; c < n; c++) edges.push({ id: `h${r}_${c}`, r, c, dir: "h", owner: -1 });
   for (let r = 0; r < n; r++) for (let c = 0; c <= n; c++) edges.push({ id: `v${r}_${c}`, r, c, dir: "v", owner: -1 });
   const idx = {}; edges.forEach((e, i) => idx[e.id] = i);
@@ -1833,7 +1843,14 @@ function finishTerritory() {
     }
   } catch (e) { console.error("가짜 판별 전적 저장 실패:", e); }
   renderTerritory();
+  const won = winners.includes("나");
+  $("territoryEndIcon").textContent = won ? (winners.length > 1 ? "🤝" : "🎉") : "🤖";
+  $("territoryEndTitle").textContent = won ? (winners.length > 1 ? "무승부!" : "내가 이겼어요!") : "AI가 이겼어요";
+  $("territoryEndSub").textContent = `내 점수 ${st.scores[0]}점 · 최고 점수 ${max}점`;
+  $("territoryEnd").hidden = false;
 }
+$("territoryEndHome").addEventListener("click", () => { $("territoryEnd").hidden = true; clearTerritoryTimer(); territoryState = null; hideGenerating(true); show("home"); });
+$("territoryEndRetry").addEventListener("click", () => startTerritoryGame());
 $("realAnswer").addEventListener("click", () => answerTerritory("real"));
 $("fakeAnswer").addEventListener("click", () => answerTerritory("fake"));
 $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); territoryState = null; hideGenerating(true); show("home"); });
