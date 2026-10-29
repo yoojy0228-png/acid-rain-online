@@ -169,7 +169,14 @@ router.post('/fact-questions', rateLimit, async (req, res) => {
 /* ---------- AI 윤리 스무고개 ---------- */
 // 최근에 나온 키워드는 다시 나오지 않게 기억해 둡니다.
 const recentWords = [];
+// 매번 다른 분야에서 출제하도록 무작위 분야를 지정합니다.
+const KW_THEMES = [
+  '개인정보·사생활 보호', '가짜 정보·딥페이크', '저작권·창작과 출처', 'AI 기술과 서비스(챗봇, 추천, 번역, 이미지 생성 등)',
+  '온라인 예절·사이버 폭력', '보안·해킹·사기', 'AI의 공정성·차별', '학습과 숙제에서 AI 쓰기',
+  'AI와 일상생활(자율주행, 스마트폰, 스피커, 로봇 등)', '데이터와 알고리즘', '디지털 습관·중독·건강', 'AI와 직업·미래 사회',
+];
 async function generateKeyword() {
+  const theme = KW_THEMES[crypto.randomInt(KW_THEMES.length)];
   const out = await askJSON({
     system: '너는 중학생을 위한 "AI 윤리 스무고개"의 출제자야. 쉽게 맞힐 수 있는 비밀 키워드 하나를 골라.\n' +
       '- 난이도는 쉽게: 중학교 1학년이 듣자마자 뜻을 아는, 일상에서 자주 쓰는 낱말이어야 해. (좋은 예: 개인정보, 가짜 뉴스, 딥페이크, 저작권, 비밀번호, 챗봇, 악플, 표절, 출처, 해킹)\n' +
@@ -178,7 +185,7 @@ async function generateKeyword() {
       '- aliases: 정답으로 인정할 다른 표현·띄어쓰기를 바꾼 형태·영어 표기·비슷한 말 3~6개. 넉넉하게 넣어.\n' +
       '- field: 플레이어에게 보여 줄 친절하고 구체적인 힌트(15자 이내, 예: "인터넷 글과 관련", "사진·영상과 관련"). 키워드 자체나 그 일부는 쓰지 마.\n' +
       '- desc: 게임이 끝나고 보여 줄 설명. 뜻과 왜 윤리적으로 중요한지 중학생 눈높이로 두 문장(90자 이내).',
-    messages: [{ role: 'user', content: `최근에 나온 키워드(이번엔 다른 것으로): ${recentWords.join(', ') || '(없음)'}` }],
+    messages: [{ role: 'user', content: `이번 판의 분야: ${theme}\n자주 나오는 뻔한 낱말(개인정보, 딥페이크, 가짜 뉴스 등)만 반복하지 말고 이 분야에서 다양하게 골라.\n최근에 나온 키워드(이번엔 반드시 다른 것으로): ${recentWords.join(', ') || '(없음)'}` }],
     schema: {
       type: 'object',
       properties: { word: { type: 'string' }, aliases: { type: 'array', items: { type: 'string' } }, field: { type: 'string' }, desc: { type: 'string' } },
@@ -286,9 +293,11 @@ router.post('/twenty/start', rateLimit, async (req, res) => {
   catch (e) {
     if (e instanceof ClaudeError && ['no_key', 'bad_key'].includes(e.code)) return sendError(res, e);
     console.error('키워드 생성 실패, 준비된 목록 사용:', e.message);
-    kw = KEYWORDS[crypto.randomInt(KEYWORDS.length)]; generated = false;
+    const fresh = KEYWORDS.filter(k => !recentWords.includes(k.word));
+    const pool = fresh.length ? fresh : KEYWORDS;
+    kw = pool[crypto.randomInt(pool.length)]; generated = false;
   }
-  recentWords.push(kw.word); if (recentWords.length > 15) recentWords.shift();
+  recentWords.push(kw.word); if (recentWords.length > 30) recentWords.shift();
   const s = {
     id: crypto.randomUUID(), mode, kw, generated,
     log: [], turnsLeft: { ...TURNS[mode] }, next: 'me', finished: false, winner: null, busy: false, createdAt: Date.now(),
