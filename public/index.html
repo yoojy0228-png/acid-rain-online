@@ -1246,9 +1246,9 @@ function rainFig(mode) {
     <div class="mini-card b" style="top:${top}">오답</div>
     <div class="mini-mark" style="top:calc(${top} - .1rem)">${mark}</div><div class="mini-floor"></div></div>`;
 }
-const MINI_Q = `<div class="mini-quiz"><div class="mini-quiz-text">“달은 스스로 빛을 만들어 낸다.”</div><div class="mini-btns"><i>1️⃣ 진짜</i><i class="f">2️⃣ 가짜 👆</i></div></div>`;
-const KEYS = `<div class="key-row"><span class="key-cap">🖱️</span><em>선택지를 <span style="color:#e53935;font-weight:700">클릭</span>하거나 터치하세요</em></div>`;
-const KEYS_FAKE = `<div class="key-row"><span class="key-cap">👆</span><em>게임판의 선을 선택한 뒤 진짜·가짜 버튼을 누르세요</em></div>`;
+const MINI_Q = `<div class="mini-quiz"><div class="mini-quiz-text">“달은 스스로 빛을 만들어 낸다.”</div><div class="mini-btns"><i>1️⃣ 진짜</i><i class="f">2️⃣ 가짜</i></div></div>`;
+const KEYS = `<div class="key-row"><em>선택지를 <span style="color:#e53935;font-weight:700">클릭</span>하거나 터치하세요</em></div>`;
+const KEYS_FAKE = `<div class="key-row"><em>게임판의 선을 선택한 뒤 진짜·가짜 버튼을 누르세요</em></div>`;
 
 function rulesMarkup(topic) {
   const btn = `<div class="poster-actions"><button id="closeRules" class="primary" type="button">확인하고 ${pendingGameStart ? "게임 시작" : "닫기"}</button></div>`;
