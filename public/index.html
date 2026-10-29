@@ -520,9 +520,14 @@ footer{padding:.5rem 0 .7rem}
 .ai-stepper{min-height:clamp(6rem,22vh,14rem)}
 #result .panel{flex:1 1 auto}
 #result .review-list{flex:1 1 auto;min-height:0;overflow:visible;display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.4rem}
-#result .review{padding:.35rem .6rem;border-left-width:4px}
-#result .review h3{margin:0 0 .1rem;font-size:.82rem;line-height:1.3}
-#result .review p{margin:.05rem 0;font-size:.72rem;line-height:1.3}
+#result .review{padding:.6rem .9rem;border-left-width:5px}
+#result .review h3{margin:0 0 .25rem;font-size:1.25rem;line-height:1.4}
+#result .review p{margin:.15rem 0;font-size:1.1rem;line-height:1.5}
+#result .review-list{grid-template-columns:repeat(auto-fit,minmax(22rem,1fr));gap:.7rem}
+#aiLoading{position:fixed;left:1rem;bottom:1rem;z-index:10001;display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;background:var(--gold-l);border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:0 4px 0 var(--ink);font-family:var(--font-display);font-size:1.1rem;color:var(--gold-d)}
+#aiLoading[hidden]{display:none}
+.topic-chip{font-size:1.9rem;padding:.2rem 1.1rem;margin-left:.5rem}
+#modeScreen .setup-head .muted{font-size:1.3rem}
 #result .closing-line{display:inline-block;margin:.5rem auto 0;padding:.5rem 1.2rem;max-width:44rem;background:var(--gold-l);border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:0 4px 0 var(--ink);color:var(--rose);font-size:clamp(1.3rem,2.8vw,1.9rem);line-height:1.4;word-break:keep-all}
 #result .result.score-only{padding:.6rem 1.3rem}
 #result .section-title{margin:clamp(.6rem,2vh,1.5rem) 0 .5rem}
@@ -650,10 +655,11 @@ b,strong,h1,h2,h3{font-weight:300!important}
   </div>
 </section>
 
+<div id="aiLoading" hidden role="status"><span class="gen-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>로딩중…</span></div>
+
 <section id="modeScreen" class="screen setup">
   <div class="setup-card">
     <div class="setup-head">
-      <p class="eyebrow">STEP 2 · 모드</p>
       <h1>플레이 모드 선택</h1>
       <p class="muted">선택한 주제 <strong id="chosenTopic" class="topic-chip">문해력</strong></p>
     </div>
@@ -670,9 +676,8 @@ b,strong,h1,h2,h3{font-weight:300!important}
 <section id="territory" class="screen">
   <div class="screen-head">
     <div>
-      <p class="eyebrow">FAKE CHECK · DOTS AND BOXES</p>
       <h1>가짜 판별 도트 앤 박스</h1>
-      <p class="territory-intro">차례대로 선 하나를 선택하고, 자료가 진짜인지 가짜인지 판별하세요. 정답이면 선이 연결되고, 네 변을 완성한 칸을 차지합니다. 오답이면 -1점이 되지만 차례는 유지됩니다.</p>
+      <p class="territory-intro">선을 골라 진짜/가짜를 맞히면 선이 이어지고, 네 변을 완성하면 칸을 차지해요. 오답은 -1점!</p>
     </div>
     <div class="case-controls"><button id="territoryHome" class="secondary">← 메인 화면</button></div>
   </div>
@@ -687,7 +692,7 @@ b,strong,h1,h2,h3{font-weight:300!important}
     <article class="territory-question">
       <div class="case-badge" id="territoryBadge">내 차례 · 버튼을 눌러 답하기</div>
       <p id="territoryTurn" class="territory-turn"></p>
-      <div id="territoryGen" class="gen-inline" hidden><span class="gen-dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="territoryGenMsg">Claude가 새 문제를 만들고 있어요…</span></div>
+      <div id="territoryGen" class="gen-inline" hidden><span class="gen-dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="territoryGenMsg">AI가 새 문제를 만들고 있어요…</span></div>
       <h2 id="territoryPrompt"></h2>
       <p id="territoryFeedback" class="case-feedback" aria-live="polite"></p>
       <div class="territory-answer-row"><button id="realAnswer" class="primary" disabled>1️⃣ 진짜</button><button id="fakeAnswer" class="primary fake-answer" disabled>2️⃣ 가짜</button></div>
@@ -709,7 +714,7 @@ b,strong,h1,h2,h3{font-weight:300!important}
     <div>
       <p class="eyebrow">AI ETHICS · 20 QUESTIONS</p>
       <h1>AI 윤리 스무고개</h1>
-      <p class="territory-intro">Claude 진행자가 숨긴 AI 윤리 키워드를 예/아니요 질문으로 좁혀 가며 맞혀 보세요.</p>
+      <p class="territory-intro">AI 진행자가 숨긴 AI 윤리 키워드를 예/아니요 질문으로 좁혀 가며 맞혀 보세요.</p>
     </div>
     <div class="case-controls"><button id="twentyHome" class="secondary">← 메인 화면</button></div>
   </div>
@@ -733,7 +738,7 @@ b,strong,h1,h2,h3{font-weight:300!important}
           <button type="button" class="secondary" id="twGuess">🎯 정답 맞히기</button>
         </div>
         <p class="tw-status" id="twStatus"></p>
-        <button type="button" class="secondary" id="twAiRetry" hidden>↻ Claude 차례 다시 시도</button>
+        <button type="button" class="secondary" id="twAiRetry" hidden>↻ AI 차례 다시 시도</button>
       </form>
       <div class="tw-end" id="twEnd" hidden>
         <div class="tw-end-card">
@@ -1257,19 +1262,19 @@ const KEYS_FAKE = `<div class="key-row"><em>게임판의 선을 선택한 뒤 �
 function rulesMarkup(topic) {
   const btn = `<div class="poster-actions"><button id="closeRules" class="primary" type="button">확인하고 ${pendingGameStart ? "게임 시작" : "닫기"}</button></div>`;
   if (topic === "AI 윤리") return `<div class="poster-title">AI 윤리 스무고개</div>
- <div class="poster-section">게임 목표</div><p class="poster-rule">Claude가 숨긴 AI 윤리 키워드를 예/아니요 질문으로 좁혀 가며 맞혀요.</p>
+ <div class="poster-section">게임 목표</div><p class="poster-rule">AI가 숨긴 AI 윤리 키워드를 예/아니요 질문으로 좁혀 가며 맞혀요.</p>
  <div class="poster-section">그림으로 보는 진행 방법</div>
  <div class="rule-steps">
-  ${ruleStep(1, "Claude가 키워드 출제", `<div class="trophy">🔒</div>`, "매 판마다 Claude가 새 키워드를 골라요. 분야와 글자 수를 힌트로 알려 줘요.")}
+  ${ruleStep(1, "AI가 키워드 출제", `<div class="trophy">🔒</div>`, "매 판마다 AI가 새 키워드를 골라요. 분야와 글자 수를 힌트로 알려 줘요.")}
   ${ruleStep(2, "예/아니요 질문", `<div class="mini-quiz"><div class="mini-quiz-text">“사람의 얼굴과 관련 있나요?”</div><div class="mini-btns"><i>예</i><i class="f">아니요</i></div></div>`, "진행자는 예 · 아니요 · 애매해요 중 하나로만 답해요.")}
   ${ruleStep(3, "정답 맞히기", `<div class="trophy">🎯</div>`, "알 것 같으면 언제든 도전! 정답 도전도 기회 1번을 써요.")}
   ${ruleStep(4, "혼자 도전: 20번", `<div class="hearts-fig"><div>❓ × 20</div><small>20번 안에 맞히면 성공</small></div>`, "질문과 정답 도전을 합쳐 20번 안에 맞혀요.")}
-  ${ruleStep(5, "Claude 대전: 번갈아", `<div class="bars"><div class="bar-row"><span>나</span><div class="bar"><i style="width:60%;background:#e0556f"></i></div><em>6</em></div><div class="bar-row"><span>🤖</span><div class="bar"><i style="width:50%;background:#3b86e0"></i></div><em>5</em></div><div class="goal">각자 10번 · 먼저 맞히면 승리</div></div>`, "나와 Claude가 번갈아 물어요. 서로의 질문과 답이 모두 보여요!")}
+  ${ruleStep(5, "AI 대전: 번갈아", `<div class="bars"><div class="bar-row"><span>나</span><div class="bar"><i style="width:60%;background:#e0556f"></i></div><em>6</em></div><div class="bar-row"><span>🤖</span><div class="bar"><i style="width:50%;background:#3b86e0"></i></div><em>5</em></div><div class="goal">각자 10번 · 먼저 맞히면 승리</div></div>`, "나와 AI가 번갈아 물어요. 서로의 질문과 답이 모두 보여요!")}
   ${ruleStep(6, "정답과 의미 배우기", `<div class="trophy">📖</div>`, "끝나면 키워드의 뜻과 왜 중요한지 알려 줘요.")}
  </div>
  <div class="poster-section">조작 방법</div><p class="poster-note">입력 칸에 질문을 쓰고 ‘질문하기’(Enter), 정답이라면 ‘정답 맞히기’를 누르세요.</p>${btn}`;
   if (topic === "가짜 판별") return `<div class="poster-title">FAKE CHECK · 도트 앤 박스</div>
- <div class="poster-section">게임 목표</div><p class="poster-rule">Claude가 실시간으로 만든 자료가 진짜인지 가짜인지 맞혀서 선을 잇고, Claude AI보다 칸을 많이 차지하세요.</p>
+ <div class="poster-section">게임 목표</div><p class="poster-rule">AI가 실시간으로 만든 자료가 진짜인지 가짜인지 맞혀서 선을 잇고, AI보다 칸을 많이 차지하세요.</p>
  <div class="poster-section">그림으로 보는 진행 방법</div>
  <div class="rule-steps">
   ${ruleStep(1, "빈 선 고르기", dotBoard({ lines: ["T", "L", "B"], cand: "R", other: [[60, 20, 100, 20]], texts: [{ x: 64, y: 82, t: "👆", size: 18, anchor: "start" }, { x: 64, y: 114, t: "빈 선 클릭", size: 9, anchor: "start", color: "#d98f22" }] }), "내 차례에 이어지지 않은 선을 눌러요.")}
@@ -1343,7 +1348,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("rulesO
 /* ---------- 설정 화면 ---------- */
 function updateSetupLabels() {
   const fake = settings.topic === "가짜 판별", modes = $("modes");
-  $("modeChoiceLabel").textContent = fake ? "함께 겨룰 Claude AI 수" : "플레이 방식";
+  $("modeChoiceLabel").textContent = fake ? "함께 겨룰 AI 수" : "플레이 방식";
   if (fake) {
     // AI 수는 하나의 조절기(−/+)로 1~4명 중에서 고릅니다.
     const n = settings.territoryAIs;
@@ -1357,12 +1362,12 @@ function updateSetupLabels() {
   } else {
     modes.className = "choices two";
     const opts = settings.topic === "AI 윤리"
-      ? [["single", "🔍", "혼자 도전", "20번 안에 키워드 맞히기"], ["ai", "🤖", "Claude 대전", "번갈아 물어서 먼저 맞히기"]]
+      ? [["single", "🔍", "혼자 도전", "20번 안에 키워드 맞히기"], ["ai", "🤖", "AI 대전", "번갈아 물어서 먼저 맞히기"]]
       : [["single", "❤️", "싱글", "생명 3개로 끝까지 도전"]];
     modes.innerHTML = opts
       .map(([v, ic, t, d]) => `<button type="button" class="choice ${settings.mode === v ? "selected" : ""}" data-v="${v}"><span class="ch-ic">${ic}</span><b>${t}</b><small>${d}</small></button>`).join("");
   }
-  const label = fake ? `AI ${settings.territoryAIs}명` : settings.topic === "AI 윤리" ? (settings.mode === "ai" ? "Claude 대전" : "혼자 도전") : "싱글";
+  const label = fake ? `AI ${settings.territoryAIs}명` : settings.topic === "AI 윤리" ? (settings.mode === "ai" ? "AI 대전" : "혼자 도전") : "싱글";
   $("modeSelectionStatus").textContent = "현재 선택: " + (fake ? `도트 앤 박스 · 나 + ${label}` : label);
   $("chosenTopic").textContent = settings.topic;
 }
@@ -1399,12 +1404,12 @@ function fitQuestionLayout() {
 }
 window.addEventListener("resize", fitQuestionLayout);
 
-/* Claude가 필요한 게임은 시작 전에 서버의 API 키 설정을 확인합니다. */
+/* AI가 필요한 게임은 시작 전에 서버의 API 키 설정을 확인합니다. */
 async function ensureClaude() {
   try {
     const r = await fetch("/api/ai/status"); const d = await r.json();
     if (d.ready) return true;
-    alert("Claude AI가 아직 연결되지 않았어요.\n서버 폴더의 .env 파일에 ANTHROPIC_API_KEY를 넣고 서버를 다시 시작해 주세요.");
+    alert("AI가 아직 연결되지 않았어요.\n서버 폴더의 .env 파일에 ANTHROPIC_API_KEY를 넣고 서버를 다시 시작해 주세요.");
   } catch { alert("게임 서버에 연결할 수 없어요. 서버(node server.js)가 실행 중인지 확인해 주세요."); }
   return false;
 }
@@ -1535,7 +1540,7 @@ function saveBest(key, score) {
 }
 const CLOSING_LINES = {
   "문해력": "낱말 하나를 정확히 아는 것이 AI 답을 제대로 읽는 첫걸음이에요.",
-  "가짜 판별": "Claude도 틀릴 수 있어요. 진짜인지 확인하는 건 바로 나!",
+  "가짜 판별": "AI도 틀릴 수 있어요. 진짜인지 확인하는 건 바로 나!",
   "AI 윤리": "오늘 AI를 쓸 때 지킬 약속 하나를 더 알게 됐어요."
 };
 function endGame(title, message) {
@@ -1589,7 +1594,7 @@ async function startTerritoryGame() {
     correctAnswers: 0, attempts: 0, recordSaved: false,
     selected: -1, question: null, finished: false, currentPlayer: 0,
     aiStatus: Array(count).fill("대기 중"), aiQuestions: Array(count).fill(null),
-    lastFeedback: "정답이면 선이 연결됩니다. 오답이면 -1점이 되지만 차례는 유지됩니다."
+    lastFeedback: "정답이면 선 연결, 오답이면 -1점!"
   };
   show("territory"); renderTerritory();
   // 첫 문제 묶음을 만드는 동안 커튼을 닫아 둡니다.
@@ -1601,6 +1606,13 @@ async function startTerritoryGame() {
 /* 문제 생성 중 화면 */
 /* 문제를 만드는 동안 커튼을 닫아 두고, 다 만들면 커튼을 엽니다. 홈으로 나갈 때는 instant로 바로 치웁니다. */
 let curtainTimers = [];
+/* AI가 게임을 만드는 동안 왼쪽 아래에 로딩중 표시 */
+function syncAiLoading() {
+  const st = territoryState, terr = !!st && !st.finished && (st.loadingQ || st.aiLoadingQ || !!st.refilling) && $("territory").classList.contains("active");
+  const twBusy = typeof tw !== "undefined" && tw.busy && tw.state && !tw.state.finished && $("twenty").classList.contains("active");
+  $("aiLoading").hidden = !(terr || twBusy || !!curtainGen);
+}
+let curtainGen = false;
 function showGenerating() {
   curtainTimers.forEach(clearTimeout); curtainTimers = [];
   const el = $("curtain");
@@ -1608,16 +1620,18 @@ function showGenerating() {
   el.classList.remove("open");
   el.hidden = false;
   void el.offsetWidth;
+  curtainGen = true; syncAiLoading();
 }
 function hideGenerating(instant) {
   const el = $("curtain");
   curtainTimers.forEach(clearTimeout); curtainTimers = [];
+  curtainGen = false; syncAiLoading();
   if (instant || el.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) { el.hidden = true; return; }
   playSfx("bark");
   el.classList.add("open");
   curtainTimers.push(setTimeout(() => { el.hidden = true; }, 1500));
 }
-/* Claude에게 가짜 판별 문제를 몇 개씩 미리 받아 둡니다. 실패하면 준비된 문제로 이어 갑니다. */
+/* AI에게 가짜 판별 문제를 몇 개씩 미리 받아 둡니다. 실패하면 준비된 문제로 이어 갑니다. */
 const FACT_BATCH = 8;
 function refillFacts(st) {
   if (st.refilling) return st.refilling;
@@ -1630,7 +1644,7 @@ function refillFacts(st) {
     } catch (e) {
       const backup = shuffle(TERRITORY_FACTS.filter(f => !st.seen.includes(f.text))).slice(0, FACT_BATCH);
       backup.forEach(f => { st.pool.push({ ...f, src: "bank" }); st.seen.push(f.text); });
-      st.genNotice = `Claude 출제가 잠시 안 돼서 준비된 문제를 쓰고 있어요. (${e.message})`;
+      st.genNotice = `AI 출제가 잠시 안 돼서 준비된 문제를 쓰고 있어요. (${e.message})`;
     } finally { st.refilling = null; }
   })();
   return st.refilling;
@@ -1702,7 +1716,7 @@ function renderTerritory() {
   for (let r = 0; r <= n; r++) for (let c = 0; c <= n; c++) svg.append(svgEl("circle", { cx: c * step, cy: r * step, r: Math.max(3.5, step * .06), fill: "#6b4226", stroke: "#fff", "stroke-width": 2 }));
   board.append(svg);
 
-  $("territoryTurn").textContent = st.finished ? "게임 종료!" : st.currentPlayer === 0 ? (st.question ? "자료를 읽고 진짜인지 가짜인지 선택하세요." : "내 차례입니다. 선 하나를 선택하세요.") : `🤖 ${TERRITORY_NAMES[st.currentPlayer]}(Claude)의 차례 · 자료를 판별하고 있어요`;
+  $("territoryTurn").textContent = st.finished ? "게임 종료!" : st.currentPlayer === 0 ? (st.question ? "자료를 읽고 진짜인지 가짜인지 선택하세요." : "") : `🤖 ${TERRITORY_NAMES[st.currentPlayer]}의 차례 · 자료를 판별하고 있어요`;
   const aiQ = st.currentPlayer !== 0 ? st.aiQuestions[st.currentPlayer] : null;
   $("territoryPrompt").textContent = st.question ? st.question.text : (st.finished ? "게임이 끝났습니다." : st.currentPlayer === 0 ? "게임판의 빈 선을 선택하면 판별할 자료가 여기에 표시됩니다." : (aiQ ? aiQ.text : `${TERRITORY_NAMES[st.currentPlayer]}가 선을 고르고 있어요…`));
   $("territoryFeedback").textContent = st.lastFeedback;
@@ -1710,11 +1724,12 @@ function renderTerritory() {
   // 문제를 만드는 중이면 문제 자리에 생성 중 표시
   const generating = !st.finished && (st.loadingQ || st.aiLoadingQ);
   $("territoryGen").hidden = !generating; $("territoryPrompt").hidden = generating;
-  $("territoryGenMsg").textContent = st.loadingQ ? "Claude가 새 문제를 만들고 있어요…" : "Claude가 AI 차례에 쓸 문제를 만들고 있어요…";
+  $("territoryGenMsg").textContent = st.loadingQ ? "AI가 새 문제를 만들고 있어요…" : "AI가 AI 차례에 쓸 문제를 만들고 있어요…";
   const shownQ = st.question || (st.currentPlayer !== 0 ? st.aiQuestions[st.currentPlayer] : null);
-  $("territoryBadge").textContent = shownQ ? (shownQ.src === "claude" ? "✨ Claude가 방금 만든 문제" : "📚 준비된 문제") : (st.currentPlayer === 0 ? "내 차례 · 선을 골라 문제 받기" : "🤖 Claude AI 차례");
+  $("territoryBadge").textContent = shownQ ? (shownQ.src === "claude" ? "✨ AI가 방금 만든 문제" : "📚 준비된 문제") : (st.currentPlayer === 0 ? "내 차례 · 선을 골라 문제 받기" : "🤖 AI 차례");
   $("realAnswer").disabled = !canAnswer; $("fakeAnswer").disabled = !canAnswer;
-  $("territoryHint").textContent = st.genNotice ? st.genNotice : st.finished ? "점수가 가장 높은 플레이어가 승리합니다." : "정답이면 선이 연결되고, 칸을 완성하면 한 번 더 진행합니다. 오답이면 -1점이지만 차례는 유지됩니다.";
+  syncAiLoading();
+  $("territoryHint").textContent = st.genNotice ? st.genNotice : st.finished ? "점수가 가장 높은 플레이어가 승리합니다." : "정답이면 선 연결, 오답이면 -1점!";
 }
 async function selectTerritory(i) {
   const st = territoryState;
@@ -1769,14 +1784,14 @@ function chooseAIEdge(options) {
   const safe = options.filter(i => adj(i).every(([r, c]) => filled(r, c) < 2)); // 상대에게 칸을 내주지 않는 선
   return pick(safe.length ? safe : options);
 }
-/* Claude에게 이번 차례의 선 고르기와 자료 판별을 한 번에 요청합니다. */
+/* AI에게 이번 차례의 선 고르기와 자료 판별을 한 번에 요청합니다. */
 async function claudeDotsTurn(st, text) {
   const r = await fetch("/api/ai/dots-turn", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ size: st.size, lines: st.edges.map(e => ({ id: e.id, owner: e.owner })), boxes: st.boxes, statement: text })
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.message || "Claude 응답 오류");
+  if (!r.ok) throw new Error(d.message || "AI 응답 오류");
   return d;
 }
 async function runAITurn() {
@@ -1787,13 +1802,13 @@ async function runAITurn() {
   renderTerritory();
   const q = await nextFact(st);
   if (territoryState !== st || st.finished || st.currentPlayer !== p) return;
-  st.aiLoadingQ = false; st.aiQuestions[p] = q; st.aiStatus[p] = "Claude 생각 중";
-  st.lastFeedback = `🤖 ${TERRITORY_NAMES[p]}(Claude)가 둘 선을 고르고, 자료가 진짜인지 가짜인지 생각하고 있어요…`;
+  st.aiLoadingQ = false; st.aiQuestions[p] = q; st.aiStatus[p] = "AI 생각 중";
+  st.lastFeedback = `🤖 ${TERRITORY_NAMES[p]}가 둘 선을 고르고, 자료가 진짜인지 가짜인지 생각하고 있어요…`;
   renderTerritory();
   const started = Date.now();
   const result = await claudeDotsTurn(st, q.text).then(r => ({ ok: true, ...r }), err => ({ ok: false, err }));
   if (territoryState !== st || st.finished || st.currentPlayer !== p) return; // 그사이 게임을 나갔으면 무시
-  // Claude가 고른 선을 보여 준 뒤 결과를 적용합니다. 연결 문제가 생기면 이번 차례만 기본 규칙으로 선을 고릅니다.
+  // AI가 고른 선을 보여 준 뒤 결과를 적용합니다. 연결 문제가 생기면 이번 차례만 기본 규칙으로 선을 고릅니다.
   const pickIdx = result.ok ? st.idx[result.line] : chooseAIEdge(options);
   const usable = pickIdx !== undefined && st.edges[pickIdx] && st.edges[pickIdx].owner < 0;
   const finalIdx = usable ? pickIdx : chooseAIEdge(options);
@@ -1802,7 +1817,7 @@ async function runAITurn() {
 }
 function applyAIJudgement(live, p, pickIdx, q, result) {
   if (territoryState !== live || live.finished || live.currentPlayer !== p) return;
-  const name = `${TERRITORY_NAMES[p]}(Claude)`;
+  const name = `${TERRITORY_NAMES[p]}`;
   let correct, said;
   if (result.ok) {
     correct = result.answer === q.answer;
@@ -1859,7 +1874,7 @@ $("realAnswer").addEventListener("click", () => answerTerritory("real"));
 $("fakeAnswer").addEventListener("click", () => answerTerritory("fake"));
 $("territoryHome").addEventListener("click", () => { clearTerritoryTimer(); territoryState = null; hideGenerating(true); show("home"); });
 
-/* ---------- AI 윤리 스무고개 (Claude 출제 · 진행 · 대전) ---------- */
+/* ---------- AI 윤리 스무고개 (AI 출제 · 진행 · 대전) ---------- */
 const tw = { state: null, gen: 0, busy: false, gaveUp: false, count: { me: 0, ai: 0 } };
 const TW_EXAMPLES = ["사람의 얼굴과 관련 있나요?", "기술의 이름인가요?", "개인정보와 관련 있나요?", "학교 숙제와 관련 있나요?"];
 async function twApi(path, body) {
@@ -1870,7 +1885,7 @@ async function twApi(path, body) {
 }
 function twStatus(msg, isErr) { $("twStatus").textContent = msg || ""; $("twStatus").classList.toggle("err", !!isErr); }
 function twSetBusy(on, msg) {
-  tw.busy = on;
+  tw.busy = on; syncAiLoading();
   const closed = on || !tw.state || tw.state.finished;
   ["twText", "twAsk", "twGuess"].forEach(id => $(id).disabled = closed);
   $("twGiveup").disabled = closed;
@@ -1887,21 +1902,21 @@ function twRenderInfo() {
     return `<div class="tw-meter ${who}${now ? " now" : ""}"><div class="tw-meter-head"><span>${label}${now ? " · 차례" : ""}</span><span><b>${left}</b> / ${total}</span></div><div class="tw-pips">${pips}</div></div>`;
   };
   $("twTurns").innerHTML = (s ? s.mode : settings.mode) === "ai"
-    ? meter("me", "🙋 나", 10) + meter("ai", "🤖 Claude", 10)
+    ? meter("me", "🙋 나", 10) + meter("ai", "🤖 AI", 10)
     : meter("me", "🙋 남은 기회", 20);
 }
 function twIntro() {
   const el = document.createElement("div"); el.className = "tw-intro";
-  el.innerHTML = `<b>🔒 비밀 키워드가 준비됐어요!</b>예/아니요로 답할 수 있는 질문으로 범위를 좁혀 보세요.${settings.mode === "ai" ? "<br>Claude도 같은 키워드를 노리고 있어요. 먼저 맞히면 승리!" : ""}<div class="tw-chips"></div>`;
+  el.innerHTML = `<b>🔒 비밀 키워드가 준비됐어요!</b>예/아니요로 답할 수 있는 질문으로 범위를 좁혀 보세요.${settings.mode === "ai" ? "<br>AI도 같은 키워드를 노리고 있어요. 먼저 맞히면 승리!" : ""}<div class="tw-chips"></div>`;
   TW_EXAMPLES.forEach(t => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.onclick = () => { $("twText").value = t; $("twText").focus(); }; el.querySelector(".tw-chips").append(b); });
   return el;
 }
 function twScroll() { const log = $("twLog"); log.scrollTop = log.scrollHeight; }
-// 기록에 새 칸을 추가합니다. text가 없으면 Claude가 생각 중인 칸입니다.
+// 기록에 새 칸을 추가합니다. text가 없으면 AI가 생각 중인 칸입니다.
 function twAddEntry(who, text) {
   $("twLog").querySelector(".tw-intro")?.remove();
   const el = document.createElement("div"); el.className = "tw-entry " + who;
-  const head = document.createElement("div"); head.className = "tw-who"; head.textContent = who === "me" ? "🙋 나" : "🤖 Claude";
+  const head = document.createElement("div"); head.className = "tw-who"; head.textContent = who === "me" ? "🙋 나" : "🤖 AI";
   const bubble = document.createElement("div"); bubble.className = "tw-bubble";
   const ans = document.createElement("div"); ans.className = "tw-answer";
   const dots = `<span class="gen-dots" aria-hidden="true"><i></i><i></i><i></i></span>`;
@@ -1912,7 +1927,7 @@ function twAddEntry(who, text) {
 }
 function twFill(ui, entry) {
   const who = entry.who;
-  ui.head.textContent = (who === "me" ? "🙋 나" : "🤖 Claude") + " · " + (entry.kind === "guess" ? "정답 도전" : `질문 ${++tw.count[who]}`);
+  ui.head.textContent = (who === "me" ? "🙋 나" : "🤖 AI") + " · " + (entry.kind === "guess" ? "정답 도전" : `질문 ${++tw.count[who]}`);
   ui.bubble.classList.remove("thinking"); ui.bubble.textContent = entry.kind === "guess" ? `정답은 "${entry.text}"!` : entry.text;
   const cls = { "예": "yes", "아니요": "no", "애매해요": "maybe", "정답": "right", "오답": "wrong" }[entry.answer] || "";
   ui.ans.hidden = false; ui.ans.className = "tw-answer " + cls;
@@ -1939,7 +1954,7 @@ async function startTwenty() {
   hideGenerating();
   $("twLog").append(twIntro());
   twRenderInfo();
-  twSetBusy(false, tw.state.generated ? "✨ Claude가 새 키워드를 출제했어요. 첫 질문을 해 보세요!" : "Claude 출제가 잠시 안 돼서 준비된 키워드로 시작했어요.");
+  twSetBusy(false, tw.state.generated ? "✨ AI가 새 키워드를 출제했어요. 첫 질문을 해 보세요!" : "AI 출제가 잠시 안 돼서 준비된 키워드로 시작했어요.");
   $("twText").focus();
 }
 async function twPlayer(kind) {
@@ -1966,17 +1981,17 @@ async function twPlayer(kind) {
 async function twAiTurn() {
   const gen = tw.gen; $("twAiRetry").hidden = true;
   const ui = twAddEntry("ai", null);
-  twSetBusy(true, "🤖 Claude가 지금까지의 기록을 보고 질문을 고르는 중이에요…");
+  twSetBusy(true, "🤖 AI가 지금까지의 기록을 보고 질문을 고르는 중이에요…");
   let res;
   try { res = await twApi("ai-turn", { id: tw.state.id }); }
   catch (e) {
     if (gen !== tw.gen) return;
-    ui.el.remove(); twStatus("Claude 차례에서 문제가 생겼어요: " + e.message, true); $("twAiRetry").hidden = false; return;
+    ui.el.remove(); twStatus("AI 차례에서 문제가 생겼어요: " + e.message, true); $("twAiRetry").hidden = false; return;
   }
   if (gen !== tw.gen) return;
   twFill(ui, res.entry); tw.state = res.state; twRenderInfo();
   if (tw.state.finished) { twFinish(); return; }
-  if (tw.state.next === "ai") { twAiTurn(); return; } // 내 기회를 다 쓴 경우 Claude가 이어서 진행
+  if (tw.state.next === "ai") { twAiTurn(); return; } // 내 기회를 다 쓴 경우 AI가 이어서 진행
   twSetBusy(false, "내 차례예요! 질문하거나 정답에 도전하세요."); $("twText").focus();
 }
 function twShowEnd(icon, title, sub, reveal) {
@@ -1992,9 +2007,9 @@ function twFinish() {
   else if (s.winner === "me") {
     icon = "🎉"; playSfx("win");
     const tries = (s.mode === "ai" ? 10 : 20) - s.turnsLeft.me;
-    title = s.mode === "ai" ? "Claude보다 먼저 맞혔어요!" : `${tries}번 만에 맞혔어요!`;
+    title = s.mode === "ai" ? "AI보다 먼저 맞혔어요!" : `${tries}번 만에 맞혔어요!`;
     sub = s.mode === "ai" ? `${tries}번째 기회에 성공했어요.` : "질문으로 범위를 잘 좁혔어요.";
-  } else if (s.winner === "ai") { icon = "🤖"; title = "Claude가 먼저 맞혔어요"; sub = "아깝다! 다음엔 더 빨리 맞혀 봐요."; playSfx("lose"); }
+  } else if (s.winner === "ai") { icon = "🤖"; title = "AI가 먼저 맞혔어요"; sub = "아깝다! 다음엔 더 빨리 맞혀 봐요."; playSfx("lose"); }
   else { icon = "🐾"; title = s.mode === "ai" ? "둘 다 못 맞혔어요 · 무승부" : "아쉬워요! 기회를 모두 썼어요"; playSfx("lose"); }
   twShowEnd(icon, title, sub, s.reveal);
 }
@@ -2184,8 +2199,8 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(true)
   function renderTwenty(s) {
     const ctl = $o("twentyControls"), mine = s.you, opp = 1 - s.you, myTurn = s.turn === mine;
     $o("twentyRole").textContent = s.ready
-      ? `🔒 Claude가 숨긴 키워드 · 분야: ${s.field}\n글자 모양: ${s.pattern}\n🙋 나 남은 기회 ${s.left[mine]}번 · 상대 ${s.left[opp]}번`
-      : "🤖 Claude가 AI 윤리 비밀 키워드를 고르고 있어요…";
+      ? `🔒 AI가 숨긴 키워드 · 분야: ${s.field}\n글자 모양: ${s.pattern}\n🙋 나 남은 기회 ${s.left[mine]}번 · 상대 ${s.left[opp]}번`
+      : "🤖 AI가 AI 윤리 비밀 키워드를 고르고 있어요…";
     const log = $o("twentyLog"); log.replaceChildren();
     s.log.forEach((e, i) => {
       const d = document.createElement("div"), who = e.who === mine ? "🙋 나" : "👤 상대";
@@ -2193,7 +2208,7 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(true)
       if (e.correct) d.style.fontWeight = "700";
       log.append(d);
     });
-    if (s.busy) { const d = document.createElement("div"); d.textContent = "🎙️ Claude 진행자가 답하는 중…"; log.append(d); }
+    if (s.busy) { const d = document.createElement("div"); d.textContent = "🎙️ AI 진행자가 답하는 중…"; log.append(d); }
     log.scrollTop = log.scrollHeight;
     ctl.replaceChildren();
     $o("twentyAgain").hidden = !(s.finished && isHost);
