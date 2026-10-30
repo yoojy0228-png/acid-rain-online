@@ -1753,7 +1753,7 @@ function renderTerritory() {
   st.edges.forEach((e, i) => {
     const x1 = e.c * step, y1 = e.r * step, x2 = e.dir === "h" ? (e.c + 1) * step : e.c * step, y2 = e.dir === "h" ? e.r * step : (e.r + 1) * step;
     const sel = st.selected === i, aiSel = st.aiPick === i;
-    svg.append(svgEl("line", { x1, y1, x2, y2, stroke: e.owner >= 0 ? TERRITORY_COLORS[e.owner] : (aiSel ? "#e02424" : sel ? "#2a68bd" : "#e6d3ac"), "stroke-width": e.owner >= 0 || aiSel ? Math.max(4, step * .08) : Math.max(2.5, step * .04), "stroke-linecap": "round" }));
+    svg.append(svgEl("line", { x1, y1, x2, y2, stroke: e.owner >= 0 ? TERRITORY_COLORS[e.owner] : (aiSel ? "#e02424" : sel ? "#2a68bd" : "#e6d3ac"), "stroke-width": e.owner >= 0 ? Math.max(4, step * .08) : Math.max(2.5, step * .04), "stroke-linecap": "round" }));
     if (e.owner < 0 && myTurn) {
       const hit = svgEl("line", { x1, y1, x2, y2, stroke: "transparent", "stroke-width": 22, "stroke-linecap": "round", tabindex: 0, role: "button", "aria-label": "선 선택" });
       hit.style.cursor = "pointer";
@@ -1873,7 +1873,7 @@ function applyAIJudgement(live, p, pickIdx, q, result) {
   let correct, said;
   if (result.ok) {
     correct = result.answer === q.answer;
-    said = `${result.lineReason ? `[선 선택: ${result.lineReason}] ` : ""}"${result.answer === "real" ? "진짜" : "가짜"}"라고 판별 — ${result.reason}`;
+    said = `"${result.answer === "real" ? "진짜" : "가짜"}"라고 판별 — ${result.reason}`;
   } else {
     // 연결 문제가 생기면 게임이 멈추지 않도록 이번 차례만 임시로 판정합니다.
     correct = Math.random() < AI_ACCURACY[p];
