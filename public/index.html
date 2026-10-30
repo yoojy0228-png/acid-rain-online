@@ -2401,9 +2401,7 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(true)
     dumbProgress = 0;
     const st = typeof territoryState !== 'undefined' ? territoryState : null;
     if (!st || st.finished) return;
-    dumbAI = !dumbAI;
-    st.lastFeedback = dumbAI ? '비밀 코드 입력됨! AI가 문제는 풀지만 선은 엉뚱하게 그어요.' : 'AI가 다시 똑똑해졌어요.';
-    renderTerritory();
+    dumbAI = !dumbAI; // 문구 없이 조용히 켜기/끄기만 합니다.
   });
 })();
 (() => {
