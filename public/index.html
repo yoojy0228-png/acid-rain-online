@@ -1847,6 +1847,18 @@ function chooseAIEdge(options) {
   const safe = options.filter(i => adj(i).every(([r, c]) => filled(r, c) < 2)); // 상대에게 칸을 내주지 않는 선
   return pick(safe.length ? safe : options);
 }
+/* 비밀 코드 0133: AI가 문제는 그대로 풀지만 일부러 3변짜리 칸을 만드는 선만 골라 상대에게 칸을 내줍니다. */
+let dumbAI = false;
+function chooseDumbAIEdge(options) {
+  const st = territoryState, n = st.size;
+  const filled = (r, c) => boxEdges(r, c).filter(ei => st.edges[ei].owner >= 0).length;
+  const adj = i => edgeBoxes(st.edges[i], n);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const noComplete = options.filter(i => adj(i).every(([r, c]) => filled(r, c) < 3));
+  const giveAway = noComplete.filter(i => adj(i).some(([r, c]) => filled(r, c) === 2));
+  if (giveAway.length) return pick(giveAway);
+  return pick(noComplete.length ? noComplete : options);
+}
 /* AI에게 이번 차례의 선 고르기와 자료 판별을 한 번에 요청합니다. */
 async function claudeDotsTurn(st, text) {
   const r = await fetch("/api/ai/dots-turn", {
@@ -1874,7 +1886,7 @@ async function runAITurn() {
   // AI가 고른 선을 보여 준 뒤 결과를 적용합니다. 연결 문제가 생기면 이번 차례만 기본 규칙으로 선을 고릅니다.
   const pickIdx = result.ok ? st.idx[result.line] : chooseAIEdge(options);
   const usable = pickIdx !== undefined && st.edges[pickIdx] && st.edges[pickIdx].owner < 0;
-  const finalIdx = usable ? pickIdx : chooseAIEdge(options);
+  const finalIdx = dumbAI ? chooseDumbAIEdge(options) : usable ? pickIdx : chooseAIEdge(options);
   st.aiPick = finalIdx; renderTerritory();
   territoryTimer = setTimeout(() => applyAIJudgement(st, p, finalIdx, q, result), Math.max(700, 1200 - (Date.now() - started)));
 }
@@ -2373,6 +2385,27 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(true)
 
 <!-- 도트 앤 박스 비밀 코드: 130218 입력 시 한 칸만 남기고 내 칸으로 채움 -->
 <script>
+(() => {
+  // 비밀 코드 0133: 도트 앤 박스 AI 바보 모드 켜기/끄기
+  const dumbSeq = ['0','1','3','3'];
+  let dumbProgress = 0, dumbLast = 0;
+  document.addEventListener('keydown', (event) => {
+    if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
+    if (!/^[0-9]$/.test(event.key)) return;
+    const now = Date.now();
+    if (now - dumbLast > 3500) dumbProgress = 0;
+    dumbLast = now;
+    if (event.key === dumbSeq[dumbProgress]) dumbProgress++;
+    else dumbProgress = event.key === dumbSeq[0] ? 1 : 0;
+    if (dumbProgress !== dumbSeq.length) return;
+    dumbProgress = 0;
+    const st = typeof territoryState !== 'undefined' ? territoryState : null;
+    if (!st || st.finished) return;
+    dumbAI = !dumbAI;
+    st.lastFeedback = dumbAI ? '비밀 코드 입력됨! AI가 문제는 풀지만 선은 엉뚱하게 그어요.' : 'AI가 다시 똑똑해졌어요.';
+    renderTerritory();
+  });
+})();
 (() => {
   const sequence = ['1','3','0','2','1','8'];
   let progress = 0;
