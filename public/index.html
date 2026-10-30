@@ -190,6 +190,12 @@ body[data-screen="game"] footer,body[data-screen="territory"] footer,body[data-s
 .choice.selected::after{content:"✓";position:absolute;top:-.65rem;right:-.5rem;width:1.9rem;height:1.9rem;display:grid;place-items:center;border-radius:50%;
   background:var(--blue);color:#fff;border:2px solid #fff;font:700 1rem/1 var(--font-body);box-shadow:0 2px 0 var(--blue-d)}
 #modeSelectionStatus{margin:1rem 0 0;text-align:center}
+/* 도트 앤 박스: 칸이 완성되면 연필로 칠하는 모션 */
+@keyframes pencilDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes pencilFade { from { opacity: 0; } to { opacity: 1; } }
+.pencil-stroke { stroke-dasharray: 1; animation: pencilDraw 1s linear both; }
+.pencil-fill, .pencil-label { animation: pencilFade .4s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .pencil-stroke, .pencil-fill, .pencil-label { animation-duration: .01s; } }
 /* 도트 앤 박스: AI 수 고르기 (하나의 조절기) */
 .ai-stepper{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(.6rem,2vw,1.4rem);min-height:clamp(8rem,24vh,14rem);padding:1.1rem clamp(.8rem,2vw,1.4rem);
   border:var(--bw) solid var(--blue-d);border-radius:var(--r);background:var(--blue-l);box-shadow:0 5px 0 var(--blue-d)}
@@ -1672,6 +1678,18 @@ function edgeBoxes(e, n) {
   return res;
 }
 function svgEl(tag, attrs = {}) { const el = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; }
+/* 연필 칠하기: 칸 안을 지그재그로 빗금 치는 점 목록 (칸마다 같은 모양이 나오도록 seed 사용) */
+const PENCIL_MS = 1000;
+function pencilHatch(x, y, w, h, seed) {
+  const rows = 7, pts = [];
+  const rnd = k => { const v = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
+  for (let i = 0; i <= rows * 2; i++) {
+    const right = i % 2 === 1, yy = y + h * (Math.floor((i + 1) / 2) / rows);
+    const jx = (rnd(i) - .5) * w * .06, jy = (rnd(i + 50) - .5) * h * .04;
+    pts.push([x + (right ? w : 0) + (right ? -1 : 1) * Math.abs(jx), Math.min(y + h, Math.max(y, yy + (right ? -h / rows * .6 : 0) + jy))]);
+  }
+  return pts;
+}
 function renderTerritory() {
   const st = territoryState; if (!st) return;
   const stats = $("territoryStats"); stats.replaceChildren();
@@ -1706,8 +1724,29 @@ function renderTerritory() {
     const owner = st.boxes[r * n + c];
     svg.append(svgEl("rect", { x: c * step + pad, y: r * step + pad, width: tile, height: tile, rx: Math.max(3, step * .09), fill: owner >= 0 ? TERRITORY_COLORS[owner] + "24" : "#fff8ea", stroke: owner >= 0 ? TERRITORY_COLORS[owner] + "70" : "#f1e2c3", "stroke-width": 1 }));
     if (owner >= 0) {
-      const t = svgEl("text", { x: c * step + step / 2, y: r * step + step * .57, "text-anchor": "middle", "font-size": String(Math.max(9, step * .17)), "font-weight": "800", fill: TERRITORY_COLORS[owner] });
-      t.textContent = TERRITORY_NAMES[owner]; svg.append(t);
+      // 방금 완성된 칸이면 연필로 칠하는 중이므로 진행 시간만큼 애니메이션을 앞당겨 이어서 보여 줌
+      const startAt = st.anim && st.anim[r * n + c], lead = startAt === undefined ? -PENCIL_MS : startAt - performance.now();
+      const animating = lead > -PENCIL_MS, delay = (lead / 1000) + "s", col = TERRITORY_COLORS[owner];
+      const pts = pencilHatch(c * step + pad * 1.6, r * step + pad * 1.6, tile - pad * 1.2, tile - pad * 1.2, r * n + c + 1);
+      const hatch = svgEl("path", { d: "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L"), fill: "none", stroke: col, "stroke-width": Math.max(1.6, step * .03), "stroke-linecap": "round", "stroke-linejoin": "round", opacity: ".6", pathLength: "1" });
+      if (animating) {
+        const rect = svg.lastChild; rect.classList.add("pencil-fill"); rect.style.animationDelay = (lead / 1000 + PENCIL_MS * .6 / 1000) + "s";
+        hatch.classList.add("pencil-stroke"); hatch.style.animationDelay = delay;
+      }
+      svg.append(hatch);
+      const t = svgEl("text", { x: c * step + step / 2, y: r * step + step * .57, "text-anchor": "middle", "font-size": String(Math.max(9, step * .17)), "font-weight": "800", fill: col });
+      t.textContent = TERRITORY_NAMES[owner];
+      if (animating) { t.classList.add("pencil-label"); t.style.animationDelay = (lead / 1000 + PENCIL_MS * .8 / 1000) + "s"; }
+      svg.append(t);
+      if (animating) {
+        // 연필 ✏️ 이 빗금 경로를 따라 움직임 (연필 끝이 선 위에 오도록 글자를 살짝 위로 올림)
+        const g = svgEl("g", { opacity: "0", "pointer-events": "none" });
+        const pen = svgEl("text", { x: 0, y: 0, "font-size": String(Math.max(14, step * .3)) }); pen.textContent = "✏️";
+        const d = pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1));
+        const mo = svgEl("animateMotion", { path: "M" + d.join(" L"), dur: PENCIL_MS / 1000 + "s", begin: delay, fill: "freeze", calcMode: "linear" });
+        const op = svgEl("animate", { attributeName: "opacity", values: "0;1;1;0", keyTimes: "0;.04;.94;1", dur: PENCIL_MS / 1000 + "s", begin: delay, fill: "freeze" });
+        g.append(pen, mo, op); svg.append(g);
+      }
     }
   }
   const myTurn = !st.finished && st.currentPlayer === 0 && !st.question && !st.loadingQ;
@@ -1754,7 +1793,11 @@ function completeBoxes(player) {
   const st = territoryState, n = st.size; let gained = 0;
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
     const bi = r * n + c;
-    if (st.boxes[bi] < 0 && boxEdges(r, c).every(ei => st.edges[ei].owner >= 0)) { st.boxes[bi] = player; st.scores[player]++; gained++; }
+    if (st.boxes[bi] < 0 && boxEdges(r, c).every(ei => st.edges[ei].owner >= 0)) {
+      st.boxes[bi] = player; st.scores[player]++;
+      (st.anim = st.anim || {})[bi] = performance.now() + gained * PENCIL_MS * .35; // 여러 칸이면 차례로 칠함
+      gained++;
+    }
   }
   return gained;
 }
@@ -2041,7 +2084,7 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(true)
 (() => {
   const $o = id => document.getElementById(id);
   const overlay = $o("onlineOverlay");
-  let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlineMode = "quiz", onlinePool = [], onlineIndex = 0, dotsState = null, pendingDotLine = null, dotsQuestionActive = false;
+  let sock = null, isHost = false, roomCode = "", onlineTopic = "문해력", onlineMode = "quiz", onlinePool = [], onlineIndex = 0, dotsState = null, dotsPencil = {}, pendingDotLine = null, dotsQuestionActive = false;
   let answered = false, myScore = 0, opponentScore = 0, myName = "플레이어";
   /* 다른 스크립트(비밀 코드)가 현재 온라인 상태를 읽을 수 있도록 노출 */
   window.__onlineResetDots = () => { dotsQuestionActive = false; pendingDotLine = null; $o("onlineOptions").replaceChildren(); };
@@ -2087,9 +2130,26 @@ $("twentyHome").addEventListener("click", () => { tw.gen++; hideGenerating(true)
   function renderPlayers(players) { $o("onlinePlayers").textContent = players.map((p, i) => `${i + 1}. ${p.name} · ${p.score}점`).join("   |   "); }
   function renderOnlineScores() { $o("onlineMyScore").textContent = myName.replace(/#\d+$/, "") + ": " + myScore + (onlineMode === "dots" ? "칸" : onlineMode === "twenty" ? "승" : "점"); $o("onlineOppScore").textContent = "상대: " + opponentScore + (onlineMode === "dots" ? "칸" : onlineMode === "twenty" ? "승" : "점"); }
   function drawOnlineDots(state) {
-    dotsState = state; const canvas=$o("onlineDotsCanvas"), ctx=canvas.getContext("2d"), n=state.size||4, pad=42, step=(640-pad*2)/n;
+    const prev = dotsState; dotsState = state; const canvas=$o("onlineDotsCanvas"), ctx=canvas.getContext("2d"), n=state.size||4, pad=42, step=(640-pad*2)/n;
+    // 직전 상태에서 새로 차지된 칸은 연필로 칠하는 모션을 시작 (같은 상태를 다시 그릴 때는 이어서 진행)
+    if(prev!==state && prev && prev.size===state.size && prev.boxes) { let k=0; for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(prev.boxes[r][c]===-1 && state.boxes[r][c]!==-1) dotsPencil[r*n+c]=performance.now()+(k++)*PENCIL_MS*.35; }
+    else if(prev!==state) dotsPencil={};
     ctx.clearRect(0,0,640,640); ctx.fillStyle="#fffdf8"; ctx.fillRect(0,0,640,640);
-    for(let r=0;r<n;r++) for(let c=0;c<n;c++){ const owner=state.boxes[r][c]; if(owner!==-1){ctx.fillStyle=owner===state.you?"#d4e5fb":"#fbd9de";ctx.fillRect(pad+c*step+4,pad+r*step+4,step-8,step-8);ctx.fillStyle=owner===state.you?"#087f6c":"#c02665";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(owner===state.you?"나":"상대",pad+(c+.5)*step,pad+(r+.5)*step);}}
+    let pencilBusy=false;
+    for(let r=0;r<n;r++) for(let c=0;c<n;c++){ const owner=state.boxes[r][c]; if(owner!==-1){
+      const mine=owner===state.you, x0=pad+c*step+4, y0=pad+r*step+4, w=step-8, p=dotsPencil[r*n+c]===undefined?1:Math.max(0,Math.min(1,(performance.now()-dotsPencil[r*n+c])/PENCIL_MS));
+      if(p<1) pencilBusy=true;
+      if(p>=.6){ctx.globalAlpha=Math.min(1,(p-.6)/.4);ctx.fillStyle=mine?"#d4e5fb":"#fbd9de";ctx.fillRect(x0,y0,w,w);ctx.globalAlpha=1;}
+      // 빗금: 경로 길이의 p 만큼만 그려서 연필이 지나간 자리까지 보이게 함
+      const pts=pencilHatch(x0+w*.08,y0+w*.08,w*.84,w*.84,r*n+c+1), lens=[]; let total=0;
+      for(let i=1;i<pts.length;i++){const l=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);lens.push(l);total+=l;}
+      let left=total*p, tip=pts[0];
+      if(p>0){ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length&&left>0;i++){const f=Math.min(1,left/lens[i-1]);tip=[pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f,pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f];ctx.lineTo(tip[0],tip[1]);left-=lens[i-1];}
+        ctx.strokeStyle=mine?"rgba(59,134,224,.6)":"rgba(224,85,111,.6)";ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.lineCap="round";ctx.stroke();}
+      if(p>=.8){ctx.globalAlpha=Math.min(1,(p-.8)/.2);ctx.fillStyle=mine?"#087f6c":"#c02665";ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(mine?"나":"상대",pad+(c+.5)*step,pad+(r+.5)*step);ctx.globalAlpha=1;}
+      if(p>0&&p<1){ctx.font="26px Arial";ctx.textAlign="left";ctx.textBaseline="bottom";ctx.fillText("✏️",tip[0],tip[1]+4);}
+    }}
+    if(pencilBusy) requestAnimationFrame(()=>{ if(dotsState===state) drawOnlineDots(state); });
     ctx.lineCap="round";
     // 사용하지 않은 선도 연한 회색으로 모두 표시해 판의 격자가 보이게 함
     for(let r=0;r<=n;r++)for(let c=0;c<n;c++){const k=`h-${r}-${c}`,owner=state.lines[k];ctx.strokeStyle=owner===undefined?"#e0cba0":(owner===state.you?"#3b86e0":"#e0556f");ctx.lineWidth=owner===undefined?5:8;ctx.beginPath();ctx.moveTo(pad+c*step,pad+r*step);ctx.lineTo(pad+(c+1)*step,pad+r*step);ctx.stroke();}
