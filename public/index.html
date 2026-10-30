@@ -694,7 +694,6 @@ b,strong,h1,h2,h3{font-weight:300!important}
   <div class="screen-head">
     <div>
       <h1>가짜 판별 도트 앤 박스</h1>
-      <p class="territory-intro">선을 골라 진짜/가짜를 맞히면 선이 이어지고, 네 변을 완성하면 칸을 차지해요. 오답은 -1점!</p>
     </div>
     <div class="case-controls"><button id="territoryHome" class="secondary">← 메인 화면</button></div>
   </div>
@@ -1753,8 +1752,8 @@ function renderTerritory() {
   const myTurn = !st.finished && st.currentPlayer === 0 && !st.question && !st.loadingQ;
   st.edges.forEach((e, i) => {
     const x1 = e.c * step, y1 = e.r * step, x2 = e.dir === "h" ? (e.c + 1) * step : e.c * step, y2 = e.dir === "h" ? e.r * step : (e.r + 1) * step;
-    const sel = st.selected === i || st.aiPick === i;
-    svg.append(svgEl("line", { x1, y1, x2, y2, stroke: e.owner >= 0 ? TERRITORY_COLORS[e.owner] : (sel ? "#2a68bd" : "#e6d3ac"), "stroke-width": e.owner >= 0 ? Math.max(4, step * .08) : Math.max(2.5, step * .04), "stroke-linecap": "round" }));
+    const sel = st.selected === i, aiSel = st.aiPick === i;
+    svg.append(svgEl("line", { x1, y1, x2, y2, stroke: e.owner >= 0 ? TERRITORY_COLORS[e.owner] : (aiSel ? "#e02424" : sel ? "#2a68bd" : "#e6d3ac"), "stroke-width": e.owner >= 0 || aiSel ? Math.max(4, step * .08) : Math.max(2.5, step * .04), "stroke-linecap": "round" }));
     if (e.owner < 0 && myTurn) {
       const hit = svgEl("line", { x1, y1, x2, y2, stroke: "transparent", "stroke-width": 22, "stroke-linecap": "round", tabindex: 0, role: "button", "aria-label": "선 선택" });
       hit.style.cursor = "pointer";
