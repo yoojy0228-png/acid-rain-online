@@ -523,8 +523,8 @@ footer{padding:.5rem 0 .7rem}
 #result.screen.setup.active{overflow:hidden;padding-top:.6rem;padding-bottom:.6rem}
 #result.screen.setup.active .setup-card{display:flex;flex-direction:column;height:100%;max-height:100%;min-height:0}
 #result.screen.setup.active .panel{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
-#result .review-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:row;gap:.8rem;overflow-x:auto;overflow-y:hidden;align-items:stretch}
-#result .review{flex:1 1 0;min-width:14rem;min-height:0;overflow:hidden;padding:.8rem 1rem;border-left-width:6px;border-left-color:var(--rose)}
+#result .review-list{flex:0 1 auto;min-height:0;max-height:38vh;display:flex;flex-direction:row;gap:.8rem;overflow-x:auto;overflow-y:auto;align-items:flex-start}
+#result .review{flex:1 1 0;min-width:14rem;min-height:0;overflow:hidden;padding:.5rem .8rem;border-left-width:6px;border-left-color:var(--rose)}
 #result .review h3{margin:0 0 .4rem;font-size:clamp(1.1rem,2.6vh,1.6rem);line-height:1.35}
 #result .review p{margin:.2rem 0;font-size:clamp(1rem,2.3vh,1.35rem);line-height:1.45}
 #result #resultMessage{display:none}
@@ -535,7 +535,7 @@ footer{padding:.5rem 0 .7rem}
 #result .setup-head{padding-top:clamp(5rem,13vh,8rem);margin-bottom:.4rem}
 #result .section-title{font-size:clamp(1.3rem,3.2vh,1.8rem);margin:.4rem 0}
 #result .actions{margin-top:.6rem;padding-bottom:.2rem}
-#aiLoading{position:fixed;left:1rem;bottom:1rem;z-index:10001;display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;background:var(--gold-l);border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:0 4px 0 var(--ink);font-family:var(--font-display);font-size:1.1rem;color:var(--gold-d)}
+#aiLoading{position:fixed;right:1rem;bottom:1rem;z-index:10001;display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;background:var(--gold-l);border:var(--bw) solid var(--ink);border-radius:var(--r);box-shadow:0 4px 0 var(--ink);font-family:var(--font-display);font-size:1.1rem;color:var(--gold-d)}
 #aiLoading[hidden]{display:none}
 .topic-chip{font-size:1.9rem;padding:.2rem 1.1rem;margin-left:.5rem}
 #modeScreen .setup-head .muted{font-size:1.3rem}
@@ -723,9 +723,7 @@ b,strong,h1,h2,h3{font-weight:300!important}
 <section id="twenty" class="screen">
   <div class="screen-head">
     <div>
-      <p class="eyebrow">AI ETHICS · 20 QUESTIONS</p>
       <h1>AI 윤리 스무고개</h1>
-      <p class="territory-intro">AI 진행자가 숨긴 AI 윤리 키워드를 예/아니요 질문으로 좁혀 가며 맞혀 보세요.</p>
     </div>
     <div class="case-controls"><button id="twentyHome" class="secondary">← 메인 화면</button></div>
   </div>
@@ -775,7 +773,7 @@ b,strong,h1,h2,h3{font-weight:300!important}
   </div>
   <div id="battle" class="battle">
     <div class="bcard">YOU <strong id="youScore">0</strong><small>목표: 100점</small></div>
-    <div class="bcard ai">AI <strong id="cpuScore">0</strong><small>목표: 100점</small></div>
+    <div class="bcard ai">리터러봇 <strong id="cpuScore">0</strong><small>목표: 100점</small></div>
   </div>
   </div>
   <div class="arena" id="arena">
@@ -1366,19 +1364,19 @@ function updateSetupLabels() {
     modes.className = "ai-picker";
     modes.innerHTML = `<div class="ai-stepper" role="group" aria-label="AI 수 선택">
       <button type="button" class="step-btn" data-ai-step="-1" aria-label="AI 한 명 줄이기" ${n <= 1 ? "disabled" : ""}>−</button>
-      <div class="ai-count"><div class="ai-faces" aria-hidden="true">🐶<span>vs</span>${"🤖".repeat(n)}</div><b>AI ${n}명</b><small>나까지 ${n + 1}명 · 게임판 ${n >= 3 ? "7×7" : "5×5"}</small>
+      <div class="ai-count"><div class="ai-faces" aria-hidden="true">🐶<span>vs</span>${"🤖".repeat(n)}</div><b>리터러봇 ${n}명</b><small>나까지 ${n + 1}명 · 게임판 ${n >= 3 ? "7×7" : "5×5"}</small>
         <div class="ai-dots" aria-hidden="true">${[1, 2, 3, 4].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div></div>
       <button type="button" class="step-btn" data-ai-step="1" aria-label="AI 한 명 늘리기" ${n >= 4 ? "disabled" : ""}>+</button>
     </div>`;
   } else {
     modes.className = "choices two";
     const opts = settings.topic === "AI 윤리"
-      ? [["single", "🔍", "혼자 도전", "20번 안에 키워드 맞히기"], ["ai", "🤖", "AI 대전", "번갈아 물어서 먼저 맞히기"]]
+      ? [["single", "🔍", "혼자 도전", "20번 안에 키워드 맞히기"], ["ai", "🤖", "리터러봇 대전", "번갈아 물어서 먼저 맞히기"]]
       : [["single", "❤️", "싱글", "생명 3개로 끝까지 도전"]];
     modes.innerHTML = opts
       .map(([v, ic, t, d]) => `<button type="button" class="choice ${settings.mode === v ? "selected" : ""}" data-v="${v}"><span class="ch-ic">${ic}</span><b>${t}</b><small>${d}</small></button>`).join("");
   }
-  const label = fake ? `AI ${settings.territoryAIs}명` : settings.topic === "AI 윤리" ? (settings.mode === "ai" ? "AI 대전" : "혼자 도전") : "싱글";
+  const label = fake ? `리터러봇 ${settings.territoryAIs}명` : settings.topic === "AI 윤리" ? (settings.mode === "ai" ? "리터러봇 대전" : "혼자 도전") : "싱글";
   $("modeSelectionStatus").textContent = "현재 선택: " + (fake ? `도트 앤 박스 · 나 + ${label}` : label);
   $("chosenTopic").textContent = settings.topic;
 }
@@ -1516,8 +1514,8 @@ function finishRound(winner) {
   if (locked || !game?.running) return;
   locked = true; stop(); buttons.forEach(b => b.disabled = true);
   const msgs = {
-    PLAYER: ["✓ 정답! +10점", "var(--cyan)"], AI: ["🤖 AI 정답! +10점", "var(--pink)"],
-    AI_WRONG: ["🤖 AI 오답! 점수 변화 없음.", "var(--yellow)"], PLAYER_WRONG: ["✕ 오답! -10점 · 다음 문제로 이동!", "var(--pink)"]
+    PLAYER: ["✓ 정답! +10점", "var(--cyan)"], AI: ["🤖 리터러봇 정답! +10점", "var(--pink)"],
+    AI_WRONG: ["🤖 리터러봇 오답! 점수 변화 없음.", "var(--yellow)"], PLAYER_WRONG: ["✕ 오답! -10점 · 다음 문제로 이동!", "var(--pink)"]
   };
   setFeedback(...msgs[winner]);
   if (winner === "PLAYER_WRONG" || winner === "AI" || winner === "AI_WRONG") $("subquestion").textContent = "정답: " + q.options[q.correctPosition];
@@ -1566,7 +1564,7 @@ function endGame(title, message) {
   $("resultTitle").textContent = title; $("resultMessage").textContent = message;
   $("resultClosing").textContent = CLOSING_LINES[settings.topic] || "";
   $("finalScore").textContent = game.score;
-  $("battleResult").textContent = settings.mode === "ai" ? `내 점수 ${game.score}점 · AI ${game.aiScore}점` : "";
+  $("battleResult").textContent = settings.mode === "ai" ? `내 점수 ${game.score}점 · 리터러봇 ${game.aiScore}점` : "";
   const key = settings.topic + (settings.mode === "ai" ? "-ai" : "-single");
   const best = readBest()[key], isNew = saveBest(key, game.score);
   $("bestScore").textContent = isNew && game.score > 0 ? "🏆 새로운 최고 기록!" : (best !== undefined ? `이 모드 최고 기록: ${best}점` : "");
@@ -1588,7 +1586,7 @@ $("homeBtn").addEventListener("click", () => { if (game) game.running = false; s
 
 /* ---------- 가짜 판별: 도트 앤 박스 ---------- */
 const TERRITORY_COLORS = ["#3b86e0", "#e0556f", "#8b5a38", "#e3a52f", "#8b5cf6"];
-const TERRITORY_NAMES = ["나", "AI 1", "AI 2", "AI 3", "AI 4"];
+const TERRITORY_NAMES = ["나", "리터러봇 1", "리터러봇 2", "리터러봇 3", "리터러봇 4"];
 const AI_ACCURACY = [0, .92, .88, .86, .84];
 let territoryState = null, territoryTimer = null;
 function clearTerritoryTimer() { if (territoryTimer) { clearTimeout(territoryTimer); territoryTimer = null; } }
